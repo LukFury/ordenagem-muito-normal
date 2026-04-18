@@ -1,0 +1,36 @@
+[
+  {
+    "id": "agilidade",
+    "name": "Agilidade",
+    "description": "Define sua coordenação motora, velocidade de reação e destreza manual.",
+    "governedSkills": ["acrobacia", "furtividade", "iniciativa", "crime", "pilotagem", "pontaria", "reflexos"]
+  },
+  {
+    "id": "forca",
+    "name": "Força",
+    "description": "Determina sua potência muscular e habilidade atlética. Aplicada em rolagens de dano corpo a corpo e armas de arremesso.",
+    "governedSkills": ["atletismo", "luta"]
+  },
+  {
+    "id": "intelecto",
+    "name": "Intelecto",
+    "description": "Mede seu raciocínio, memória e educação geral. Concede perícias treinadas adicionais igual ao seu valor e afeta o número de rituais conhecidos.",
+    "governedSkills": ["atualidades", "ciencias", "investigacao", "medicina", "ocultismo", "profissao", "sobrevivencia", "tatica", "tecnologia"],
+    "bonusTrainedSkills": "equal_to_value",
+    "affectsRitualSlots": true
+  },
+  {
+    "id": "presenca",
+    "name": "Presença",
+    "description": "Define sua capacidade de observação, força de vontade e habilidades sociais. Concede PE adicionais por NEX retroativamente.",
+    "governedSkills": ["diplomacia", "enganacao", "intimidacao", "intuicao", "percepcao", "religiao", "vontade"],
+    "bonusPEPerNEX": "equal_to_value"
+  },
+  {
+    "id": "vigor",
+    "name": "Vigor",
+    "description": "Determina sua saúde e resistência física. Concede PV adicionais por NEX retroativamente.",
+    "governedSkills": ["fortitude"],
+    "bonusHPPerNEX": "equal_to_value"
+  }
+]

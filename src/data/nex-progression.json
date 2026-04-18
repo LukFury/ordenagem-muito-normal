@@ -1,0 +1,26 @@
+{
+  "tiers": [
+    { "nex": "5%",  "peLimit": 1 },
+    { "nex": "10%", "peLimit": 2 },
+    { "nex": "15%", "peLimit": 3 },
+    { "nex": "20%", "peLimit": 4 },
+    { "nex": "25%", "peLimit": 5 },
+    { "nex": "30%", "peLimit": 6 },
+    { "nex": "35%", "peLimit": 7 },
+    { "nex": "40%", "peLimit": 8 },
+    { "nex": "45%", "peLimit": 9 },
+    { "nex": "50%", "peLimit": 10 },
+    { "nex": "55%", "peLimit": 11 },
+    { "nex": "60%", "peLimit": 12 },
+    { "nex": "65%", "peLimit": 13 },
+    { "nex": "70%", "peLimit": 14 },
+    { "nex": "75%", "peLimit": 15 },
+    { "nex": "80%", "peLimit": 16 },
+    { "nex": "85%", "peLimit": 17 },
+    { "nex": "90%", "peLimit": 18 },
+    { "nex": "95%", "peLimit": 19 },
+    { "nex": "99%", "peLimit": 20 }
+  ],
+  "nexPerMission": "5%",
+  "notes": "NEX increases by 5% per successfully completed mission. NEX 99% is the maximum."
+}

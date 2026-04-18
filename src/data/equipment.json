@@ -1,0 +1,134 @@
+{
+  "_note": "Categories: 0 = free/basic, I = standard, II = military, III = heavy military. Damage types: C=cortante, P=perfurante, I=impacto, B=balístico. Damage notation: '1d8/1d10' means one hand/two hands. Crit notation: '19' means 19-20/x2, '18' means 18-20/x2, 'x3' means 20/x3, '19/x3' means 19-20/x3.",
+  "proficiencyGroups": {
+    "armas-simples": "All characters can use. Basic weapons and common firearms.",
+    "armas-taticas": "Requires proficiency. Military and specialized weapons.",
+    "armas-pesadas": "Requires proficiency (Armamento Pesado power). Heavy military weapons.",
+    "protecoes-leves": "Requires proficiency. Light armor.",
+    "protecoes-pesadas": "Requires proficiency (Proteção Pesada power). Heavy armor."
+  },
+  "specialRules": {
+    "agil": "Use Agilidade instead of Força for attack tests and damage rolls. Weapons: Faca, Punhal, Cajado, Nunchaku, Florete, Katana.",
+    "automatica": "Can fire single shots (normal) or bursts (–5 attack, +1 damage die). Weapons: Fuzil de Assalto, Submetralhadora, Metralhadora.",
+    "arremessavel": "Can be thrown. Weapons: Faca, Lança, Machadinha.",
+    "duasMaos": "Can be used one-handed (lower damage) or two-handed (higher damage). Weapons: Bastão, Espada, Cajado.",
+    "coronhada": "Any firearm can be used as a melee weapon (coronhada): 1d4 or 1d6, x2, -, I."
+  },
+  "weapons": {
+    "simples": {
+      "meleeLight": [
+        { "id": "coronhada", "name": "Coronhada", "category": 0, "damage": "1d4/1d6", "critical": "x2", "range": null, "damageType": "I", "spaces": 0, "notes": "Any firearm used as melee weapon." },
+        { "id": "faca", "name": "Faca", "category": 0, "damage": "1d4", "critical": "19", "range": "curto", "damageType": "C", "spaces": 1, "special": ["agil", "arremessavel"], "notes": "Navalha, faca militar, etc. Facas de cozinha pequenas causam 1d3." },
+        { "id": "martelo", "name": "Martelo", "category": 0, "damage": "1d6", "critical": "x2", "range": null, "damageType": "I", "spaces": 1, "notes": "Ferramenta comum usada como arma." },
+        { "id": "punhal", "name": "Punhal", "category": 0, "damage": "1d4", "critical": "x3", "range": null, "damageType": "P", "spaces": 1, "special": ["agil"], "notes": "Faca de lâmina longa e pontiaguda, usada por cultistas em rituais." },
+        { "id": "machadinha", "name": "Machadinha", "category": 0, "damage": "1d6", "critical": "x3", "range": "curto", "damageType": "C", "spaces": 1, "special": ["arremessavel"], "notes": "Ferramenta comum em fazendas e obras. Pode ser arremessada." },
+        { "id": "nunchaku", "name": "Nunchaku", "category": 0, "damage": "1d8", "critical": "x2", "range": null, "damageType": "I", "spaces": 1, "special": ["agil"], "notes": "Dois bastões curtos de madeira ligados por uma corrente." }
+      ],
+      "meleeOneHand": [
+        { "id": "bastao", "name": "Bastão", "category": 0, "damage": "1d6/1d8", "critical": "x2", "range": null, "damageType": "I", "spaces": 1, "special": ["duasMaos"], "notes": "Taco de beisebol, cassetete, tonfa. One hand: 1d6, two hands: 1d8." },
+        { "id": "machete", "name": "Machete", "category": 0, "damage": "1d6", "critical": "19", "range": null, "damageType": "C", "spaces": 1, "notes": "Lâmina longa e larga para abrir trilhas." },
+        { "id": "lanca", "name": "Lança", "category": 0, "damage": "1d6", "critical": "x2", "range": "curto", "damageType": "P", "spaces": 1, "special": ["arremessavel"], "notes": "Haste de madeira com ponta metálica. Pode ser arremessada." },
+        { "id": "corrente", "name": "Corrente", "category": 0, "damage": "1d8", "critical": "x2", "range": null, "damageType": "I", "spaces": 1, "notes": "+2 em testes para desarmar e derrubar." }
+      ],
+      "meleeTwoHands": [
+        { "id": "cajado", "name": "Cajado", "category": 0, "damage": "1d6/1d8", "critical": "x2", "range": null, "damageType": "I", "spaces": 1, "special": ["agil", "duasMaos"], "notes": "Bo de artes marciais. Ágil. Pode ser usado com Combater com Duas Armas como se fosse arma de uma mão + arma leve." }
+      ],
+      "rangedTwoHands": [
+        { "id": "arco", "name": "Arco", "category": 0, "damage": "1d6", "critical": "x2", "range": "medio", "damageType": "P", "spaces": 1, "ammo": "flechas", "notes": "Arco e flecha comum para tiro ao alvo." },
+        { "id": "besta", "name": "Besta", "category": 0, "damage": "1d8", "critical": "19", "range": "medio", "damageType": "P", "spaces": 2, "ammo": "flechas", "notes": "Arma da antiguidade. Exige ação de movimento para recarregar a cada disparo." }
+      ],
+      "firearmsLight": [
+        { "id": "pistola", "name": "Pistola", "category": "I", "damage": "1d12", "critical": "18", "range": "curto", "damageType": "B", "spaces": 1, "ammo": "balas-curtas", "notes": "Arma de mão comum entre policiais e militares. Facilmente recarregável." },
+        { "id": "revolver", "name": "Revólver", "category": "I", "damage": "2d6", "critical": "19/x3", "range": "curto", "damageType": "B", "spaces": 1, "ammo": "balas-curtas", "notes": "A arma de fogo mais comum e uma das mais confiáveis." }
+      ],
+      "firearms": [
+        { "id": "fuzil-de-caca", "name": "Fuzil de Caça", "category": "I", "damage": "2d8", "critical": "19/x3", "range": "medio", "damageType": "B", "spaces": 2, "ammo": "balas-longas", "notes": "Popular entre fazendeiros, caçadores e atiradores esportistas." }
+      ]
+    },
+    "taticas": {
+      "meleeLight": [
+        { "id": "florete", "name": "Florete", "category": "I", "damage": "1d6", "critical": "18", "range": null, "damageType": "C", "spaces": 1, "special": ["agil"], "notes": "Espada de lâmina fina, usada por esgrimistas." }
+      ],
+      "meleeOneHand": [
+        { "id": "espada", "name": "Espada", "category": "I", "damage": "1d8/1d10", "critical": "19", "range": null, "damageType": "C", "spaces": 1, "special": ["duasMaos"], "notes": "Espada longa ou cimitarra. One hand: 1d8, two hands: 1d10." },
+        { "id": "machado", "name": "Machado", "category": "I", "damage": "1d8", "critical": "x3", "range": null, "damageType": "C", "spaces": 1, "notes": "Ferramenta importante para lenhadores e bombeiros." },
+        { "id": "maca", "name": "Maça", "category": "I", "damage": "2d4", "critical": "x2", "range": null, "damageType": "I", "spaces": 1, "notes": "Bastão com cabeça metálica cheia de protuberâncias." }
+      ],
+      "meleeTwoHands": [
+        { "id": "acha", "name": "Acha", "category": "I", "damage": "1d12", "critical": "x3", "range": null, "damageType": "C", "spaces": 2, "notes": "Machado grande e pesado para corte de árvores largas." },
+        { "id": "gadanho", "name": "Gadanho", "category": "I", "damage": "2d4", "critical": "x4", "range": null, "damageType": "C", "spaces": 2, "notes": "Versão maior da foice, para uso com as duas mãos." },
+        { "id": "katana", "name": "Katana", "category": "I", "damage": "1d10", "critical": "19", "range": null, "damageType": "C", "spaces": 2, "special": ["agil"], "notes": "Ágil. Se veterano em Luta, pode ser usada com uma mão." },
+        { "id": "marreta", "name": "Marreta", "category": "I", "damage": "3d4", "critical": "x2", "range": null, "damageType": "I", "spaces": 2, "notes": "Usado para demolir paredes e pessoas. –5 nos testes de ataque." },
+        { "id": "montante", "name": "Montante", "category": "I", "damage": "2d6", "critical": "19", "range": null, "damageType": "C", "spaces": 2, "notes": "Enorme espada de 1,5m de comprimento." },
+        { "id": "motosserra", "name": "Motosserra", "category": "I", "damage": "3d6", "critical": "x2", "range": null, "damageType": "C", "spaces": 2, "notes": "Role dado adicional quando rolar 6 em qualquer dado de dano. –5 nos testes de ataque. Ligar gasta ação de movimento." }
+      ],
+      "rangedTwoHands": [
+        { "id": "arco-composto", "name": "Arco Composto", "category": "I", "damage": "1d12", "critical": "19", "range": "medio", "damageType": "P", "spaces": 2, "ammo": "flechas", "notes": "Usa Força em rolagens de dano. Materiais de alta tensão com sistema de roldanas." },
+        { "id": "balestra", "name": "Balestra", "category": "I", "damage": "2d8", "critical": "19/x3", "range": "medio", "damageType": "P", "spaces": 2, "ammo": "flechas", "notes": "Besta pesada. Exige ação de movimento para recarregar." },
+        { "id": "submetralhadora", "name": "Submetralhadora", "category": "I", "damage": "2d6", "critical": "19/x3", "range": "curto", "damageType": "B", "spaces": 1, "ammo": "balas-curtas", "special": ["automatica"], "notes": "Arma de fogo automática que pode ser empunhada com apenas uma mão." },
+        { "id": "espingarda", "name": "Espingarda", "category": "I", "damage": "4d6", "critical": "x3", "range": "curto", "damageType": "B", "spaces": 2, "ammo": "cartuchos", "notes": "Causa metade do dano em alcance médio ou maior." }
+      ]
+    },
+    "pesadas": {
+      "firearmsLight": [
+        { "id": "pistola-sinalizadora", "name": "Pistola Sinalizadora", "category": "I", "damage": "varies", "critical": "x2", "range": "curto", "damageType": "Fogo", "spaces": 1, "notes": "Dispara um sinalizador. Usado para comunicação ou como arma improvisada." },
+        { "id": "pistola-de-dardos", "name": "Pistola de Dardos", "category": "I", "damage": "1d4+veneno", "critical": "x2", "range": "curto", "damageType": "P", "spaces": 1, "notes": "Dispara dardos que injetam veneno." }
+      ],
+      "firearmsTwoHands": [
+        { "id": "fuzil-de-assalto", "name": "Fuzil de Assalto", "category": "II", "damage": "2d10", "critical": "19/x3", "range": "medio", "damageType": "B", "spaces": 2, "ammo": "balas-longas", "special": ["automatica"], "notes": "Arma de fogo padrão dos exércitos modernos. Automática." },
+        { "id": "fuzil-de-precisao", "name": "Fuzil de Precisão", "category": "III", "damage": "2d10", "critical": "19/x3", "range": "longo", "damageType": "B", "spaces": 2, "ammo": "balas-longas", "notes": "Se veterano em Pontaria e mirar, +5 na margem de ameaça." },
+        { "id": "metralhadora", "name": "Metralhadora", "category": "II", "damage": "2d12", "critical": "19/x3", "range": "medio", "damageType": "B", "spaces": 2, "ammo": "balas-longas", "special": ["automatica"], "notes": "Precisa Força 4 ou ação de movimento para apoiar no tripé; caso contrário –5 nos ataques." },
+        { "id": "bazuca", "name": "Bazuca", "category": "III", "damage": "10d8", "critical": "x2", "range": "medio", "damageType": "I", "spaces": 2, "ammo": "foguete", "notes": "Dano no alvo e em todos em raio 3m (Reflexos DT Agi para metade). Pode mirar em ponto no chão. Exige ação de movimento para recarregar." },
+        { "id": "lanca-chamas", "name": "Lança-chamas", "category": "III", "damage": "6d6", "critical": "x2", "range": "curto", "damageType": "Fogo", "spaces": 2, "ammo": "combustivel", "notes": "Atinge todos em linha 1,5m × alcance curto. Um teste de ataque para todos na área. Seres atingidos ficam em chamas." }
+      ]
+    }
+  },
+  "ammo": [
+    { "id": "balas-curtas", "name": "Balas curtas", "category": 0, "spaces": 1, "usedBy": ["pistola", "revolver", "submetralhadora"] },
+    { "id": "balas-longas", "name": "Balas longas", "category": "I", "spaces": 1, "usedBy": ["fuzil-de-caca", "fuzil-de-assalto", "fuzil-de-precisao", "metralhadora"] },
+    { "id": "cartuchos", "name": "Cartuchos", "category": "I", "spaces": 1, "usedBy": ["espingarda"] },
+    { "id": "flechas", "name": "Flechas", "category": 0, "spaces": 1, "usedBy": ["arco", "besta", "arco-composto", "balestra"] },
+    { "id": "foguete", "name": "Foguete", "category": "I", "spaces": 1, "usedBy": ["bazuca"] },
+    { "id": "combustivel", "name": "Combustível", "category": "I", "spaces": 1, "usedBy": ["lanca-chamas"] }
+  ],
+  "armor": [
+    { "id": "protecao-leve", "name": "Proteção Leve", "category": "I", "defenseBonus": 5, "spaces": 2, "notes": "Required proficiency: protecoes-leves. Casting rituals in light armor is a bad condition (DT 15+PE)." },
+    { "id": "protecao-pesada", "name": "Proteção Pesada", "category": "II", "defenseBonus": 10, "spaces": 5, "notes": "Required proficiency: protecoes-pesadas (Proteção Pesada power, NEX 30%). Casting rituals in heavy armor is a terrible condition (DT 20+PE)." },
+    { "id": "escudo", "name": "Escudo", "category": "I", "defenseBonus": 2, "spaces": 2, "notes": "Medieval or modern shield." }
+  ],
+  "armorModifications": [
+    { "id": "antibombas", "name": "Antibombas", "effect": "+5 em testes de resistência contra efeitos de área." },
+    { "id": "blindada", "name": "Blindada", "effect": "Aumenta RD para 5 e o espaço em +1." },
+    { "id": "discreta", "name": "Discreta", "effect": "+5 em testes de ocultar e reduz o espaço em –1." },
+    { "id": "reforcada", "name": "Reforçada", "effect": "Aumenta a Defesa em +2 e o espaço em +1." }
+  ],
+  "generalItems": {
+    "accessories": [
+      { "id": "kit-de-pericia", "name": "Kit de perícia", "category": 0, "spaces": 1, "notes": "Auxiliary tools for using specific skills." },
+      { "id": "utensilio", "name": "Utensílio", "category": "I", "spaces": 1, "notes": "Provides skill bonus. Bonus from items doesn't stack with other items." },
+      { "id": "vestimenta", "name": "Vestimenta", "category": "I", "spaces": 1, "notes": "Clothing that provides a skill bonus. Doesn't stack with other items." }
+    ],
+    "explosives": [
+      { "id": "granada-atordoamento", "name": "Granada de Atordoamento", "category": 0, "spaces": 1 },
+      { "id": "granada-fragmentacao", "name": "Granada de Fragmentação", "category": "I", "spaces": 1 },
+      { "id": "granada-fumaca", "name": "Granada de Fumaça", "category": 0, "spaces": 1 },
+      { "id": "granada-incendiaria", "name": "Granada Incendiária", "category": "I", "spaces": 1 },
+      { "id": "mina-antipessoal", "name": "Mina Antipessoal", "category": "I", "spaces": 1 }
+    ],
+    "operational": [
+      { "id": "algemas", "name": "Algemas", "category": 0, "spaces": 1 },
+      { "id": "arpeu", "name": "Arpéu", "category": 0, "spaces": 1 },
+      { "id": "bandoleira", "name": "Bandoleira", "category": "I", "spaces": 1 },
+      { "id": "binoculos", "name": "Binóculos", "category": 0, "spaces": 1 },
+      { "id": "bloqueador-de-sinal", "name": "Bloqueador de Sinal", "category": "I", "spaces": 1 },
+      { "id": "cicatrizante", "name": "Cicatrizante", "category": "I", "spaces": 1 }
+    ]
+  },
+  "ranks": [
+    { "id": "recruta", "name": "Recruta", "prestígio": "0", "creditLimit": "baixo", "itemLimits": { "I": 2, "II": 0, "III": 0, "IV": 0 } },
+    { "id": "operador", "name": "Operador", "prestígio": "20", "creditLimit": "médio", "itemLimits": { "I": 3, "II": 1, "III": 0, "IV": 0 } },
+    { "id": "agente-especial", "name": "Agente Especial", "prestígio": "50", "creditLimit": "médio", "itemLimits": { "I": 3, "II": 2, "III": 1, "IV": 0 } },
+    { "id": "oficial-de-operacoes", "name": "Oficial de Operações", "prestígio": "100", "creditLimit": "alto", "itemLimits": { "I": 3, "II": 3, "III": 2, "IV": 1 } },
+    { "id": "agente-de-elite", "name": "Agente de Elite", "prestígio": "200", "creditLimit": "ilimitado", "itemLimits": { "I": 3, "II": 3, "III": 3, "IV": 2 } }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "attributeGeneration": {
+    "startingValue": 1,
+    "pointsToDistribute": 4,
+    "maxInitialValue": 3,
+    "canReduceOneToZero": true,
+    "bonusPointsForReducingToZero": 1
+  },
+  "diceSystem": {
+    "description": "Roll a number of d20 equal to the attribute value, take the highest result. Add skill bonus to the highest result.",
+    "attributeZeroRule": "Roll 2d20, take the LOWEST result.",
+    "skillBonuses": {
+      "destreinado": 0,
+      "treinado": 5,
+      "veterano": 10,
+      "expert": 15
+    }
+  }
+}

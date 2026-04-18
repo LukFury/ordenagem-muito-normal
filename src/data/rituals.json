@@ -1,0 +1,195 @@
+{
+  "_note": "Ritual costs by circle: 1st=1 PE, 2nd=3 PE, 3rd=6 PE, 4th=10 PE. Requires gestures with at least one free hand and ritual components (except Medo rituals). Concentration test (Vontade) if injured during casting. Light armor = bad condition (DT 15+cost), heavy armor = terrible condition (DT 20+cost).",
+  "elements": {
+    "conhecimento": {
+      "id": "conhecimento",
+      "name": "Conhecimento",
+      "description": "A entidade da consciência. Rituais de Conhecimento afetam a mente e revelam ou escondem coisas.",
+      "oppresses": "energia",
+      "oppressedBy": "sangue",
+      "components": true
+    },
+    "energia": {
+      "id": "energia",
+      "name": "Energia",
+      "description": "A entidade do caos. Rituais de Energia podem gerar luz, eletricidade, fogo e frio, além de afetar probabilidades.",
+      "oppresses": "morte",
+      "oppressedBy": "conhecimento",
+      "components": true
+    },
+    "morte": {
+      "id": "morte",
+      "name": "Morte",
+      "description": "A entidade da espiral do tempo. Rituais de Morte afetam a energia vital de seres e distorcem o tempo.",
+      "oppresses": "sangue",
+      "oppressedBy": "energia",
+      "components": true
+    },
+    "sangue": {
+      "id": "sangue",
+      "name": "Sangue",
+      "description": "A entidade do sentimento. Rituais de Sangue fortalecem o corpo, aprimoram os sentidos e manipulam as emoções.",
+      "oppresses": "conhecimento",
+      "oppressedBy": "morte",
+      "components": true
+    },
+    "medo": {
+      "id": "medo",
+      "name": "Medo",
+      "description": "O elemento mais misterioso do Outro Lado. Rituais de Medo afetam a própria relação do Outro Lado com a Realidade.",
+      "oppresses": null,
+      "oppressedBy": null,
+      "components": false,
+      "note": "Medo is neutral. No components required. Only some Medo rituals can be learned — they require specific trail abilities."
+    }
+  },
+  "costs": {
+    "1": 1,
+    "2": 3,
+    "3": 6,
+    "4": 10
+  },
+  "ranges": {
+    "pessoal": "Self only",
+    "toque": "Must touch the target",
+    "curto": "9m / 6 squares",
+    "medio": "18m / 12 squares",
+    "longo": "36m / 24 squares",
+    "extremo": "90m / 60 squares",
+    "ilimitado": "Anywhere in the world (usually requires knowing/having been to the location)"
+  },
+  "catalog": {
+    "1": {
+      "conhecimento": [
+        { "id": "amaldicoar-arma-1-con", "name": "Amaldiçoar Arma", "summary": "Arma causa mais dano. Escolha um elemento; arma causa +1d6 do tipo do elemento. Discente (+2 PE): +2d6 (2º círculo). Verdadeiro (+5 PE): +4d6 (3º círculo, afinidade)." },
+        { "id": "compreensao-paranormal", "name": "Compreensão Paranormal", "summary": "Você entende qualquer linguagem escrita ou falada." },
+        { "id": "enfeiticar", "name": "Enfeitiçar", "summary": "Alvo se torna prestativo." },
+        { "id": "perturbacao", "name": "Perturbação", "summary": "Força o alvo a obedecer a uma ordem." },
+        { "id": "ouvir-os-sussurros", "name": "Ouvir os Sussurros", "summary": "Você se comunica com vozes do Outro Lado para receber informações." },
+        { "id": "tecer-ilusao", "name": "Tecer Ilusão", "summary": "Cria uma ilusão visual ou sonora." },
+        { "id": "fortalecimento-sensorial", "name": "Fortalecimento Sensorial", "summary": "Melhora seus sentidos e sua percepção." },
+        { "id": "odio-incontrolavel", "name": "Ódio Incontrolável", "summary": "Aumenta dano corpo a corpo e perícias físicas, mas impede calma e concentração." }
+      ],
+      "energia": [
+        { "id": "amaldicoar-arma-1-ene", "name": "Amaldiçoar Arma", "summary": "Arma causa mais dano (ver Conhecimento 1)." },
+        { "id": "chamas-do-caos", "name": "Chamas do Caos", "summary": "Controla o fogo." },
+        { "id": "contencao-fantasmagorica", "name": "Contenção Fantasmagórica", "summary": "Laços de energia prendem o alvo." },
+        { "id": "dissonancia-acustica", "name": "Dissonância Acústica", "summary": "Cria uma área em que é impossível ouvir sons." },
+        { "id": "sopro-do-caos", "name": "Sopro do Caos", "summary": "Move o ar de formas impossíveis." },
+        { "id": "tela-de-ruido", "name": "Tela de Ruído", "summary": "Cria uma película protetora que absorve dano." }
+      ],
+      "morte": [
+        { "id": "amaldicoar-arma-1-mor", "name": "Amaldiçoar Arma", "summary": "Arma causa mais dano (ver Conhecimento 1)." },
+        { "id": "cicatrizacao", "name": "Cicatrização", "summary": "Acelera a regeneração de um ferimento." },
+        { "id": "consumir-manancial", "name": "Consumir Manancial", "summary": "Suga o tempo de vida de seres próximos, recebendo PV temporários." },
+        { "id": "decadencia", "name": "Decadência", "summary": "Acelera o envelhecimento dos órgãos internos do alvo, fazendo seu corpo definhar." },
+        { "id": "definhar", "name": "Definhar", "summary": "Alvo fica fatigado ou vulnerável." },
+        { "id": "espirais-da-perdicao", "name": "Espirais da Perdição", "summary": "Inimigos sofrem penalidade em ataque." },
+        { "id": "nuvem-de-cinzas", "name": "Nuvem de Cinzas", "summary": "Nuvem fornece camuflagem." }
+      ],
+      "sangue": [
+        { "id": "amaldicoar-arma-1-san", "name": "Amaldiçoar Arma", "summary": "Arma causa mais dano (ver Conhecimento 1)." },
+        { "id": "arma-atroz", "name": "Arma Atroz", "summary": "Arma corpo a corpo recebe bônus em testes de ataque e margem de ameaça." },
+        { "id": "invadir-mente", "name": "Invadir Mente", "summary": "Gera uma rajada mental ou se conecta telepaticamente." },
+        { "id": "localizacao", "name": "Localização", "summary": "Determina em que direção está um objeto ou ser à sua escolha." }
+      ],
+      "medo": [
+        { "id": "cineraria", "name": "Cinerária", "summary": "Névoa fortalece rituais na área." },
+        { "id": "terceiro-olho", "name": "Terceiro Olho", "summary": "Você vê manifestações paranormais." }
+      ]
+    },
+    "2": {
+      "conhecimento": [
+        { "id": "aprimorar-mente", "name": "Aprimorar Mente", "summary": "Fornece bônus em Intelecto ou Presença." },
+        { "id": "deteccao-de-ameacas", "name": "Detecção de Ameaças", "summary": "Detecta seres hostis e armadilhas na área." },
+        { "id": "esconder-dos-olhos", "name": "Esconder dos Olhos", "summary": "Torna o usuário invisível aos olhos comuns por determinado tempo." },
+        { "id": "alterar-memoria", "name": "Alterar Memória", "summary": "Invade a mente do alvo e altera ou apaga memórias de até uma hora atrás." }
+      ],
+      "energia": [
+        { "id": "amaldicoar-tecnologia", "name": "Amaldiçoar Tecnologia", "summary": "Imbui um acessório ou arma de fogo com Energia, fazendo-o funcionar acima de sua capacidade. O item recebe uma modificação à sua escolha." },
+        { "id": "coincidencia-forcada", "name": "Coincidência Forçada", "summary": "Recebe bônus em testes." },
+        { "id": "embaralhar", "name": "Embaralhar", "summary": "Cria duplicatas para confundir os inimigos, oferecendo bônus na Defesa." },
+        { "id": "eletrocussao", "name": "Eletrocussão", "summary": "Corrente voltaica eletrocuta o alvo." },
+        { "id": "luz", "name": "Luz", "summary": "Objeto brilha como uma lâmpada." },
+        { "id": "polarizacao-caotica", "name": "Polarização Caótica", "summary": "Objetos metálicos são atraídos ou repelidos conforme sua vontade." }
+      ],
+      "morte": [
+        { "id": "desacelerar-impacto", "name": "Desacelerar Impacto", "summary": "Diminui dano de queda e reduz o dano de projéteis à metade." },
+        { "id": "eco-espiral", "name": "Eco Espiral", "summary": "Repete o dano que o alvo sofreu ao longo das rodadas, concentrando." },
+        { "id": "paradoxo", "name": "Paradoxo", "summary": "Cria uma área de tempo paradoxal, capaz de envelhecer corpo e alma." }
+      ],
+      "sangue": [
+        { "id": "armadura-de-sangue", "name": "Armadura de Sangue", "summary": "Recobre o corpo com placas de sangue endurecido." },
+        { "id": "aprimorar-fisico", "name": "Aprimorar Físico", "summary": "Bônus em Agilidade ou Força." },
+        { "id": "descarnar", "name": "Descarnar", "summary": "A pele do alvo é dilacerada, abrindo cortes profundos." },
+        { "id": "flagelo-de-sangue", "name": "Flagelo de Sangue", "summary": "Alvo precisa obedecer uma ordem." },
+        { "id": "hemofagia", "name": "Hemofagia", "summary": "Absorve o sangue do alvo, causando dano e recuperando seus pontos de vida." },
+        { "id": "transfusao-vital", "name": "Transfusão Vital", "summary": "Transfere vida do usuário para um ser, curando-o instantaneamente." }
+      ],
+      "medo": [
+        { "id": "protecao-contra-rituais", "name": "Proteção contra Rituais", "summary": "Alvo recebe resistência contra efeitos e criaturas paranormais." },
+        { "id": "rejeitar-nevoa", "name": "Rejeitar Névoa", "summary": "Enfraquece a conjuração de rituais." }
+      ]
+    },
+    "3": {
+      "conhecimento": [
+        { "id": "contato-paranormal", "name": "Contato Paranormal", "summary": "Você barganha com o Outro Lado para obter ajuda." },
+        { "id": "mergulho-mental", "name": "Mergulho Mental", "summary": "Se infiltra na mente do alvo para vasculhar seus pensamentos." },
+        { "id": "videncia", "name": "Vidência", "summary": "Pode observar e ouvir um alvo à distância." }
+      ],
+      "energia": [
+        { "id": "convocacao-instantanea", "name": "Convocação Instantânea", "summary": "Teletransporta um objeto marcado para suas mãos." },
+        { "id": "salto-fantasma", "name": "Salto Fantasma", "summary": "Teletransporta você e outros seres para um ponto dentro do alcance." },
+        { "id": "transfigurar-agua", "name": "Transfigurar Água", "summary": "Água e gelo se comportam de forma caótica." },
+        { "id": "transfigurar-terra", "name": "Transfigurar Terra", "summary": "Rochas, lama e areia se comportam de forma caótica." }
+      ],
+      "morte": [
+        { "id": "ancora-temporal", "name": "Âncora Temporal", "summary": "Impede o alvo de se afastar de um ponto." },
+        { "id": "poeira-da-podridao", "name": "Poeira da Podridão", "summary": "Nuvem de poeira apodrece tudo que toca." },
+        { "id": "tentaculos-de-lodo", "name": "Tentáculos de Lodo", "summary": "Tentáculos pretos atacam e agarram seres na área." },
+        { "id": "zerar-entropia", "name": "Zerar Entropia", "summary": "O alvo fica lento ou paralisado." },
+        { "id": "miasma-entropico", "name": "Miasma Entrópico", "summary": "Nuvem tóxica enjoa e sufoca os alvos." }
+      ],
+      "sangue": [
+        { "id": "corpo-adaptado", "name": "Corpo Adaptado", "summary": "Ignora frio e calor, pode respirar debaixo d'água." },
+        { "id": "velocidade-mortal", "name": "Velocidade Mortal", "summary": "Alvo acelera no tempo, realizando ações adicionais." },
+        { "id": "vomitar-pestes", "name": "Vomitar Pestes", "summary": "Vomita um enxame de pequenas criaturas de Sangue." }
+      ],
+      "medo": [
+        { "id": "dissipar-ritual", "name": "Dissipar Ritual", "summary": "Cancela os efeitos de rituais em um alvo ou área." }
+      ]
+    },
+    "4": {
+      "conhecimento": [
+        { "id": "controle-mental", "name": "Controle Mental", "summary": "Faz com que a mente da vítima seja controlada por outra pessoa." },
+        { "id": "inexistir", "name": "Inexistir", "summary": "Você toca um alvo e o apaga completamente da existência." },
+        { "id": "possessao", "name": "Possessão", "summary": "Transfere sua consciência para o corpo do alvo." }
+      ],
+      "energia": [
+        { "id": "alterar-destino", "name": "Alterar Destino", "summary": "Enxerga o futuro próximo, podendo alterar o resultado de um teste. Reação: +15 em um teste de resistência ou na Defesa contra um ataque." },
+        { "id": "deflagracao-de-energia", "name": "Deflagração de Energia", "summary": "Explosão de energia bruta causa dano e afeta itens amaldiçoados." },
+        { "id": "teletransporte", "name": "Teletransporte", "summary": "Teletransporta você e outros seres." }
+      ],
+      "morte": [
+        { "id": "convocar-o-algoz", "name": "Convocar o Algoz", "summary": "Conjura o maior medo do alvo, que irá persegui-lo e tentar matá-lo." },
+        { "id": "distorcao-temporal", "name": "Distorção Temporal", "summary": "Você age livremente por um curto período de tempo." },
+        { "id": "fim-inevitavel", "name": "Fim Inevitável", "summary": "Abre uma ruptura no espaço que suga tudo ao redor." }
+      ],
+      "sangue": [
+        { "id": "capturar-o-coracao", "name": "Capturar o Coração", "summary": "Manipula as emoções e vontades do alvo, fazendo dele seu aliado." },
+        { "id": "involucro-de-carne", "name": "Invólucro de Carne", "summary": "Cria um clone de carne e sangue com as mesmas estatísticas do alvo." },
+        { "id": "vinculo-de-sangue", "name": "Vínculo de Sangue", "summary": "Alvo sofre todo dano que você sofrer." },
+        { "id": "ferver-sangue", "name": "Ferver Sangue", "summary": "Faz o sangue do alvo entrar em ebulição, causando dano e deixando-o fraco." },
+        { "id": "forma-monstruosa", "name": "Forma Monstruosa", "summary": "Você assume a aparência e forma de uma criatura monstruosa." },
+        { "id": "purgatorio", "name": "Purgatório", "summary": "Área de sangue deixa alvos vulneráveis a dano e causa dor a quem tentar sair." }
+      ],
+      "medo": [
+        { "id": "canalizar-o-medo", "name": "Canalizar o Medo", "summary": "Transfere parte de seu poder paranormal para um alvo. Requer trilha Conduíte NEX 99%.", "requiresTrail": "conduíte" },
+        { "id": "conhecendo-o-medo", "name": "Conhecendo o Medo", "summary": "Manifesta o Medo absoluto na mente do alvo. Requer trilha Graduado NEX 99%.", "requiresTrail": "graduado" },
+        { "id": "lamina-do-medo", "name": "Lâmina do Medo", "summary": "Golpeia o alvo com uma lâmina de medo puro. Requer trilha Lâmina Paranormal NEX 99%.", "requiresTrail": "lamina-paranormal" },
+        { "id": "medo-tangivel", "name": "Medo Tangível", "summary": "Recebe uma série de imunidades. Requer trilha Flagelador NEX 99%.", "requiresTrail": "flagelador" },
+        { "id": "presenca-do-medo", "name": "Presença do Medo", "summary": "Você assume uma forma impossível dentro da Realidade. Requer trilha Intuitivo NEX 99%.", "requiresTrail": "intuitivo" }
+      ]
+    }
+  }
+}

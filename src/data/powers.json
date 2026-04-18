@@ -1,0 +1,229 @@
+{
+  "_note": "Paranormal powers are obtained via the Transcender class power or directly for Ocultistas. Any character can learn up to Intelecto paranormal powers via Aprender Ritual. Afinidade Elemental unlocks at NEX 50% and lets you take each power a second time for its Afinidade benefit.",
+  "elements": ["conhecimento", "energia", "morte", "sangue"],
+  "elementRelations": {
+    "sangue": { "effectiveAgainst": "conhecimento", "weakAgainst": "morte" },
+    "conhecimento": { "effectiveAgainst": "energia", "weakAgainst": "sangue" },
+    "energia": { "effectiveAgainst": "morte", "weakAgainst": "conhecimento" },
+    "morte": { "effectiveAgainst": "sangue", "weakAgainst": "energia" },
+    "medo": { "effectiveAgainst": null, "weakAgainst": null, "note": "Medo is neutral — not especially effective against any element and no element is especially effective against it." }
+  },
+  "general": [
+    {
+      "id": "aprender-ritual",
+      "name": "Aprender Ritual",
+      "element": null,
+      "description": "Você aprende e pode conjurar um ritual de 1º círculo à sua escolha. Você pode substituir um ritual que já conhece por outro. A partir de NEX 45%, quando escolhe este poder, você aprende um ritual de qualquer círculo que possa lançar.",
+      "prerequisites": [],
+      "canChooseMultipleTimes": true
+    },
+    {
+      "id": "resistir-elemento",
+      "name": "Resistir a <Elemento>",
+      "element": "choose",
+      "description": "Escolha entre Conhecimento, Energia, Morte ou Sangue. Você recebe resistência 10 contra esse elemento. Este poder conta como um poder do elemento escolhido.",
+      "prerequisites": [],
+      "afinidade": "Aumenta a resistência para 20."
+    }
+  ],
+  "conhecimento": [
+    {
+      "id": "expansao-de-conhecimento",
+      "name": "Expansão de Conhecimento",
+      "element": "conhecimento",
+      "description": "Você se conecta com o Conhecimento do Outro Lado, rompendo os limites de sua compreensão. Você aprende um poder de classe que não pertença à sua classe (caso o poder possua pré-requisitos, você precisa preenchê-los).",
+      "prerequisites": ["conhecimento_1"],
+      "afinidade": "Você aprende um segundo poder de classe que não pertença à sua classe."
+    },
+    {
+      "id": "percepcao-paranormal",
+      "name": "Percepção Paranormal",
+      "element": "conhecimento",
+      "description": "O Conhecimento sussurra em sua mente. Em cenas de investigação, sempre que fizer um teste para procurar pistas, você pode rolar novamente um dado com resultado menor que 10. Você deve aceitar a segunda rolagem, mesmo que seja menor.",
+      "prerequisites": [],
+      "afinidade": "Você pode rolar novamente até dois dados com resultado menor que 10."
+    },
+    {
+      "id": "precognicao",
+      "name": "Precognição",
+      "element": "conhecimento",
+      "description": "Você possui um 'sexto sentido' que o avisa do perigo antes que ele aconteça. Você recebe +2 em Defesa e em testes de resistência.",
+      "prerequisites": ["conhecimento_1"],
+      "afinidade": "Você fica imune à condição desprevenido."
+    },
+    {
+      "id": "sensitivo",
+      "name": "Sensitivo",
+      "element": "conhecimento",
+      "description": "Você consegue sentir as emoções e intenções de outros seres, como medo, raiva ou malícia. Você recebe +5 em testes de Diplomacia, Intimidação e Intuição.",
+      "prerequisites": [],
+      "afinidade": "Quando você faz um teste oposto usando uma dessas perícias, o oponente sofre –5."
+    },
+    {
+      "id": "visao-do-oculto",
+      "name": "Visão do Oculto",
+      "element": "conhecimento",
+      "description": "Você não enxerga mais pelos olhos, mas sim pela percepção do Conhecimento em sua mente. Você recebe +5 em testes de Percepção e enxerga no escuro.",
+      "prerequisites": [],
+      "afinidade": "Você ignora camuflagem."
+    }
+  ],
+  "energia": [
+    {
+      "id": "afortunado",
+      "name": "Afortunado",
+      "element": "energia",
+      "description": "A Energia considera resultados medíocres entediantes. Uma vez por rolagem, você pode rolar novamente um resultado 1 em qualquer dado que não seja d20.",
+      "prerequisites": [],
+      "afinidade": "Além disso, uma vez por teste, você pode rolar novamente um resultado 1 em d20."
+    },
+    {
+      "id": "campo-protetor",
+      "name": "Campo Protetor",
+      "element": "energia",
+      "description": "Você consegue gerar um campo de Energia que o protege de perigos. Quando usa a ação esquiva, você pode gastar 1 PE para receber +5 em Defesa.",
+      "prerequisites": ["energia_1"],
+      "afinidade": "Quando usa este poder, você também recebe +5 em Reflexos e, até o início de seu próximo turno, se passar em um teste de Reflexos que reduziria o dano à metade, em vez disso não sofre nenhum dano."
+    },
+    {
+      "id": "causalidade-fortuita",
+      "name": "Causalidade Fortuita",
+      "element": "energia",
+      "description": "A Energia o conduz rumo a descobertas. Em cenas de investigação, a DT para procurar pistas diminui em –5 para você até você encontrar uma pista.",
+      "prerequisites": [],
+      "afinidade": "A DT para procurar pistas sempre diminui em –5 para você."
+    },
+    {
+      "id": "golpe-de-sorte",
+      "name": "Golpe de Sorte",
+      "element": "energia",
+      "description": "Seus ataques recebem +1 na margem de ameaça.",
+      "prerequisites": ["energia_1"],
+      "afinidade": "Seus ataques recebem +1 no multiplicador de crítico."
+    },
+    {
+      "id": "manipular-entropia",
+      "name": "Manipular Entropia",
+      "element": "energia",
+      "description": "Quando outro ser em alcance curto faz um teste de perícia, você pode gastar 2 PE para fazê-lo rolar novamente um dos dados desse teste.",
+      "prerequisites": ["energia_1"],
+      "afinidade": "O alvo rola novamente todos os dados que você escolher."
+    }
+  ],
+  "morte": [
+    {
+      "id": "encarar-a-morte",
+      "name": "Encarar a Morte",
+      "element": "morte",
+      "description": "Sua conexão com a Morte faz com que você não hesite em situações de perigo. Durante cenas de ação, seu limite de gasto de PE aumenta em +1 (isso não afeta a DT de seus efeitos).",
+      "prerequisites": [],
+      "afinidade": "Durante cenas de ação, seu limite de gasto de PE aumenta em +2 (para um total de +3)."
+    },
+    {
+      "id": "escapar-da-morte",
+      "name": "Escapar da Morte",
+      "element": "morte",
+      "description": "A Morte tem um interesse especial em sua caminhada. Uma vez por cena, quando receber dano que o deixaria com 0 PV, você fica com 1 PV. Não funciona em caso de dano massivo.",
+      "prerequisites": ["morte_1"],
+      "afinidade": "Em vez do normal, você evita completamente o dano. Em caso de dano massivo, você fica com 1 PV."
+    },
+    {
+      "id": "potencial-aprimorado",
+      "name": "Potencial Aprimorado",
+      "element": "morte",
+      "description": "A Morte lhe concede potencial latente de momentos roubados de outro lugar. Você recebe +1 ponto de esforço por NEX. Quando sobe de NEX, os PE que recebe por este poder aumentam de acordo.",
+      "prerequisites": [],
+      "afinidade": "Você recebe +1 PE adicional por NEX (para um total de +2 PE por NEX)."
+    },
+    {
+      "id": "potencial-reaproveitado",
+      "name": "Potencial Reaproveitado",
+      "element": "morte",
+      "description": "Você absorve os momentos desperdiçados de outros seres. Uma vez por rodada, quando passa num teste de resistência, você ganha 2 PE temporários cumulativos. Os pontos desaparecem no final da cena.",
+      "prerequisites": [],
+      "afinidade": "Você ganha 3 PE temporários, em vez de 2."
+    },
+    {
+      "id": "surto-temporal",
+      "name": "Surto Temporal",
+      "element": "morte",
+      "description": "A sua percepção temporal se torna distorcida e espiralizada. Uma vez por cena, durante seu turno, você pode gastar 3 PE para realizar uma ação padrão adicional.",
+      "prerequisites": ["morte_2"],
+      "afinidade": "Em vez de uma vez por cena, você pode usar este poder uma vez por turno."
+    }
+  ],
+  "sangue": [
+    {
+      "id": "anatomia-insana",
+      "name": "Anatomia Insana",
+      "element": "sangue",
+      "description": "O seu corpo parece desenvolver um instinto próprio. Você tem 50% de chance (resultado par em 1d4) de ignorar o dano adicional de um acerto crítico ou ataque furtivo.",
+      "prerequisites": ["sangue_2"],
+      "afinidade": "Você é imune aos efeitos de acertos críticos e ataques furtivos."
+    },
+    {
+      "id": "arma-de-sangue",
+      "name": "Arma de Sangue",
+      "element": "sangue",
+      "description": "Gaste ação de movimento e 2 PE para produzir garras, chifres ou uma lâmina de sangue cristalizado. É uma arma simples, corpo a corpo e leve que causa 1d6 de dano de Sangue. Uma vez por turno ao usar a ação agredir, gaste 1 PE para um ataque adicional. Dura até o final da cena.",
+      "prerequisites": [],
+      "afinidade": "A arma se torna parte permanente de você e causa 1d10 de dano de Sangue."
+    },
+    {
+      "id": "sangue-de-ferro",
+      "name": "Sangue de Ferro",
+      "element": "sangue",
+      "description": "O seu sangue flui de forma paranormal, concedendo vigor não natural. Você recebe +2 PV por NEX. Quando sobe de NEX, os PV que recebe por este poder aumentam de acordo.",
+      "prerequisites": [],
+      "afinidade": "Você recebe +5 em Fortitude e se torna imune a venenos e doenças."
+    },
+    {
+      "id": "sangue-fervente",
+      "name": "Sangue Fervente",
+      "element": "sangue",
+      "description": "Enquanto estiver machucado, você recebe +1 em Agilidade ou Força, à sua escolha (escolha sempre que este efeito for ativado).",
+      "prerequisites": ["sangue_2"],
+      "afinidade": "O bônus que você recebe em Agilidade ou Força aumenta para +2."
+    },
+    {
+      "id": "sangue-vivo",
+      "name": "Sangue Vivo",
+      "element": "sangue",
+      "description": "Na primeira vez que ficar machucado durante uma cena, você recebe cura acelerada 2. Esse efeito nunca cura você acima da metade dos PV máximos e termina no fim da cena ou caso perca a condição machucado.",
+      "prerequisites": ["sangue_1"],
+      "afinidade": "A cura acelerada aumenta para 5."
+    }
+  ],
+  "ocultistaPowers": [
+    {
+      "id": "camuflar-ocultismo",
+      "name": "Camuflar Ocultismo",
+      "description": "Ação livre: esconda símbolos e sigilos em objetos ou em sua pele. Ao lançar um ritual, gaste +2 PE para conjurá-lo sem componentes ou gestos. Outros só percebem com Ocultismo (DT 25).",
+      "prerequisites": []
+    },
+    {
+      "id": "envolto-em-misterio",
+      "name": "Envolto em Mistério",
+      "description": "+5 em Enganação e Intimidação contra pessoas não treinadas em Ocultismo.",
+      "prerequisites": []
+    },
+    {
+      "id": "especialista-em-elemento",
+      "name": "Especialista em Elemento",
+      "description": "Escolha um elemento. A DT para resistir aos seus rituais desse elemento aumenta em +2.",
+      "prerequisites": []
+    },
+    {
+      "id": "ferramentas-paranormais",
+      "name": "Ferramentas Paranormais",
+      "description": "Você reduz a categoria de um item paranormal em I e pode ativar itens paranormais sem pagar seu custo em PE.",
+      "prerequisites": []
+    },
+    {
+      "id": "criar-selo",
+      "name": "Criar Selo",
+      "description": "Você sabe fabricar selos paranormais de rituais que conheça. Fabricar um selo gasta uma ação de interlúdio e PE iguais ao custo de conjurar o ritual.",
+      "prerequisites": []
+    }
+  ]
+}

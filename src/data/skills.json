@@ -1,0 +1,226 @@
+[
+  {
+    "id": "acrobacia",
+    "name": "Acrobacia",
+    "attribute": "agilidade",
+    "trainedOnly": false,
+    "loadPenalty": true,
+    "requiresKit": false
+  },
+  {
+    "id": "adestramento",
+    "name": "Adestramento",
+    "attribute": "presenca",
+    "trainedOnly": true,
+    "loadPenalty": false,
+    "requiresKit": false
+  },
+  {
+    "id": "artes",
+    "name": "Artes",
+    "attribute": "presenca",
+    "trainedOnly": true,
+    "loadPenalty": false,
+    "requiresKit": false
+  },
+  {
+    "id": "atletismo",
+    "name": "Atletismo",
+    "attribute": "forca",
+    "trainedOnly": false,
+    "loadPenalty": false,
+    "requiresKit": false
+  },
+  {
+    "id": "atualidades",
+    "name": "Atualidades",
+    "attribute": "intelecto",
+    "trainedOnly": false,
+    "loadPenalty": false,
+    "requiresKit": false
+  },
+  {
+    "id": "ciencias",
+    "name": "Ciências",
+    "attribute": "intelecto",
+    "trainedOnly": true,
+    "loadPenalty": false,
+    "requiresKit": false
+  },
+  {
+    "id": "crime",
+    "name": "Crime",
+    "attribute": "agilidade",
+    "trainedOnly": true,
+    "loadPenalty": true,
+    "requiresKit": true
+  },
+  {
+    "id": "diplomacia",
+    "name": "Diplomacia",
+    "attribute": "presenca",
+    "trainedOnly": false,
+    "loadPenalty": false,
+    "requiresKit": false
+  },
+  {
+    "id": "enganacao",
+    "name": "Enganação",
+    "attribute": "presenca",
+    "trainedOnly": false,
+    "loadPenalty": false,
+    "requiresKit": true
+  },
+  {
+    "id": "fortitude",
+    "name": "Fortitude",
+    "attribute": "vigor",
+    "trainedOnly": false,
+    "loadPenalty": false,
+    "requiresKit": false
+  },
+  {
+    "id": "furtividade",
+    "name": "Furtividade",
+    "attribute": "agilidade",
+    "trainedOnly": false,
+    "loadPenalty": true,
+    "requiresKit": false
+  },
+  {
+    "id": "iniciativa",
+    "name": "Iniciativa",
+    "attribute": "agilidade",
+    "trainedOnly": false,
+    "loadPenalty": false,
+    "requiresKit": false
+  },
+  {
+    "id": "intimidacao",
+    "name": "Intimidação",
+    "attribute": "presenca",
+    "trainedOnly": false,
+    "loadPenalty": false,
+    "requiresKit": false
+  },
+  {
+    "id": "intuicao",
+    "name": "Intuição",
+    "attribute": "presenca",
+    "trainedOnly": false,
+    "loadPenalty": false,
+    "requiresKit": false
+  },
+  {
+    "id": "investigacao",
+    "name": "Investigação",
+    "attribute": "intelecto",
+    "trainedOnly": false,
+    "loadPenalty": false,
+    "requiresKit": false
+  },
+  {
+    "id": "luta",
+    "name": "Luta",
+    "attribute": "forca",
+    "trainedOnly": false,
+    "loadPenalty": false,
+    "requiresKit": false
+  },
+  {
+    "id": "medicina",
+    "name": "Medicina",
+    "attribute": "intelecto",
+    "trainedOnly": false,
+    "loadPenalty": false,
+    "requiresKit": true
+  },
+  {
+    "id": "ocultismo",
+    "name": "Ocultismo",
+    "attribute": "intelecto",
+    "trainedOnly": true,
+    "loadPenalty": false,
+    "requiresKit": false
+  },
+  {
+    "id": "percepcao",
+    "name": "Percepção",
+    "attribute": "presenca",
+    "trainedOnly": false,
+    "loadPenalty": false,
+    "requiresKit": false
+  },
+  {
+    "id": "pilotagem",
+    "name": "Pilotagem",
+    "attribute": "agilidade",
+    "trainedOnly": true,
+    "loadPenalty": false,
+    "requiresKit": false
+  },
+  {
+    "id": "pontaria",
+    "name": "Pontaria",
+    "attribute": "agilidade",
+    "trainedOnly": false,
+    "loadPenalty": false,
+    "requiresKit": false
+  },
+  {
+    "id": "profissao",
+    "name": "Profissão",
+    "attribute": "intelecto",
+    "trainedOnly": true,
+    "loadPenalty": false,
+    "requiresKit": false
+  },
+  {
+    "id": "reflexos",
+    "name": "Reflexos",
+    "attribute": "agilidade",
+    "trainedOnly": false,
+    "loadPenalty": false,
+    "requiresKit": false
+  },
+  {
+    "id": "religiao",
+    "name": "Religião",
+    "attribute": "presenca",
+    "trainedOnly": true,
+    "loadPenalty": false,
+    "requiresKit": false
+  },
+  {
+    "id": "sobrevivencia",
+    "name": "Sobrevivência",
+    "attribute": "intelecto",
+    "trainedOnly": false,
+    "loadPenalty": false,
+    "requiresKit": false
+  },
+  {
+    "id": "tatica",
+    "name": "Tática",
+    "attribute": "intelecto",
+    "trainedOnly": true,
+    "loadPenalty": false,
+    "requiresKit": false
+  },
+  {
+    "id": "tecnologia",
+    "name": "Tecnologia",
+    "attribute": "intelecto",
+    "trainedOnly": true,
+    "loadPenalty": false,
+    "requiresKit": true
+  },
+  {
+    "id": "vontade",
+    "name": "Vontade",
+    "attribute": "presenca",
+    "trainedOnly": false,
+    "loadPenalty": false,
+    "requiresKit": false
+  }
+]

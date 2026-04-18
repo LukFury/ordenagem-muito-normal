@@ -1,0 +1,278 @@
+{
+  "_note": "Unless specified otherwise, conditions end at the end of the scene. Conditions of the same category generally escalate (e.g., Fraco → Debilitado → Inconsciente). Bonus/penalty stacking: bonuses/penalties from different sources stack; from the same source, only the highest applies.",
+  "categories": {
+    "medo": "Fear conditions. Abalado → Apavorado.",
+    "mental": "Mental conditions. Affect Intelecto and Presença tests.",
+    "paralisia": "Paralysis/mobility conditions.",
+    "fadiga": "Fatigue conditions. Fatigado → Exausto → Inconsciente.",
+    "sentidos": "Sensory conditions."
+  },
+  "conditions": [
+    {
+      "id": "abalado",
+      "name": "Abalado",
+      "category": "medo",
+      "description": "O personagem sofre –5 em testes. Se ficar abalado novamente, em vez disso fica apavorado.",
+      "mechanical": { "testPenalty": -5 }
+    },
+    {
+      "id": "agarrado",
+      "name": "Agarrado",
+      "category": "paralisia",
+      "description": "O personagem fica desprevenido e imóvel, sofre –5 em testes de ataque e só pode atacar com armas leves. Um personagem fazendo um ataque à distância contra um alvo envolvido na manobra agarrar tem 50% de chance de acertar o alvo errado.",
+      "mechanical": { "conditions": ["desprevenido", "imóvel"], "attackPenalty": -5, "onlyLightWeapons": true }
+    },
+    {
+      "id": "alquebrado",
+      "name": "Alquebrado",
+      "category": "mental",
+      "description": "O custo em pontos de esforço das habilidades e dos rituais do personagem aumenta em +1.",
+      "mechanical": { "peSkillCostIncrease": 1 }
+    },
+    {
+      "id": "apavorado",
+      "name": "Apavorado",
+      "category": "medo",
+      "description": "O personagem sofre –10 em testes de perícia e deve fugir da fonte do medo da maneira mais eficiente possível. Se não puder, pode agir mas não pode se aproximar voluntariamente da fonte do medo.",
+      "mechanical": { "skillPenalty": -10, "mustFlee": true }
+    },
+    {
+      "id": "asfixiado",
+      "name": "Asfixiado",
+      "category": null,
+      "description": "O personagem não pode respirar. Pode prender a respiração por um número de rodadas igual ao seu Vigor. Depois disso, deve fazer teste de Fortitude por rodada (DT 5 +5 por teste anterior). Se falhar, cai inconsciente e perde 1d6 PV por rodada até respirar novamente ou morrer.",
+      "mechanical": { "holdBreathRounds": "vigor", "fortitudeDT": "5+5_per_prior_test", "failOutcome": ["inconsciente", "1d6_hp_per_round"] }
+    },
+    {
+      "id": "atordoado",
+      "name": "Atordoado",
+      "category": "mental",
+      "description": "O personagem fica desprevenido e não pode fazer ações.",
+      "mechanical": { "conditions": ["desprevenido"], "cannotAct": true }
+    },
+    {
+      "id": "caido",
+      "name": "Caído",
+      "category": "paralisia",
+      "description": "Deitado no chão. O personagem sofre –10 em ataques corpo a corpo e seu deslocamento é reduzido a 1,5m. Sofre –5 na Defesa contra ataques corpo a corpo, mas recebe +5 na Defesa contra ataques à distância.",
+      "mechanical": { "meleePenalty": -10, "movement": "1.5m", "meleeDefense": -5, "rangedDefense": 5 }
+    },
+    {
+      "id": "cego",
+      "name": "Cego",
+      "category": "sentidos",
+      "description": "O personagem fica desprevenido e lento, não pode fazer testes de Percepção para observar e sofre –10 em testes de perícias baseadas em Agilidade ou Força. Todos os alvos de seus ataques recebem camuflagem total.",
+      "mechanical": { "conditions": ["desprevenido", "lento"], "cannotPerceiveVisually": true, "agilForcaPenalty": -10, "allTargetsFullConcealment": true }
+    },
+    {
+      "id": "confuso",
+      "name": "Confuso",
+      "category": "mental",
+      "description": "Role 1d6 no início de seus turnos: 1) Move em direção aleatória; 2-3) Não pode agir, fica balbuciando; 4-5) Ataca o ser mais próximo (ou a si mesmo se sozinho); 6) Condição termina e pode agir normalmente.",
+      "mechanical": { "rollD6EachTurn": true }
+    },
+    {
+      "id": "debilitado",
+      "name": "Debilitado",
+      "category": null,
+      "description": "O personagem sofre –10 em testes de Agilidade, Força e Vigor. Se ficar debilitado novamente, em vez disso fica inconsciente.",
+      "mechanical": { "agilForcaVigorPenalty": -10, "escalates": "inconsciente" }
+    },
+    {
+      "id": "desprevenido",
+      "name": "Desprevenido",
+      "category": null,
+      "description": "Despreparado para reagir. O personagem sofre –5 na Defesa e –5 em Reflexos. Você fica desprevenido contra inimigos que não possa perceber.",
+      "mechanical": { "defensePenalty": -5, "reflexesPenalty": -5 }
+    },
+    {
+      "id": "doente",
+      "name": "Doente",
+      "category": null,
+      "description": "Sob efeito de uma doença.",
+      "mechanical": { "varies": true }
+    },
+    {
+      "id": "em-chamas",
+      "name": "Em Chamas",
+      "category": null,
+      "description": "O personagem está pegando fogo. No início de seus turnos, sofre 1d6 pontos de dano de fogo. O personagem pode gastar uma ação padrão para apagar o fogo. Imersão em água também apaga as chamas.",
+      "mechanical": { "damagePerTurn": "1d6", "damageType": "fogo", "canExtinguish": "acao_padrao_or_water" }
+    },
+    {
+      "id": "enjoado",
+      "name": "Enjoado",
+      "category": null,
+      "description": "O personagem só pode realizar uma ação padrão ou de movimento (não ambas) por rodada.",
+      "mechanical": { "actionsPerRound": 1 }
+    },
+    {
+      "id": "enlouquecendo",
+      "name": "Enlouquecendo",
+      "category": "mental",
+      "description": "Se iniciar três turnos enlouquecendo na mesma cena (não necessariamente consecutivos), o personagem fica insano — torna-se um NPC. Pode ser encerrada com Diplomacia (DT 20 +5 por vez já acalmado na cena) ou qualquer efeito que cure pelo menos 1 de Sanidade.",
+      "mechanical": { "turnsUntilInsanity": 3, "cure": "Diplomacia_DT20+5_per_time_or_1_SAN_healed" }
+    },
+    {
+      "id": "enredado",
+      "name": "Enredado",
+      "category": "paralisia",
+      "description": "O personagem fica lento, vulnerável e sofre –5 em testes de ataque.",
+      "mechanical": { "conditions": ["lento", "vulneravel"], "attackPenalty": -5 }
+    },
+    {
+      "id": "envenenado",
+      "name": "Envenenado",
+      "category": null,
+      "description": "Varia de acordo com o veneno. Pode ser outra condição ou dano recorrente. A descrição do veneno determina a duração. Dano recorrente de condições envenenado sempre se acumula.",
+      "mechanical": { "varies": true }
+    },
+    {
+      "id": "esmorecido",
+      "name": "Esmorecido",
+      "category": "mental",
+      "description": "O personagem sofre –10 em testes de Intelecto e Presença.",
+      "mechanical": { "intPresencaPenalty": -10 }
+    },
+    {
+      "id": "exausto",
+      "name": "Exausto",
+      "category": "fadiga",
+      "description": "O personagem fica debilitado, lento e vulnerável. Se ficar exausto novamente, em vez disso fica inconsciente.",
+      "mechanical": { "conditions": ["debilitado", "lento", "vulneravel"], "escalates": "inconsciente" }
+    },
+    {
+      "id": "fascinado",
+      "name": "Fascinado",
+      "category": "mental",
+      "description": "Com a atenção presa em alguma coisa. O personagem sofre –10 em Percepção e não pode fazer ações, exceto observar aquilo que o fascinou. Qualquer ação hostil contra o personagem anula esta condição. Balançar um ser fascinado gasta uma ação padrão.",
+      "mechanical": { "percepcaoPenalty": -10, "cannotAct": true, "canceledByHostileAction": true }
+    },
+    {
+      "id": "fatigado",
+      "name": "Fatigado",
+      "category": "fadiga",
+      "description": "O personagem fica fraco e vulnerável. Se ficar fatigado novamente, em vez disso fica exausto.",
+      "mechanical": { "conditions": ["fraco", "vulneravel"], "escalates": "exausto" }
+    },
+    {
+      "id": "fraco",
+      "name": "Fraco",
+      "category": null,
+      "description": "O personagem sofre –5 em testes de Agilidade, Força e Vigor. Se ficar fraco novamente, em vez disso fica debilitado.",
+      "mechanical": { "agilForcaVigorPenalty": -5, "escalates": "debilitado" }
+    },
+    {
+      "id": "frustrado",
+      "name": "Frustrado",
+      "category": "mental",
+      "description": "O personagem sofre –5 em testes de Intelecto e Presença. Se ficar frustrado novamente, em vez disso fica esmorecido.",
+      "mechanical": { "intPresencaPenalty": -5, "escalates": "esmorecido" }
+    },
+    {
+      "id": "imóvel",
+      "name": "Imóvel",
+      "category": "paralisia",
+      "description": "Todas as formas de deslocamento do personagem são reduzidas a 0m.",
+      "mechanical": { "movement": 0 }
+    },
+    {
+      "id": "inconsciente",
+      "name": "Inconsciente",
+      "category": null,
+      "description": "O personagem fica indefeso e não pode fazer ações, incluindo reações. Balançar um ser para acordá-lo gasta uma ação padrão.",
+      "mechanical": { "conditions": ["indefeso"], "cannotAct": true, "cannotReact": true }
+    },
+    {
+      "id": "indefeso",
+      "name": "Indefeso",
+      "category": null,
+      "description": "O personagem é considerado desprevenido, mas sofre –10 na Defesa, falha automaticamente em testes de Reflexos e pode sofrer golpes de misericórdia.",
+      "mechanical": { "conditions": ["desprevenido"], "defensePenalty": -10, "autoFailReflexes": true, "canReceiveCoupDeGrace": true }
+    },
+    {
+      "id": "lento",
+      "name": "Lento",
+      "category": "paralisia",
+      "description": "Todas as formas de deslocamento do personagem são reduzidas à metade (arredonde para baixo para o primeiro incremento de 1,5m) e ele não pode correr ou fazer investidas.",
+      "mechanical": { "movementHalved": true, "cannotRun": true, "cannotCharge": true }
+    },
+    {
+      "id": "machucado",
+      "name": "Machucado",
+      "category": null,
+      "description": "O personagem tem metade ou menos de seus pontos de vida totais.",
+      "mechanical": { "trigger": "hp_at_or_below_half_max" }
+    },
+    {
+      "id": "morrendo",
+      "name": "Morrendo",
+      "category": null,
+      "description": "Com 0 pontos de vida. Se iniciar três turnos morrendo na mesma cena (não necessariamente consecutivos), você morre. Pode ser encerrada com teste de Medicina (DT 20 +5 por vez já estabilizado na cena) ou efeitos específicos.",
+      "mechanical": { "trigger": "hp_0", "turnsUntilDeath": 3, "stabilize": "Medicina_DT20+5_per_time" }
+    },
+    {
+      "id": "ofuscado",
+      "name": "Ofuscado",
+      "category": "sentidos",
+      "description": "O personagem sofre –5 em testes de ataque e de Percepção.",
+      "mechanical": { "attackPenalty": -5, "percepcaoPenalty": -5 }
+    },
+    {
+      "id": "paralisado",
+      "name": "Paralisado",
+      "category": "paralisia",
+      "description": "O personagem fica imóvel e indefeso e só pode realizar ações puramente mentais.",
+      "mechanical": { "conditions": ["imóvel", "indefeso"], "onlyMentalActions": true }
+    },
+    {
+      "id": "pasmo",
+      "name": "Pasmo",
+      "category": "mental",
+      "description": "O personagem não pode fazer ações.",
+      "mechanical": { "cannotAct": true }
+    },
+    {
+      "id": "perturbado",
+      "name": "Perturbado",
+      "category": "mental",
+      "description": "Na primeira vez que isso acontece em uma cena, você recebe um efeito de insanidade.",
+      "mechanical": { "firstTimeInScene": "receive_insanity_effect" }
+    },
+    {
+      "id": "petrificado",
+      "name": "Petrificado",
+      "category": null,
+      "description": "O personagem fica inconsciente e recebe resistência a dano 10.",
+      "mechanical": { "conditions": ["inconsciente"], "damageResistance": 10 }
+    },
+    {
+      "id": "sangrando",
+      "name": "Sangrando",
+      "category": null,
+      "description": "Com um ferimento aberto. No início de seus turnos, deve fazer teste de Vigor (DT 20). Se passar, estabiliza e remove essa condição. Se falhar, perde 1d6 PV e continua sangrando. Também é possível estabilizar com ação completa e teste de Medicina (DT 20).",
+      "mechanical": { "fortitudeDT": 20, "failHpLoss": "1d6", "stabilize": "Medicina_DT20_full_action" }
+    },
+    {
+      "id": "surdo",
+      "name": "Surdo",
+      "category": "sentidos",
+      "description": "O personagem não pode fazer testes de Percepção para ouvir e sofre –10 em testes de Iniciativa. Além disso, é considerado em condição ruim para lançar rituais.",
+      "mechanical": { "cannotHear": true, "iniciativaPenalty": -10, "ritualCondition": "ruim" }
+    },
+    {
+      "id": "surpreendido",
+      "name": "Surpreendido",
+      "category": null,
+      "description": "Não ciente de seus inimigos. O personagem fica desprevenido e não pode fazer ações.",
+      "mechanical": { "conditions": ["desprevenido"], "cannotAct": true }
+    },
+    {
+      "id": "vulneravel",
+      "name": "Vulnerável",
+      "category": null,
+      "description": "O personagem sofre –2 na Defesa.",
+      "mechanical": { "defensePenalty": -2 }
+    }
+  ]
+}

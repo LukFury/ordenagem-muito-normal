@@ -1,0 +1,289 @@
+[
+  {
+    "id": "academico",
+    "name": "Acadêmico",
+    "roll": "2-8",
+    "description": "Você era um pesquisador ou professor universitário. Seus estudos tocaram em assuntos misteriosos e chamaram a atenção da Ordo Realitas.",
+    "trainedSkills": ["ciencias", "investigacao"],
+    "power": {
+      "name": "Saber é Poder",
+      "description": "Quando faz um teste usando Intelecto, você pode gastar 2 PE para receber +5 nesse teste."
+    }
+  },
+  {
+    "id": "agente-de-saude",
+    "name": "Agente de Saúde",
+    "roll": "9-10",
+    "description": "Você era um profissional da saúde — enfermeiro, farmacêutico, médico, psicólogo ou socorrista.",
+    "trainedSkills": ["intuicao", "medicina"],
+    "power": {
+      "name": "Técnica Medicinal",
+      "description": "Sempre que cura um personagem, você adiciona seu Intelecto no total de PV curados."
+    }
+  },
+  {
+    "id": "amnesico",
+    "name": "Amnésico",
+    "roll": "11",
+    "description": "Você perdeu a maior parte da memória. Sua amnésia pode ser resultado de um trauma paranormal ou de um ritual.",
+    "trainedSkills": { "type": "gm_choice", "count": 2 },
+    "power": {
+      "name": "Vislumbres do Passado",
+      "description": "Uma vez por sessão, você pode fazer um teste de Intelecto (DT 10) para reconhecer pessoas ou lugares familiares. Se passar, recebe 1d4 PE temporários e uma informação útil a critério do mestre."
+    }
+  },
+  {
+    "id": "artista",
+    "name": "Artista",
+    "roll": "12-13",
+    "description": "Você era um ator, músico, escritor, dançarino, influenciador… Seu trabalho pode ter sido inspirado por uma experiência paranormal.",
+    "trainedSkills": ["artes", "enganacao"],
+    "power": {
+      "name": "Magnum Opus",
+      "description": "Você é famoso por uma de suas obras. Uma vez por missão, pode determinar que uma pessoa o reconheça. Você recebe +5 em testes de Presença e de perícias baseadas em Presença contra aquela pessoa."
+    }
+  },
+  {
+    "id": "atleta",
+    "name": "Atleta",
+    "roll": "14-15",
+    "description": "Você competia em um esporte individual ou coletivo. Seu desempenho pode ser fruto de uma influência paranormal.",
+    "trainedSkills": ["acrobacia", "atletismo"],
+    "power": {
+      "name": "110%",
+      "description": "Quando faz um teste de perícia usando Força ou Agilidade (exceto Luta e Pontaria), você pode gastar 2 PE para receber +5 nesse teste."
+    }
+  },
+  {
+    "id": "chef",
+    "name": "Chef",
+    "roll": "16",
+    "description": "Você é um cozinheiro amador ou profissional. Os outros agentes adoram quando você vai para a missão!",
+    "trainedSkills": ["fortitude", "profissao"],
+    "trainedSkillsNote": "Profissão (cozinheiro)",
+    "power": {
+      "name": "Ingrediente Secreto",
+      "description": "Em cenas de interlúdio, você pode fazer a ação alimentar-se para cozinhar um prato especial. Você e todos os membros do grupo que fizeram a ação alimentar-se recebem o benefício de dois pratos (efeitos se acumulam se o mesmo for escolhido duas vezes)."
+    }
+  },
+  {
+    "id": "criminoso",
+    "name": "Criminoso",
+    "roll": "17",
+    "description": "Você vivia uma vida fora da lei. Em algum momento se envolveu em um assunto da Ordem — talvez tenha roubado um item amaldiçoado?",
+    "trainedSkills": ["crime", "furtividade"],
+    "power": {
+      "name": "O Crime Compensa",
+      "description": "No final de uma missão, escolha um item encontrado na missão. Em sua próxima missão, você pode incluir esse item em seu inventário sem que ele conte em seu limite de itens por patente."
+    }
+  },
+  {
+    "id": "cultista-arrependido",
+    "name": "Cultista Arrependido",
+    "roll": "18",
+    "description": "Você fez parte de um culto paranormal. Algo abriu seus olhos e agora você luta pelo lado certo — embora carregue traços de sua vida pregressa.",
+    "trainedSkills": ["ocultismo", "religiao"],
+    "power": {
+      "name": "Traços do Outro Lado",
+      "description": "Você possui um poder paranormal à sua escolha. Porém, começa o jogo com metade da Sanidade normal para sua classe."
+    }
+  },
+  {
+    "id": "desgarrado",
+    "name": "Desgarrado",
+    "roll": "19",
+    "description": "Você não vivia de acordo com as normas da sociedade — eremita, pessoa em situação de rua, ou alguém que abandonou a rotina após descobrir o paranormal.",
+    "trainedSkills": ["fortitude", "sobrevivencia"],
+    "power": {
+      "name": "Calejado",
+      "description": "Você recebe +1 PV para cada 5% de NEX."
+    }
+  },
+  {
+    "id": "engenheiro",
+    "name": "Engenheiro",
+    "roll": "20",
+    "description": "Enquanto os acadêmicos estão preocupados com teorias, você coloca a mão na massa. Provavelmente criou algum dispositivo paranormal que chamou a atenção da Ordem.",
+    "trainedSkills": ["profissao", "tecnologia"],
+    "power": {
+      "name": "Ferramenta Favorita",
+      "description": "Um item à sua escolha (exceto armas) conta como uma categoria abaixo (por exemplo, um item de categoria II conta como categoria I para você)."
+    }
+  },
+  {
+    "id": "executivo",
+    "name": "Executivo",
+    "roll": "21",
+    "description": "Você possuía um trabalho de escritório em uma grande empresa. Sua vida era bastante normal, até que você descobriu algo que não devia.",
+    "trainedSkills": ["diplomacia", "profissao"],
+    "power": {
+      "name": "Processo Otimizado",
+      "description": "Sempre que faz um teste de perícia durante um teste estendido, ou uma ação para revisar documentos (físicos ou digitais), pode pagar 2 PE para receber +5 nesse teste."
+    }
+  },
+  {
+    "id": "investigador",
+    "name": "Investigador",
+    "roll": "22-23",
+    "description": "Você era um investigador do governo (perito forense, policial federal) ou privado (detetive particular). Recrutado pela Ordem por suas habilidades de resolução de mistérios.",
+    "trainedSkills": ["investigacao", "percepcao"],
+    "power": {
+      "name": "Faro para Pistas",
+      "description": "Uma vez por cena, quando fizer um teste para procurar pistas, você pode gastar 1 PE para receber +5 nesse teste."
+    }
+  },
+  {
+    "id": "lutador",
+    "name": "Lutador",
+    "roll": "24",
+    "description": "Você pratica uma arte marcial ou esporte de luta, ou cresceu em um bairro perigoso onde aprendeu briga de rua.",
+    "trainedSkills": ["luta", "reflexos"],
+    "power": {
+      "name": "Mão Pesada",
+      "description": "Você recebe +2 em rolagens de dano com ataques corpo a corpo."
+    }
+  },
+  {
+    "id": "magnata",
+    "name": "Magnata",
+    "roll": "25",
+    "description": "Você possui muito dinheiro ou patrimônio — herdeiro de família ligada ao oculto, fundador de empresa, ou ganhador de uma loteria amaldiçoada.",
+    "trainedSkills": ["diplomacia", "pilotagem"],
+    "power": {
+      "name": "Patrocinador da Ordem",
+      "description": "Seu limite de crédito é sempre considerado um acima do atual."
+    }
+  },
+  {
+    "id": "mercenario",
+    "name": "Mercenário",
+    "roll": "26",
+    "description": "Você é um soldado de aluguel. Escoltas e assassinatos fizeram parte de sua rotina por tempo o suficiente para você se envolver com o paranormal.",
+    "trainedSkills": ["iniciativa", "intimidacao"],
+    "power": {
+      "name": "Posição de Combate",
+      "description": "No primeiro turno de cada cena de ação, você pode gastar 2 PE para receber uma ação de movimento adicional."
+    }
+  },
+  {
+    "id": "militar",
+    "name": "Militar",
+    "roll": "27",
+    "description": "Você serviu em uma força militar. Passou muito tempo treinando com armas de fogo, acostumado a obedecer ordens e partir em missões.",
+    "trainedSkills": ["pontaria", "tatica"],
+    "power": {
+      "name": "Para Bellum",
+      "description": "Você recebe +2 em rolagens de dano com armas de fogo."
+    }
+  },
+  {
+    "id": "operario",
+    "name": "Operário",
+    "roll": "28",
+    "description": "Pedreiro, industriário, operador de máquinas — você passou uma parte de sua vida em um emprego braçal que lhe deu uma visão pragmática do mundo.",
+    "trainedSkills": ["fortitude", "profissao"],
+    "power": {
+      "name": "Ferramenta de Trabalho",
+      "description": "Escolha uma arma simples ou tática que poderia ser usada como ferramenta em sua profissão. Você sabe usar a arma escolhida e recebe +1 em testes de ataque, rolagens de dano e margem de ameaça com ela."
+    }
+  },
+  {
+    "id": "policial",
+    "name": "Policial",
+    "roll": "29-30",
+    "description": "Você fez parte de uma força de segurança pública, civil ou militar. Em alguma patrulha se deparou com um caso paranormal e sobreviveu para contar a história.",
+    "trainedSkills": ["percepcao", "pontaria"],
+    "power": {
+      "name": "Patrulha",
+      "description": "Você recebe +2 em Defesa."
+    }
+  },
+  {
+    "id": "religioso",
+    "name": "Religioso",
+    "roll": "31",
+    "description": "Você é devoto ou sacerdote de uma fé. Dedicado a auxiliar pessoas com problemas espirituais, teve contato com o paranormal e foi convocado pela Ordem.",
+    "trainedSkills": ["religiao", "vontade"],
+    "power": {
+      "name": "Acalentar",
+      "description": "Você recebe +5 em testes de Religião para acalmar. Além disso, quando acalma uma pessoa, ela recebe 1d6 + sua Presença pontos de Sanidade."
+    }
+  },
+  {
+    "id": "servidor-publico",
+    "name": "Servidor Público",
+    "roll": "32",
+    "description": "Você possuía carreira em um órgão do governo. Sua rotina foi quebrada quando você descobriu que figuras públicas realizavam rituais em segredo.",
+    "trainedSkills": ["intuicao", "vontade"],
+    "power": {
+      "name": "Espírito Cívico",
+      "description": "Sempre que faz um teste para ajudar, você pode gastar 1 PE para aumentar o bônus concedido em +2."
+    }
+  },
+  {
+    "id": "teorico-da-conspiracao",
+    "name": "Teórico da Conspiração",
+    "roll": "33",
+    "description": "A humanidade nunca pisou na lua. Reptilianos ocupam importantes cargos públicos. Você sabe disso tudo — e quando sua pesquisa esbarrou no paranormal de verdade, foi recrutado.",
+    "trainedSkills": ["investigacao", "ocultismo"],
+    "power": {
+      "name": "Eu Já Sabia",
+      "description": "Você não se abala tanto com entidades ou anomalias. Afinal, sempre soube que isso tudo existia. Você recebe resistência a dano mental igual ao seu Intelecto."
+    }
+  },
+  {
+    "id": "ti",
+    "name": "T.I.",
+    "roll": "34",
+    "description": "Programador, engenheiro de software ou simplesmente \"o cara da T.I.\". Seu talento (ou curiosidade exagerada) chamou a atenção da Ordem.",
+    "trainedSkills": ["investigacao", "tecnologia"],
+    "power": {
+      "name": "Motor de Busca",
+      "description": "A critério do mestre, sempre que tiver acesso à internet, você pode gastar 2 PE para substituir um teste de perícia qualquer por um teste de Tecnologia."
+    }
+  },
+  {
+    "id": "trabalhador-rural",
+    "name": "Trabalhador Rural",
+    "roll": "35",
+    "description": "Fazendeiro, pescador, biólogo, veterinário — você se acostumou com o convívio com a natureza e os animais, e descobriu que muitas histórias de fantasmas são verdadeiras.",
+    "trainedSkills": ["adestramento", "sobrevivencia"],
+    "power": {
+      "name": "Desbravador",
+      "description": "Quando faz um teste de Adestramento ou Sobrevivência, você pode gastar 2 PE para receber +5 nesse teste. Além disso, você não sofre penalidade em deslocamento por terreno difícil."
+    }
+  },
+  {
+    "id": "trambiqueiro",
+    "name": "Trambiqueiro",
+    "roll": "36",
+    "description": "Uma vida digna exige muito trabalho, então é melhor nem tentar. Você vivia de pequenos golpes, jogatina ilegal e falcatruas — até ser recrutado pela Ordem.",
+    "trainedSkills": ["crime", "enganacao"],
+    "power": {
+      "name": "Impostor",
+      "description": "Uma vez por cena, você pode gastar 2 PE para substituir um teste de perícia qualquer por um teste de Enganação."
+    }
+  },
+  {
+    "id": "universitario",
+    "name": "Universitário",
+    "roll": "37-38",
+    "description": "Você era aluno de uma faculdade. Em sua rotina de estudos, provas e festas, acabou descobrindo algo — talvez um livro amaldiçoado na biblioteca do campus.",
+    "trainedSkills": ["atualidades", "investigacao"],
+    "power": {
+      "name": "Dedicação",
+      "description": "Você recebe +1 PE, e mais 1 PE adicional a cada NEX ímpar (15%, 25%…). Além disso, seu limite de PE por turno aumenta em 1 (em NEX 5% seu limite é 2, em NEX 10% é 3 e assim por diante; isso não afeta a DT de seus efeitos)."
+    }
+  },
+  {
+    "id": "vitima",
+    "name": "Vítima",
+    "roll": "39-40",
+    "description": "Em algum momento de sua vida você encontrou o paranormal de forma traumática. Decidiu lutar para impedir que outros inocentes passem pelo mesmo.",
+    "trainedSkills": ["reflexos", "vontade"],
+    "power": {
+      "name": "Cicatrizes Psicológicas",
+      "description": "Você recebe +1 de Sanidade para cada 5% de NEX."
+    }
+  }
+]
