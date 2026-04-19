@@ -5,6 +5,8 @@ import { calculateDerivedStats, getSkillBonus } from '@/lib/rules'
 import type { Attributes, ClassId, NexTier, TrainingGrade, DerivedStats } from '@/types/character'
 import skillsData from '@/data/skills.json'
 import { cn } from '@/lib/utils'
+import { useDiceRoller } from '@/hooks/useDiceRoller'
+import DiceRollModal from '@/components/DiceRollModal'
 
 interface Skill { id: string; name: string; attribute: string; trainedOnly: boolean }
 interface SkillTraining { skillId: string; grade: TrainingGrade }
@@ -65,6 +67,7 @@ export default function CharacterSheetPage() {
   const [currentSan, setCurrentSan] = useState(0)
 
   const [inventoryTab, setInventoryTab] = useState<'pessoal' | 'partido'>('pessoal')
+  const { isOpen: diceOpen, pending: dicePending, result: diceResult, roll, onRollComplete, close: closeDice } = useDiceRoller()
 
   useEffect(() => {
     if (!id) return
@@ -106,6 +109,19 @@ export default function CharacterSheetPage() {
     attrValue: character.attributes[attr as keyof Attributes],
     skills: skills.filter(s => s.attribute === attr),
   }))
+
+  function rollSkill(skillName: string, attrKey: string, attrValue: number, grade: TrainingGrade) {
+    const bonus = getSkillBonus(grade)
+    roll({
+      label: skillName,
+      notation: '1d20',
+      modifier: attrValue + bonus,
+      modifierBreakdown: [
+        { label: ATTR_LABELS[attrKey], value: attrValue },
+        ...(bonus > 0 ? [{ label: 'Treino', value: bonus }] : []),
+      ],
+    })
+  }
 
   const hpPct = Math.max(0, Math.min(100, (currentHp / derived.hp) * 100))
   const pePct = Math.max(0, Math.min(100, (currentPe / derived.pe) * 100))
@@ -305,7 +321,12 @@ export default function CharacterSheetPage() {
                       const isTrained = grade !== 'destreinado'
 
                       return (
-                        <div key={skill.id} className="group cursor-crosshair" title={`${TRAINING_LABELS[grade]} — rola 1d20+${total}`}>
+                        <div
+                          key={skill.id}
+                          className="group cursor-crosshair"
+                          title={`${TRAINING_LABELS[grade]} — clica para rolar 1d20+${total}`}
+                          onClick={() => rollSkill(skill.name, skill.attribute, attrValue, grade)}
+                        >
                           <div className={cn(
                             'flex justify-between items-end border-b pb-1 mb-1.5 transition-colors',
                             isTrained ? 'border-secondary/30 group-hover:border-secondary' : 'border-outline-variant/20 group-hover:border-outline-variant/50'
@@ -500,6 +521,15 @@ export default function CharacterSheetPage() {
           )}
         </aside>
       </main>
+
+      {/* Dice Roll Modal */}
+      <DiceRollModal
+        isOpen={diceOpen}
+        pending={dicePending}
+        result={diceResult}
+        onRollComplete={onRollComplete}
+        onClose={closeDice}
+      />
 
       {/* Footer */}
       <footer className="bg-surface-container-lowest flex flex-col md:flex-row justify-between items-center px-10 py-8 gap-4 mt-auto border-t border-outline-variant/10">
