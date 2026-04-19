@@ -17,7 +17,7 @@
   "weapons": {
     "simples": {
       "meleeLight": [
-        { "id": "coronhada", "name": "Coronhada", "category": 0, "damage": "1d4/1d6", "critical": "x2", "range": null, "damageType": "I", "spaces": 0, "notes": "Any firearm used as melee weapon." },
+        { "id": "coronhada", "name": "Coronhada", "category": 0, "damage": "1d4/1d6", "critical": "x2", "range": null, "damageType": "I", "spaces": 0, "notes": "Qualquer arma de fogo usada como arma corpo a corpo." },
         { "id": "faca", "name": "Faca", "category": 0, "damage": "1d4", "critical": "19", "range": "curto", "damageType": "C", "spaces": 1, "special": ["agil", "arremessavel"], "notes": "Navalha, faca militar, etc. Facas de cozinha pequenas causam 1d3." },
         { "id": "martelo", "name": "Martelo", "category": 0, "damage": "1d6", "critical": "x2", "range": null, "damageType": "I", "spaces": 1, "notes": "Ferramenta comum usada como arma." },
         { "id": "punhal", "name": "Punhal", "category": 0, "damage": "1d4", "critical": "x3", "range": null, "damageType": "P", "spaces": 1, "special": ["agil"], "notes": "Faca de lâmina longa e pontiaguda, usada por cultistas em rituais." },
@@ -25,7 +25,7 @@
         { "id": "nunchaku", "name": "Nunchaku", "category": 0, "damage": "1d8", "critical": "x2", "range": null, "damageType": "I", "spaces": 1, "special": ["agil"], "notes": "Dois bastões curtos de madeira ligados por uma corrente." }
       ],
       "meleeOneHand": [
-        { "id": "bastao", "name": "Bastão", "category": 0, "damage": "1d6/1d8", "critical": "x2", "range": null, "damageType": "I", "spaces": 1, "special": ["duasMaos"], "notes": "Taco de beisebol, cassetete, tonfa. One hand: 1d6, two hands: 1d8." },
+        { "id": "bastao", "name": "Bastão", "category": 0, "damage": "1d6/1d8", "critical": "x2", "range": null, "damageType": "I", "spaces": 1, "special": ["duasMaos"], "notes": "Taco de beisebol, cassetete, tonfa. Uma mão: 1d6, duas mãos: 1d8." },
         { "id": "machete", "name": "Machete", "category": 0, "damage": "1d6", "critical": "19", "range": null, "damageType": "C", "spaces": 1, "notes": "Lâmina longa e larga para abrir trilhas." },
         { "id": "lanca", "name": "Lança", "category": 0, "damage": "1d6", "critical": "x2", "range": "curto", "damageType": "P", "spaces": 1, "special": ["arremessavel"], "notes": "Haste de madeira com ponta metálica. Pode ser arremessada." },
         { "id": "corrente", "name": "Corrente", "category": 0, "damage": "1d8", "critical": "x2", "range": null, "damageType": "I", "spaces": 1, "notes": "+2 em testes para desarmar e derrubar." }
@@ -50,7 +50,7 @@
         { "id": "florete", "name": "Florete", "category": "I", "damage": "1d6", "critical": "18", "range": null, "damageType": "C", "spaces": 1, "special": ["agil"], "notes": "Espada de lâmina fina, usada por esgrimistas." }
       ],
       "meleeOneHand": [
-        { "id": "espada", "name": "Espada", "category": "I", "damage": "1d8/1d10", "critical": "19", "range": null, "damageType": "C", "spaces": 1, "special": ["duasMaos"], "notes": "Espada longa ou cimitarra. One hand: 1d8, two hands: 1d10." },
+        { "id": "espada", "name": "Espada", "category": "I", "damage": "1d8/1d10", "critical": "19", "range": null, "damageType": "C", "spaces": 1, "special": ["duasMaos"], "notes": "Espada longa ou cimitarra. Uma mão: 1d8, duas mãos: 1d10." },
         { "id": "machado", "name": "Machado", "category": "I", "damage": "1d8", "critical": "x3", "range": null, "damageType": "C", "spaces": 1, "notes": "Ferramenta importante para lenhadores e bombeiros." },
         { "id": "maca", "name": "Maça", "category": "I", "damage": "2d4", "critical": "x2", "range": null, "damageType": "I", "spaces": 1, "notes": "Bastão com cabeça metálica cheia de protuberâncias." }
       ],
@@ -92,9 +92,9 @@
     { "id": "combustivel", "name": "Combustível", "category": "I", "spaces": 1, "usedBy": ["lanca-chamas"] }
   ],
   "armor": [
-    { "id": "protecao-leve", "name": "Proteção Leve", "category": "I", "defenseBonus": 5, "spaces": 2, "notes": "Required proficiency: protecoes-leves. Casting rituals in light armor is a bad condition (DT 15+PE)." },
-    { "id": "protecao-pesada", "name": "Proteção Pesada", "category": "II", "defenseBonus": 10, "spaces": 5, "notes": "Required proficiency: protecoes-pesadas (Proteção Pesada power, NEX 30%). Casting rituals in heavy armor is a terrible condition (DT 20+PE)." },
-    { "id": "escudo", "name": "Escudo", "category": "I", "defenseBonus": 2, "spaces": 2, "notes": "Medieval or modern shield." }
+    { "id": "protecao-leve", "name": "Proteção Leve", "category": "I", "defenseBonus": 5, "spaces": 2, "notes": "Requer proficiência: proteções-leves. Lançar rituais com proteção leve é uma condição ruim (DT 15+PE)." },
+    { "id": "protecao-pesada", "name": "Proteção Pesada", "category": "II", "defenseBonus": 10, "spaces": 5, "notes": "Requer proficiência: proteções-pesadas (poder Proteção Pesada, NEX 30%). Lançar rituais com proteção pesada é uma condição terrível (DT 20+PE)." },
+    { "id": "escudo", "name": "Escudo", "category": "I", "defenseBonus": 2, "spaces": 2, "notes": "Escudo medieval ou moderno. +2 de Defesa." }
   ],
   "armorModifications": [
     { "id": "antibombas", "name": "Antibombas", "effect": "+5 em testes de resistência contra efeitos de área." },
@@ -104,9 +104,9 @@
   ],
   "generalItems": {
     "accessories": [
-      { "id": "kit-de-pericia", "name": "Kit de perícia", "category": 0, "spaces": 1, "notes": "Auxiliary tools for using specific skills." },
-      { "id": "utensilio", "name": "Utensílio", "category": "I", "spaces": 1, "notes": "Provides skill bonus. Bonus from items doesn't stack with other items." },
-      { "id": "vestimenta", "name": "Vestimenta", "category": "I", "spaces": 1, "notes": "Clothing that provides a skill bonus. Doesn't stack with other items." }
+      { "id": "kit-de-pericia", "name": "Kit de perícia", "category": 0, "spaces": 1, "notes": "Ferramentas auxiliares para uso de perícias específicas." },
+      { "id": "utensilio", "name": "Utensílio", "category": "I", "spaces": 1, "notes": "Concede bônus em perícias. Bônus de itens não se acumula com outros itens." },
+      { "id": "vestimenta", "name": "Vestimenta", "category": "I", "spaces": 1, "notes": "Roupa que concede bônus em perícias. Não se acumula com outros itens." }
     ],
     "explosives": [
       { "id": "granada-atordoamento", "name": "Granada de Atordoamento", "category": 0, "spaces": 1 },
