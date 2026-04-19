@@ -28,76 +28,68 @@ export default function StepAttributes({ draft, update, errors }: Props) {
   }
 
   return (
-    <section className="space-y-6">
+    <section className="space-y-8">
       <div>
-        <h2 className="font-cinzel text-2xl font-semibold text-purple-200 tracking-wide mb-2">
-          Atributos
-        </h2>
-        <p className="text-zinc-400 text-sm leading-relaxed">
-          Todos os atributos começam em 1. Você tem <span className="text-purple-300 font-medium">4 pontos</span> para distribuir.
-          Pode reduzir <em>um</em> atributo para 0 e ganhar +1 ponto extra. Máximo inicial: 3.
+        <h3 className="text-xl font-bold uppercase tracking-widest text-on-surface flex items-center gap-3 mb-2">
+          <span className="material-symbols-outlined text-primary-container">analytics</span>
+          Avaliação de Capacidades
+        </h3>
+        <p className="text-sm text-on-surface-variant leading-relaxed max-w-md">
+          Todos os atributos começam em 1. Tens{' '}
+          <span className="bg-on-surface text-background px-1 font-bold">4 pontos</span>{' '}
+          para distribuir. Podes reduzir um atributo para 0 e ganhar +1 ponto extra. Máximo inicial: 3.
         </p>
       </div>
 
-      {/* Points tracker */}
-      <div className="flex items-center gap-3 p-3 rounded-lg border border-purple-900/40 bg-purple-950/20">
-        <span className="text-xs text-zinc-400 font-medium">Pontos disponíveis:</span>
+      <div className="flex items-center gap-4 p-3 bg-surface-container border-l-2 border-secondary">
+        <span className="text-[10px] font-mono text-on-surface/50 uppercase tracking-widest">Pontos Disponíveis:</span>
         <span className={cn(
-          'text-lg font-bold font-cinzel',
-          pointsRemaining < 0 ? 'text-red-400' : pointsRemaining === 0 ? 'text-green-400' : 'text-purple-300'
+          'text-2xl font-mono font-bold',
+          pointsRemaining < 0 ? 'text-primary-container' : pointsRemaining === 0 ? 'text-tertiary' : 'text-secondary'
         )}>
           {pointsRemaining}
         </span>
-        <span className="text-xs text-zinc-600">/ Distribuídos: {totalSpent - baseTotal}</span>
+        <span className="text-[10px] font-mono text-on-surface/30 uppercase">/ Distribuídos: {totalSpent - baseTotal}</span>
       </div>
 
       {errors.length > 0 && (
-        <div className="rounded-lg border border-red-900/60 bg-red-950/20 p-3 space-y-1">
+        <div className="bg-error-container/20 border-l-4 border-error-container p-3 space-y-1">
           {errors.map(e => (
-            <p key={e} className="text-xs text-red-400 flex items-center gap-2">
-              <span>⚠</span> {e}
-            </p>
+            <p key={e} className="text-[10px] font-mono text-primary uppercase tracking-wider">⚠ {e}</p>
           ))}
         </div>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-1">
         {(Object.keys(ATTR_LABELS) as AttributeKey[]).map(key => {
           const attrInfo = (attributesData as Array<{ id: string; description: string }>).find(a => a.id === key)
           const val = attrs[key]
           return (
-            <div
-              key={key}
-              className="rounded-lg border border-purple-900/40 bg-[#07050f]/60 p-4 space-y-2 hover:border-purple-700/50 transition-colors"
-            >
-              <div className="flex items-center justify-between">
-                <span className="font-cinzel text-sm font-semibold text-purple-200 tracking-wide">
-                  {ATTR_LABELS[key]}
-                </span>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setAttr(key, Math.max(0, val - 1))}
-                    className="w-7 h-7 rounded border border-purple-800/60 bg-purple-950/40 text-purple-300 hover:bg-purple-900/60 hover:text-white transition-all flex items-center justify-center text-sm"
-                  >
-                    −
-                  </button>
-                  <span className={cn(
-                    'w-8 text-center font-bold text-lg font-cinzel',
-                    val === 0 ? 'text-zinc-500' : val === 3 ? 'text-purple-300' : 'text-zinc-200'
-                  )}>
-                    {val}
-                  </span>
-                  <button
-                    onClick={() => setAttr(key, Math.min(3, val + 1))}
-                    className="w-7 h-7 rounded border border-purple-800/60 bg-purple-950/40 text-purple-300 hover:bg-purple-900/60 hover:text-white transition-all flex items-center justify-center text-sm"
-                  >
-                    +
-                  </button>
-                </div>
+            <div key={key} className="bg-surface-container-highest p-4 flex items-center justify-between gap-4 hover:bg-surface-bright transition-all">
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface mb-1">{ATTR_LABELS[key]}</p>
+                {attrInfo && <p className="text-[10px] text-on-surface/40 leading-tight line-clamp-2">{attrInfo.description}</p>}
               </div>
-              {attrInfo && (
-                <p className="text-xs text-zinc-500 leading-relaxed">{attrInfo.description}</p>
-              )}
+              <div className="flex items-center gap-3 shrink-0">
+                <button
+                  onClick={() => setAttr(key, Math.max(0, val - 1))}
+                  className="w-8 h-8 flex items-center justify-center bg-surface-container text-on-surface/60 hover:text-on-surface hover:bg-surface-container-low transition-all font-mono text-lg cursor-crosshair"
+                >
+                  −
+                </button>
+                <span className={cn(
+                  'w-8 text-center font-mono text-xl font-bold',
+                  val === 0 ? 'text-on-surface/30' : val === 3 ? 'text-secondary' : 'text-on-surface'
+                )}>
+                  {val}
+                </span>
+                <button
+                  onClick={() => setAttr(key, Math.min(3, val + 1))}
+                  className="w-8 h-8 flex items-center justify-center bg-surface-container text-on-surface/60 hover:text-on-surface hover:bg-surface-container-low transition-all font-mono text-lg cursor-crosshair"
+                >
+                  +
+                </button>
+              </div>
             </div>
           )
         })}

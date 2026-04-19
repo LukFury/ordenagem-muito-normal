@@ -55,10 +55,9 @@ export default function CharacterCreatePage() {
   const next = () => setStep(s => Math.min(s + 1, STEPS.length - 1))
   const back = () => setStep(s => Math.max(s - 1, 0))
 
-  const derivedStats =
-    draft.classId
-      ? calculateDerivedStats(draft.classId, draft.attributes, draft.nex)
-      : null
+  const derivedStats = draft.classId
+    ? calculateDerivedStats(draft.classId, draft.attributes, draft.nex)
+    : null
 
   const attrErrors = validateAttributes(draft.attributes)
 
@@ -82,79 +81,79 @@ export default function CharacterCreatePage() {
     })
 
     setSaving(false)
-
-    if (error) {
-      setSaveError(error.message)
-    } else {
-      navigate('/')
-    }
+    if (error) setSaveError(error.message)
+    else navigate('/')
   }
 
   return (
-    <div className="min-h-screen bg-[#07050f] text-[#c4b5d4]">
-      {/* Atmospheric header */}
-      <header className="border-b border-purple-900/30 bg-[#07050f]/90 backdrop-blur-sm sticky top-0 z-10">
-        <div className="max-w-3xl mx-auto px-6 py-4 flex items-center justify-between">
+    <div className="min-h-screen bg-background text-on-background">
+      <header className="bg-background flex justify-between items-center px-6 py-3 sticky top-0 z-50 border-b border-outline-variant/10">
+        <h1 className="text-2xl font-headline font-bold italic text-primary-container tracking-tighter uppercase">
+          ORDEM PARANORMAL
+        </h1>
+        <div className="flex items-center gap-4">
+          <span className="text-[10px] font-mono text-secondary/50 tracking-widest hidden sm:block">
+            PROTOCOLO DE RECRUTAMENTO
+          </span>
           <button
             onClick={() => navigate('/')}
-            className="text-purple-400/60 hover:text-purple-300 text-sm transition-colors flex items-center gap-2"
+            className="text-on-surface/40 hover:text-on-surface transition-colors text-[10px] uppercase tracking-widest cursor-crosshair"
           >
-            ← Voltar ao início
+            ← Abortar
           </button>
-          <h1 className="font-cinzel text-lg font-semibold text-purple-200 tracking-widest uppercase">
-            Criar Personagem
-          </h1>
-          <div className="w-24" />
         </div>
       </header>
 
-      <main className="max-w-3xl mx-auto px-6 py-8">
-        {/* Step indicator */}
-        <div className="mb-10">
-          <div className="flex items-center justify-between relative">
-            {/* connector line */}
-            <div className="absolute top-4 left-0 right-0 h-px bg-purple-900/40" />
-            <div
-              className="absolute top-4 left-0 h-px bg-purple-600/70 transition-all duration-500"
-              style={{ width: `${(step / (STEPS.length - 1)) * 100}%` }}
-            />
-            {STEPS.map((label, i) => {
-              const done = i < step
-              const active = i === step
-              return (
-                <button
-                  key={label}
-                  onClick={() => setStep(i)}
-                  className="relative flex flex-col items-center gap-2 group"
-                >
-                  <div
-                    className={cn(
-                      'w-8 h-8 rounded-full border-2 flex items-center justify-center text-xs font-bold z-10 transition-all duration-300',
-                      done
-                        ? 'border-purple-500 bg-purple-900 text-purple-300'
-                        : active
-                        ? 'border-purple-400 bg-purple-950 text-purple-200 shadow-[0_0_12px_rgba(147,51,234,0.6)]'
-                        : 'border-purple-900/60 bg-[#07050f] text-purple-700'
-                    )}
-                  >
-                    {done ? '✓' : i + 1}
-                  </div>
-                  <span
-                    className={cn(
-                      'text-xs font-cinzel tracking-wide transition-colors hidden sm:block',
-                      active ? 'text-purple-300' : done ? 'text-purple-500' : 'text-purple-800'
-                    )}
-                  >
-                    {label}
-                  </span>
-                </button>
-              )
-            })}
+      <main className="pt-10 pb-24 px-6 md:px-12 max-w-5xl mx-auto">
+        <div className="mb-10 space-y-1">
+          <div className="flex items-center gap-2">
+            <span className="bg-primary-container text-white px-2 py-0.5 text-[10px] font-bold tracking-tighter uppercase">
+              Novo Recrutamento
+            </span>
+            <span className="font-mono text-[10px] text-secondary/50 tracking-widest">
+              PASSO {step + 1}/{STEPS.length}
+            </span>
           </div>
+          <h2 className="text-5xl font-headline font-bold italic text-on-surface tracking-tighter uppercase leading-none">
+            Dossiê de <span className="text-primary-container">Agente</span>
+          </h2>
+        </div>
+
+        {/* Step indicator */}
+        <div className="flex items-center gap-0 mb-10 overflow-x-auto">
+          {STEPS.map((label, i) => {
+            const done = i < step
+            const active = i === step
+            return (
+              <button
+                key={label}
+                onClick={() => setStep(i)}
+                className={cn(
+                  'flex items-center gap-2 px-4 py-2 text-[10px] font-bold uppercase tracking-widest transition-all cursor-crosshair whitespace-nowrap border-b-2',
+                  active
+                    ? 'border-secondary text-secondary bg-surface-container-low'
+                    : done
+                    ? 'border-primary-container/50 text-primary-container/70 hover:text-primary-container'
+                    : 'border-transparent text-on-surface/30 hover:text-on-surface/50'
+                )}
+              >
+                <span className={cn(
+                  'w-5 h-5 flex items-center justify-center text-[9px] font-mono border',
+                  active ? 'border-secondary text-secondary' : done ? 'border-primary-container/50 text-primary-container/50' : 'border-on-surface/20 text-on-surface/30'
+                )}>
+                  {done ? '✓' : i + 1}
+                </span>
+                <span className="hidden sm:block">{label}</span>
+              </button>
+            )
+          })}
         </div>
 
         {/* Step content */}
-        <div className="rounded-xl border border-purple-900/40 bg-[#0f0b1a]/80 shadow-[0_0_40px_rgba(88,28,135,0.12)] p-6 md:p-8 min-h-[420px]">
+        <div className="bg-surface-container-low border-l-4 border-primary-container p-8 relative overflow-hidden min-h-96">
+          <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
+            <span className="material-symbols-outlined text-9xl">fingerprint</span>
+          </div>
           {step === 0 && <StepConcept draft={draft} update={update} />}
           {step === 1 && <StepAttributes draft={draft} update={update} errors={attrErrors} />}
           {step === 2 && <StepOrigin draft={draft} update={update} />}
@@ -166,12 +165,12 @@ export default function CharacterCreatePage() {
         </div>
 
         {/* Navigation */}
-        <div className="flex items-center justify-between mt-6">
+        <div className="flex items-center justify-between mt-4">
           <div>
             {step > 0 && (
               <button
                 onClick={back}
-                className="px-5 py-2 rounded border border-purple-800/60 text-purple-400 text-sm hover:bg-purple-950/50 hover:text-purple-200 transition-all"
+                className="px-5 py-2 border border-outline-variant/20 text-on-surface/50 text-[10px] font-bold uppercase tracking-widest hover:text-on-surface hover:border-outline-variant transition-all cursor-crosshair"
               >
                 ← Voltar
               </button>
@@ -181,9 +180,10 @@ export default function CharacterCreatePage() {
             {step < STEPS.length - 1 && (
               <button
                 onClick={next}
-                className="px-6 py-2 rounded bg-purple-700 hover:bg-purple-600 text-white text-sm font-medium shadow-[0_0_14px_rgba(147,51,234,0.35)] hover:shadow-[0_0_20px_rgba(147,51,234,0.55)] transition-all"
+                className="px-6 py-3 bg-primary-container hover:bg-on-primary-fixed-variant text-on-primary-container font-bold text-[10px] uppercase tracking-widest transition-all flex items-center gap-3 group cursor-crosshair"
               >
-                Próximo →
+                <span>Próximo: {STEPS[step + 1]}</span>
+                <span className="material-symbols-outlined text-sm group-hover:translate-x-1 transition-transform">arrow_forward_ios</span>
               </button>
             )}
           </div>

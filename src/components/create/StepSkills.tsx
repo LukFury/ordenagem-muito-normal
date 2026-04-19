@@ -17,60 +17,58 @@ export default function StepSkills({ draft, update }: Props) {
   const origins = originsData as Origin[]
 
   const origin = origins.find(o => o.id === draft.originId)
-  const originSkills: string[] = Array.isArray(origin?.trainedSkills)
-    ? origin.trainedSkills as string[]
-    : []
+  const originSkills: string[] = Array.isArray(origin?.trainedSkills) ? origin.trainedSkills as string[] : []
 
   const classId = draft.classId || null
   const mandatoryClassSkills: string[] = []
-  if (classId === 'ocultista') {
-    mandatoryClassSkills.push('ocultismo', 'vontade')
-  }
+  if (classId === 'ocultista') mandatoryClassSkills.push('ocultismo', 'vontade')
 
   const freeCount = classId ? getFreeSkillCount(classId, draft.attributes.intelecto) : 0
   const autoTrained = new Set([...originSkills, ...mandatoryClassSkills])
 
   type SkillEntry = { skillId: string; grade: 'treinado' }
-
   const freeSelected = (draft.skillTraining as SkillEntry[])
-    .filter((s: SkillEntry) => !autoTrained.has(s.skillId))
-    .map((s: SkillEntry) => s.skillId)
+    .filter(s => !autoTrained.has(s.skillId))
+    .map(s => s.skillId)
 
   function toggleFree(skillId: string) {
     if (autoTrained.has(skillId)) return
     const isSelected = freeSelected.includes(skillId)
     if (isSelected) {
-      update({ skillTraining: (draft.skillTraining as SkillEntry[]).filter((s: SkillEntry) => s.skillId !== skillId) })
+      update({ skillTraining: (draft.skillTraining as SkillEntry[]).filter(s => s.skillId !== skillId) })
     } else if (freeSelected.length < freeCount) {
       update({ skillTraining: [...(draft.skillTraining as SkillEntry[]), { skillId, grade: 'treinado' as const }] })
     }
   }
 
   return (
-    <section className="space-y-6">
+    <section className="space-y-8">
       <div>
-        <h2 className="font-cinzel text-2xl font-semibold text-purple-200 tracking-wide mb-2">
+        <h3 className="text-xl font-bold uppercase tracking-widest text-on-surface flex items-center gap-3 mb-2">
+          <span className="material-symbols-outlined text-primary-container">school</span>
           Perícias
-        </h2>
+        </h3>
       </div>
 
-      {/* Summary bar */}
-      <div className="rounded-lg border border-purple-900/40 bg-purple-950/20 p-3 space-y-1.5 text-xs text-zinc-400">
-        {originSkills.length > 0 && (
-          <p><span className="text-purple-400 font-medium">Origem:</span> {originSkills.join(', ')}</p>
-        )}
-        {mandatoryClassSkills.length > 0 && (
-          <p><span className="text-purple-400 font-medium">Classe:</span> {mandatoryClassSkills.join(', ')}</p>
-        )}
-        {classId && (
-          <p>
-            <span className="text-purple-400 font-medium">Livres:</span>{' '}
-            {freeSelected.length}/{freeCount} selecionadas
-          </p>
-        )}
+      <div className="flex items-center gap-4 p-3 bg-surface-container border-l-2 border-secondary">
+        <div className="space-y-1 text-[10px] font-mono uppercase tracking-widest">
+          {originSkills.length > 0 && (
+            <p><span className="text-secondary">Origem: </span><span className="text-on-surface/50">{originSkills.join(' · ')}</span></p>
+          )}
+          {mandatoryClassSkills.length > 0 && (
+            <p><span className="text-secondary">Classe: </span><span className="text-on-surface/50">{mandatoryClassSkills.join(' · ')}</span></p>
+          )}
+          {classId && (
+            <p><span className="text-secondary">Livres: </span>
+              <span className={freeSelected.length >= freeCount ? 'text-tertiary' : 'text-on-surface/50'}>
+                {freeSelected.length}/{freeCount} selecionadas
+              </span>
+            </p>
+          )}
+        </div>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-1">
         {skills.map(skill => {
           const isAuto = autoTrained.has(skill.id)
           const isFreeSelected = freeSelected.includes(skill.id)
@@ -82,24 +80,24 @@ export default function StepSkills({ draft, update }: Props) {
               onClick={() => toggleFree(skill.id)}
               disabled={isDisabled && !isAuto}
               className={cn(
-                'text-left rounded border p-2.5 transition-all duration-150',
+                'text-left p-3 transition-all border-l-4',
                 isAuto
-                  ? 'border-purple-600/50 bg-purple-900/30 cursor-default'
+                  ? 'bg-surface-container-highest border-secondary cursor-default'
                   : isFreeSelected
-                  ? 'border-purple-500/70 bg-purple-950/40 shadow-[0_0_8px_rgba(147,51,234,0.2)]'
+                  ? 'bg-surface-container-highest border-tertiary cursor-crosshair'
                   : isDisabled
-                  ? 'border-purple-900/20 bg-[#07050f]/40 opacity-40 cursor-not-allowed'
-                  : 'border-purple-900/40 bg-[#07050f]/60 hover:border-purple-700/60 hover:bg-purple-950/20 cursor-pointer'
+                  ? 'bg-surface-container border-transparent opacity-30 cursor-not-allowed'
+                  : 'bg-surface-container border-transparent hover:bg-surface-container-high hover:border-outline-variant cursor-crosshair'
               )}
             >
               <p className={cn(
-                'text-xs font-medium',
-                isAuto ? 'text-purple-300' : isFreeSelected ? 'text-purple-200' : 'text-zinc-400'
+                'text-[10px] font-bold uppercase tracking-wide',
+                isAuto ? 'text-secondary' : isFreeSelected ? 'text-tertiary' : 'text-on-surface/70'
               )}>
                 {skill.name}
               </p>
-              <p className="text-[10px] text-zinc-600 mt-0.5">{skill.attribute}</p>
-              {isAuto && <p className="text-[9px] text-purple-600 mt-0.5">automática</p>}
+              <p className="text-[9px] text-on-surface/30 mt-0.5 uppercase">{skill.attribute}</p>
+              {isAuto && <p className="text-[9px] text-secondary/50 mt-0.5 uppercase">automática</p>}
             </button>
           )
         })}

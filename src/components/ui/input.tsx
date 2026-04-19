@@ -4,17 +4,18 @@ import { cn } from '@/lib/utils'
 const Input = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(
   ({ className, type, ...props }, ref) => {
     return (
-      <input
-        type={type}
-        className={cn(
-          'flex h-10 w-full rounded border border-purple-900/60 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-500 transition-colors',
-          'focus:outline-none focus:border-purple-500 focus:shadow-[0_0_8px_rgba(147,51,234,0.3)]',
-          'disabled:cursor-not-allowed disabled:opacity-50',
-          className
-        )}
-        ref={ref}
-        {...props}
-      />
+      <div className="relative group">
+        <input
+          type={type}
+          className={cn(
+            'w-full bg-surface-container-lowest border-none border-b-2 border-outline/30 text-on-surface placeholder:text-on-surface/20 font-mono tracking-widest py-4 px-0 text-sm transition-all focus:outline-none focus:ring-0 input-underline uppercase',
+            className
+          )}
+          ref={ref}
+          {...props}
+        />
+        <div className="absolute bottom-0 left-0 h-0.5 bg-secondary w-0 group-focus-within:w-full transition-all duration-500 blur-[2px]" />
+      </div>
     )
   }
 )

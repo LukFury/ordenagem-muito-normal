@@ -20,18 +20,20 @@ export default function StepOrigin({ draft, update }: Props) {
   const selected = origins.find(o => o.id === draft.originId)
 
   return (
-    <section className="space-y-6">
+    <section className="space-y-8">
       <div>
-        <h2 className="font-cinzel text-2xl font-semibold text-purple-200 tracking-wide mb-2">
-          Origem
-        </h2>
-        <p className="text-zinc-400 text-sm leading-relaxed">
-          O que você fazia antes de se envolver com o paranormal e entrar na Ordem da Realidade?
-          Cada origem fornece <span className="text-purple-300">duas perícias treinadas</span> e um <span className="text-purple-300">poder exclusivo</span>.
+        <h3 className="text-xl font-bold uppercase tracking-widest text-on-surface flex items-center gap-3 mb-2">
+          <span className="material-symbols-outlined text-primary-container">history_edu</span>
+          Ficheiro de Origem
+        </h3>
+        <p className="text-sm text-on-surface-variant leading-relaxed max-w-md">
+          O que fazias antes do paranormal? Cada origem concede{' '}
+          <span className="bg-on-surface text-background px-1 font-bold">duas perícias treinadas</span>{' '}
+          e um poder exclusivo.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-1">
         {origins.map(origin => {
           const isSelected = draft.originId === origin.id
           return (
@@ -39,21 +41,21 @@ export default function StepOrigin({ draft, update }: Props) {
               key={origin.id}
               onClick={() => update({ originId: origin.id })}
               className={cn(
-                'text-left rounded-lg border p-4 transition-all duration-200',
+                'text-left p-4 transition-all cursor-crosshair border-l-4',
                 isSelected
-                  ? 'border-purple-500/70 bg-purple-950/40 shadow-[0_0_12px_rgba(147,51,234,0.25)]'
-                  : 'border-purple-900/40 bg-[#07050f]/60 hover:border-purple-700/50 hover:bg-purple-950/20'
+                  ? 'bg-surface-container-highest border-secondary'
+                  : 'bg-surface-container border-transparent hover:bg-surface-container-high hover:border-outline-variant'
               )}
             >
               <p className={cn(
-                'font-cinzel text-sm font-semibold tracking-wide mb-1',
-                isSelected ? 'text-purple-200' : 'text-zinc-300'
+                'text-[10px] font-bold uppercase tracking-widest mb-1',
+                isSelected ? 'text-secondary' : 'text-on-surface'
               )}>
                 {origin.name}
               </p>
-              <p className="text-xs text-zinc-500">
+              <p className="text-[10px] text-on-surface/40 uppercase tracking-wide">
                 {Array.isArray(origin.trainedSkills)
-                  ? origin.trainedSkills.join(', ')
+                  ? origin.trainedSkills.join(' · ')
                   : '2 à escolha do mestre'}
               </p>
             </button>
@@ -62,20 +64,21 @@ export default function StepOrigin({ draft, update }: Props) {
       </div>
 
       {selected && (
-        <div className="rounded-lg border border-purple-700/40 bg-purple-950/20 p-5 space-y-3">
-          <h3 className="font-cinzel text-base font-semibold text-purple-200 tracking-wide">
-            {selected.name}
-          </h3>
-          <p className="text-sm text-zinc-300 leading-relaxed">{selected.description}</p>
-          <div className="border-t border-purple-900/40 pt-3 space-y-2">
-            <p className="text-xs text-zinc-400">
-              <span className="text-purple-400 font-medium">Perícias treinadas: </span>
+        <div className="bg-surface-container-highest p-6 border-l-4 border-tertiary space-y-4">
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-bold text-tertiary uppercase tracking-widest bg-tertiary/10 px-2 py-0.5">Dossiê</span>
+            <span className="text-sm font-headline font-bold italic text-on-surface">{selected.name}</span>
+          </div>
+          <p className="text-sm text-on-surface-variant leading-relaxed">{selected.description}</p>
+          <div className="border-t border-outline-variant/20 pt-4 space-y-2">
+            <p className="text-[10px] text-on-surface/50 uppercase tracking-widest">
+              <span className="text-secondary">Perícias treinadas: </span>
               {Array.isArray(selected.trainedSkills)
                 ? selected.trainedSkills.join(' e ')
                 : '2 à escolha do mestre'}
             </p>
-            <p className="text-xs text-zinc-400">
-              <span className="text-purple-400 font-medium">{selected.power.name}. </span>
+            <p className="text-[10px] text-on-surface/50 uppercase tracking-widest">
+              <span className="text-tertiary">{selected.power.name}: </span>
               {selected.power.description}
             </p>
           </div>

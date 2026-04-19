@@ -5,10 +5,7 @@ const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElemen
   ({ className, ...props }, ref) => (
     <div
       ref={ref}
-      className={cn(
-        'rounded-lg border border-purple-900/50 bg-zinc-950/80 shadow-[0_0_20px_rgba(88,28,135,0.15)]',
-        className
-      )}
+      className={cn('bg-surface-container-low border-l-4 border-primary-container relative overflow-hidden', className)}
       {...props}
     />
   )
@@ -17,7 +14,7 @@ Card.displayName = 'Card'
 
 const CardHeader = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   ({ className, ...props }, ref) => (
-    <div ref={ref} className={cn('flex flex-col gap-1.5 p-6', className)} {...props} />
+    <div ref={ref} className={cn('flex flex-col gap-1.5 p-6 bg-surface-container-highest', className)} {...props} />
   )
 )
 CardHeader.displayName = 'CardHeader'
@@ -26,7 +23,7 @@ const CardTitle = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivE
   ({ className, ...props }, ref) => (
     <div
       ref={ref}
-      className={cn('font-cinzel text-xl font-semibold text-purple-200 tracking-wide', className)}
+      className={cn('font-headline font-bold text-xl text-on-surface uppercase tracking-widest italic', className)}
       {...props}
     />
   )
@@ -35,14 +32,14 @@ CardTitle.displayName = 'CardTitle'
 
 const CardDescription = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   ({ className, ...props }, ref) => (
-    <div ref={ref} className={cn('text-sm text-zinc-400', className)} {...props} />
+    <div ref={ref} className={cn('text-sm text-on-surface-variant leading-relaxed', className)} {...props} />
   )
 )
 CardDescription.displayName = 'CardDescription'
 
 const CardContent = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   ({ className, ...props }, ref) => (
-    <div ref={ref} className={cn('p-6 pt-0', className)} {...props} />
+    <div ref={ref} className={cn('p-6', className)} {...props} />
   )
 )
 CardContent.displayName = 'CardContent'

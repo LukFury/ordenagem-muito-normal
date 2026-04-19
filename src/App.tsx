@@ -13,6 +13,7 @@ export default function App() {
   return (
     <HashRouter>
       <AuthProvider>
+        <div className="noise-overlay" />
         <Routes>
           <Route path="/auth" element={<AuthPage />} />
 
