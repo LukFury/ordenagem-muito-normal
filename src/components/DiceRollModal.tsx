@@ -85,25 +85,25 @@ export default function DiceRollModal({ isOpen, pending, result, onRollComplete,
         }
       `}</style>
 
-      {/* Full-screen dice canvas */}
+      {/* Full-screen dice canvas — starts below the header (56px) */}
       <div
         id="dice-canvas-container"
         style={{
           position: 'fixed',
-          top: 0,
+          top: 56,
           left: 0,
           width: '100vw',
-          height: '100vh',
+          height: 'calc(100vh - 56px)',
           zIndex: 200,
           pointerEvents: result ? 'none' : 'auto',
         }}
       />
 
-      {/* UI overlay on top of canvas */}
+      {/* UI overlay on top of canvas — also offset below header */}
       <div
-        className="fixed inset-0 z-[201] flex flex-col pointer-events-none"
+        className="fixed left-0 right-0 bottom-0 z-[201] flex flex-col pointer-events-none"
+        style={{ top: 56, pointerEvents: result ? 'auto' : 'none' }}
         onClick={result ? onClose : undefined}
-        style={{ pointerEvents: result ? 'auto' : 'none' }}
       >
         {/* Scanlines */}
         <div

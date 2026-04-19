@@ -139,7 +139,7 @@ export default function CharacterSheetPage() {
       />
 
       {/* Header */}
-      <header className="bg-background text-primary-container flex justify-between items-center w-full px-6 py-3 z-40 sticky top-0 border-b border-outline-variant/10">
+      <header className="bg-background text-primary-container flex justify-between items-center w-full px-6 py-3 sticky top-0 border-b border-outline-variant/10" style={{ zIndex: 500 }}>
         <div className="flex items-center gap-4">
           <Link to="/">
             <span className="text-2xl font-headline font-bold italic text-primary-container tracking-tighter uppercase cursor-crosshair">
