@@ -27,7 +27,7 @@ export default function DiceRollModal({ isOpen, pending, result, onRollComplete,
     const box = new DiceBox('#dice-canvas-container', {
       assetPath: `${BASE_PATH}assets/`,
       theme: 'default',
-      scale: 20,
+      scale: 10,
       gravity: 1.2,
       mass: 1,
       friction: 0.8,
