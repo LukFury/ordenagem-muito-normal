@@ -8,11 +8,12 @@ import { cn } from '@/lib/utils'
 import { useDiceRoller } from '@/hooks/useDiceRoller'
 import DiceRollModal from '@/components/DiceRollModal'
 import AddItemModal, { type FlatItem } from '@/components/inventory/AddItemModal'
+import ItemDetailModal from '@/components/inventory/ItemDetailModal'
 
 interface Skill { id: string; name: string; attribute: string; trainedOnly: boolean }
 interface SkillTraining { skillId: string; grade: TrainingGrade }
 
-interface InventoryItem {
+export interface InventoryItem {
   id: string
   item_id: string
   item_type: string
@@ -82,6 +83,7 @@ export default function CharacterSheetPage() {
   const [inventoryTab, setInventoryTab] = useState<'pessoal' | 'partido'>('pessoal')
   const [inventory, setInventory] = useState<InventoryItem[]>([])
   const [showAddItem, setShowAddItem] = useState(false)
+  const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null)
   const { isOpen: diceOpen, pending: dicePending, result: diceResult, roll, onRollComplete, close: closeDice } = useDiceRoller()
 
   useEffect(() => {
@@ -159,6 +161,10 @@ export default function CharacterSheetPage() {
 
   const totalSpaces = inventory.reduce((sum, i) => sum + (i.spaces * i.quantity), 0)
   const MAX_SPACES = 30
+  const armorBonus = inventory
+    .filter(i => i.item_type === 'armor')
+    .reduce((sum, i) => sum + (Number((i.item_data as Record<string, unknown>).defenseBonus) || 0), 0)
+  const effectiveDefense = derived.defense + armorBonus
 
   const hpPct = Math.max(0, Math.min(100, (currentHp / derived.hp) * 100))
   const pePct = Math.max(0, Math.min(100, (currentPe / derived.pe) * 100))
@@ -258,7 +264,7 @@ export default function CharacterSheetPage() {
           {/* Derived stats */}
           <div className="bg-surface-container-low p-4 grid grid-cols-2 gap-3">
             {[
-              { label: 'Defesa', value: derived.defense },
+              { label: armorBonus > 0 ? `Defesa (+${armorBonus} armadura)` : 'Defesa', value: effectiveDefense },
               { label: 'Lim. PE/turno', value: derived.nexPELimit },
             ].map(s => (
               <div key={s.label}>
@@ -490,8 +496,9 @@ export default function CharacterSheetPage() {
                         return (
                           <div
                             key={item.id}
+                            onClick={() => setSelectedItem(item)}
                             className={cn(
-                              'bg-surface-container-lowest p-3 border-l-2 group',
+                              'bg-surface-container-lowest p-3 border-l-2 group cursor-crosshair',
                               isWeapon ? 'border-primary-container/40 hover:border-primary-container' :
                               item.item_type === 'armor' ? 'border-secondary/30 hover:border-secondary' :
                               item.item_type === 'ammo' ? 'border-tertiary/30 hover:border-tertiary' :
@@ -571,6 +578,19 @@ export default function CharacterSheetPage() {
           )}
         </aside>
       </main>
+
+      {/* Item Detail Modal */}
+      {selectedItem && (
+        <ItemDetailModal
+          item={selectedItem}
+          attributes={character.attributes}
+          onRoll={(label, notation, modifier, breakdown) => {
+            setSelectedItem(null)
+            roll({ label, notation, modifier, modifierBreakdown: breakdown })
+          }}
+          onClose={() => setSelectedItem(null)}
+        />
+      )}
 
       {/* Add Item Modal */}
       {showAddItem && (
