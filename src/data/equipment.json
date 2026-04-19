@@ -109,19 +109,19 @@
       { "id": "vestimenta", "name": "Vestimenta", "category": "I", "spaces": 1, "notes": "Roupa que concede bônus em perícias. Não se acumula com outros itens." }
     ],
     "explosives": [
-      { "id": "granada-atordoamento", "name": "Granada de Atordoamento", "category": 0, "spaces": 1 },
-      { "id": "granada-fragmentacao", "name": "Granada de Fragmentação", "category": "I", "spaces": 1 },
-      { "id": "granada-fumaca", "name": "Granada de Fumaça", "category": 0, "spaces": 1 },
-      { "id": "granada-incendiaria", "name": "Granada Incendiária", "category": "I", "spaces": 1 },
-      { "id": "mina-antipessoal", "name": "Mina Antipessoal", "category": "I", "spaces": 1 }
+      { "id": "granada-atordoamento", "name": "Granada de Atordoamento", "category": 0, "spaces": 1, "notes": "Atordoa todos em raio 3m por 1 turno (Fortitude DT 15 anula). Não causa dano." },
+      { "id": "granada-fragmentacao", "name": "Granada de Fragmentação", "category": "I", "spaces": 1, "notes": "4d6 de dano balístico em raio 3m (Reflexos DT 15 para metade)." },
+      { "id": "granada-fumaca", "name": "Granada de Fumaça", "category": 0, "spaces": 1, "notes": "Cria nuvem de fumaça em raio 3m por 3 turnos. Criaturas dentro ficam cegas." },
+      { "id": "granada-incendiaria", "name": "Granada Incendiária", "category": "I", "spaces": 1, "notes": "4d6 de dano de fogo em raio 3m. Seres atingidos ficam em chamas." },
+      { "id": "mina-antipessoal", "name": "Mina Antipessoal", "category": "I", "spaces": 1, "notes": "6d6 de dano balístico em raio 3m quando ativada (Reflexos DT 20 para metade)." }
     ],
     "operational": [
-      { "id": "algemas", "name": "Algemas", "category": 0, "spaces": 1 },
-      { "id": "arpeu", "name": "Arpéu", "category": 0, "spaces": 1 },
-      { "id": "bandoleira", "name": "Bandoleira", "category": "I", "spaces": 1 },
-      { "id": "binoculos", "name": "Binóculos", "category": 0, "spaces": 1 },
-      { "id": "bloqueador-de-sinal", "name": "Bloqueador de Sinal", "category": "I", "spaces": 1 },
-      { "id": "cicatrizante", "name": "Cicatrizante", "category": "I", "spaces": 1 }
+      { "id": "algemas", "name": "Algemas", "category": 0, "spaces": 1, "notes": "Imobiliza criaturas de tamanho humano. Força DT 20 para escapar." },
+      { "id": "arpeu", "name": "Arpéu", "category": 0, "spaces": 1, "notes": "Permite escalar superfícies verticais. Alcance curto. +5 em testes de Atletismo para escalar." },
+      { "id": "bandoleira", "name": "Bandoleira", "category": "I", "spaces": 1, "notes": "Permite carregar +2 espaços de munição sem contar para o limite de carga." },
+      { "id": "binoculos", "name": "Binóculos", "category": 0, "spaces": 1, "notes": "+5 em testes de Percepção à distância." },
+      { "id": "bloqueador-de-sinal", "name": "Bloqueador de Sinal", "category": "I", "spaces": 1, "notes": "Bloqueia comunicações eletrônicas em raio de 10m enquanto ativo." },
+      { "id": "cicatrizante", "name": "Cicatrizante", "category": "I", "spaces": 1, "notes": "Recupera 1d6+2 PV ao ser aplicado. Uso único." }
     ]
   },
   "ranks": [
