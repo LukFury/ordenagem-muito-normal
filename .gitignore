@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# Generated graph output
+graphify-out/
+
 # Rulebook (do not commit copyrighted PDF or extracted text)
 *.pdf
 rulebook.txt
