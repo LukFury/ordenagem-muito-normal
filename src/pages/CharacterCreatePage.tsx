@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { Attributes, ClassId, NexTier } from '@/types/character'
 import { calculateDerivedStats, validateAttributes } from '@/lib/rules'
+import { supabase } from '@/lib/supabase'
+import { useAuth } from '@/contexts/AuthContext'
 import { cn } from '@/lib/utils'
 
 import StepConcept from '@/components/create/StepConcept'
@@ -42,7 +44,10 @@ const STEPS = ['Conceito', 'Atributos', 'Origem', 'Classe', 'Perícias', 'Revisa
 export default function CharacterCreatePage() {
   const [step, setStep] = useState(0)
   const [draft, setDraft] = useState<CharacterDraft>(INITIAL_DRAFT)
+  const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState('')
   const navigate = useNavigate()
+  const { user } = useAuth()
 
   const update = (partial: Partial<CharacterDraft>) =>
     setDraft(prev => ({ ...prev, ...partial }))
@@ -58,8 +63,31 @@ export default function CharacterCreatePage() {
   const attrErrors = validateAttributes(draft.attributes)
 
   async function handleSave() {
-    console.log('Saving character draft:', draft)
-    navigate('/')
+    if (!user) return
+    setSaving(true)
+    setSaveError('')
+
+    const { error } = await supabase.from('characters').insert({
+      user_id: user.id,
+      name: draft.name,
+      concept: draft.concept,
+      origin_id: draft.originId,
+      class_id: draft.classId,
+      trail_id: draft.trailId,
+      nex: draft.nex,
+      attributes: draft.attributes,
+      skill_training: draft.skillTraining,
+      known_rituals: draft.knownRituals,
+      selected_powers: draft.selectedPowers,
+    })
+
+    setSaving(false)
+
+    if (error) {
+      setSaveError(error.message)
+    } else {
+      navigate('/')
+    }
   }
 
   return (
@@ -133,7 +161,7 @@ export default function CharacterCreatePage() {
           {step === 3 && <StepClass draft={draft} update={update} />}
           {step === 4 && <StepSkills draft={draft} update={update} />}
           {step === 5 && (
-            <StepReview draft={draft} derivedStats={derivedStats} onSave={handleSave} />
+            <StepReview draft={draft} derivedStats={derivedStats} onSave={handleSave} saving={saving} saveError={saveError} />
           )}
         </div>
 

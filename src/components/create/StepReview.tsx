@@ -6,6 +6,8 @@ interface Props {
   draft: CharacterDraft
   derivedStats: DerivedStats | null
   onSave: () => void
+  saving: boolean
+  saveError: string
 }
 
 function Row({ label, value }: { label: string; value: string | number }) {
@@ -19,7 +21,7 @@ function Row({ label, value }: { label: string; value: string | number }) {
   )
 }
 
-export default function StepReview({ draft, derivedStats, onSave }: Props) {
+export default function StepReview({ draft, derivedStats, onSave, saving, saveError }: Props) {
   return (
     <section className="space-y-6">
       <div>
@@ -80,12 +82,19 @@ export default function StepReview({ draft, derivedStats, onSave }: Props) {
         )}
       </div>
 
+      {saveError && (
+        <p className="text-xs text-red-400 border border-red-900/40 bg-red-950/20 rounded px-3 py-2">
+          {saveError}
+        </p>
+      )}
+
       <div className="flex justify-end pt-2">
         <button
           onClick={onSave}
-          className="px-8 py-3 rounded bg-purple-700 hover:bg-purple-600 text-white font-cinzel text-sm tracking-wide shadow-[0_0_20px_rgba(147,51,234,0.4)] hover:shadow-[0_0_28px_rgba(147,51,234,0.6)] transition-all"
+          disabled={saving}
+          className="px-8 py-3 rounded bg-purple-700 hover:bg-purple-600 disabled:opacity-50 text-white font-cinzel text-sm tracking-wide shadow-[0_0_20px_rgba(147,51,234,0.4)] hover:shadow-[0_0_28px_rgba(147,51,234,0.6)] transition-all"
         >
-          Salvar Personagem
+          {saving ? 'Salvando...' : 'Salvar Personagem'}
         </button>
       </div>
     </section>
