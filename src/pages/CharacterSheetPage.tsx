@@ -7,9 +7,22 @@ import skillsData from '@/data/skills.json'
 import { cn } from '@/lib/utils'
 import { useDiceRoller } from '@/hooks/useDiceRoller'
 import DiceRollModal from '@/components/DiceRollModal'
+import AddItemModal, { type FlatItem } from '@/components/inventory/AddItemModal'
 
 interface Skill { id: string; name: string; attribute: string; trainedOnly: boolean }
 interface SkillTraining { skillId: string; grade: TrainingGrade }
+
+interface InventoryItem {
+  id: string
+  item_id: string
+  item_type: string
+  item_subtype: string
+  name: string
+  quantity: number
+  spaces: number
+  notes: string
+  item_data: Record<string, unknown>
+}
 
 interface Character {
   id: string
@@ -67,25 +80,26 @@ export default function CharacterSheetPage() {
   const [currentSan, setCurrentSan] = useState(0)
 
   const [inventoryTab, setInventoryTab] = useState<'pessoal' | 'partido'>('pessoal')
+  const [inventory, setInventory] = useState<InventoryItem[]>([])
+  const [showAddItem, setShowAddItem] = useState(false)
   const { isOpen: diceOpen, pending: dicePending, result: diceResult, roll, onRollComplete, close: closeDice } = useDiceRoller()
 
   useEffect(() => {
     if (!id) return
-    supabase
-      .from('characters')
-      .select('*')
-      .eq('id', id)
-      .single()
-      .then(({ data, error }) => {
-        if (error || !data) { navigate('/'); return }
-        setCharacter(data as Character)
-        const stats = calculateDerivedStats(data.class_id, data.attributes, data.nex)
-        setDerived(stats)
-        setCurrentHp(stats.hp)
-        setCurrentPe(stats.pe)
-        setCurrentSan(stats.san)
-        setLoading(false)
-      })
+    Promise.all([
+      supabase.from('characters').select('*').eq('id', id).single(),
+      supabase.from('inventory_items').select('*').eq('character_id', id).order('created_at'),
+    ]).then(([{ data, error }, { data: inv }]) => {
+      if (error || !data) { navigate('/'); return }
+      setCharacter(data as Character)
+      setInventory((inv ?? []) as InventoryItem[])
+      const stats = calculateDerivedStats(data.class_id, data.attributes, data.nex)
+      setDerived(stats)
+      setCurrentHp(stats.hp)
+      setCurrentPe(stats.pe)
+      setCurrentSan(stats.san)
+      setLoading(false)
+    })
   }, [id, navigate])
 
   if (loading) {
@@ -122,6 +136,29 @@ export default function CharacterSheetPage() {
       ],
     })
   }
+
+  async function handleAddItem(item: FlatItem, quantity: number) {
+    const { data, error } = await supabase.from('inventory_items').insert({
+      character_id: id,
+      item_id: item.id,
+      item_type: item.itemType,
+      item_subtype: item.itemSubtype,
+      name: item.name,
+      quantity,
+      spaces: item.spaces,
+      notes: item.notes ?? '',
+      item_data: item.itemData,
+    }).select().single()
+    if (!error && data) setInventory(prev => [...prev, data as InventoryItem])
+  }
+
+  async function handleRemoveItem(itemId: string) {
+    await supabase.from('inventory_items').delete().eq('id', itemId)
+    setInventory(prev => prev.filter(i => i.id !== itemId))
+  }
+
+  const totalSpaces = inventory.reduce((sum, i) => sum + (i.spaces * i.quantity), 0)
+  const MAX_SPACES = 30
 
   const hpPct = Math.max(0, Math.min(100, (currentHp / derived.hp) * 100))
   const pePct = Math.max(0, Math.min(100, (currentPe / derived.pe) * 100))
@@ -399,96 +436,109 @@ export default function CharacterSheetPage() {
           <div className="bg-surface-container-high flex flex-col">
             {/* Tabs */}
             <div className="flex">
-              <button
-                onClick={() => setInventoryTab('pessoal')}
-                className={cn(
-                  'flex-1 py-3 text-[10px] font-bold tracking-widest uppercase transition-colors cursor-crosshair',
-                  inventoryTab === 'pessoal'
-                    ? 'bg-surface-container-highest border-b-2 border-secondary text-secondary'
-                    : 'text-outline bg-surface-container-low hover:bg-surface-container hover:text-on-surface'
-                )}
-              >
-                Dossiê Pessoal
-              </button>
-              <button
-                onClick={() => setInventoryTab('partido')}
-                className={cn(
-                  'flex-1 py-3 text-[10px] font-bold tracking-widest uppercase transition-colors cursor-crosshair',
-                  inventoryTab === 'partido'
-                    ? 'bg-surface-container-highest border-b-2 border-secondary text-secondary'
-                    : 'text-outline bg-surface-container-low hover:bg-surface-container hover:text-on-surface'
-                )}
-              >
-                Arquivo do Grupo
-              </button>
+              {(['pessoal', 'partido'] as const).map(t => (
+                <button
+                  key={t}
+                  onClick={() => setInventoryTab(t)}
+                  className={cn(
+                    'flex-1 py-3 text-[10px] font-bold tracking-widest uppercase transition-colors cursor-crosshair',
+                    inventoryTab === t
+                      ? 'bg-surface-container-highest border-b-2 border-secondary text-secondary'
+                      : 'text-outline bg-surface-container-low hover:bg-surface-container hover:text-on-surface'
+                  )}
+                >
+                  {t === 'pessoal' ? 'Dossiê Pessoal' : 'Arquivo do Grupo'}
+                </button>
+              ))}
             </div>
 
-            <div className="p-5 flex-1 space-y-6">
+            <div className="p-5 flex-1 space-y-4">
               {inventoryTab === 'pessoal' ? (
                 <>
-                  {/* Equipamento tático */}
-                  <div>
-                    <h4 className="text-[10px] uppercase tracking-widest text-secondary mb-3">Equipamento Tático</h4>
-                    <div className="space-y-2">
-                      {/* Slot arma */}
-                      <div className="bg-surface-container-lowest p-3 border border-outline-variant/10 hover:border-secondary/30 transition-all cursor-crosshair group">
-                        <div className="flex justify-between items-center mb-1">
-                          <span className="text-[10px] text-outline uppercase tracking-tighter">Arma Principal</span>
-                          <span className="material-symbols-outlined text-sm text-outline/40 group-hover:text-secondary transition-colors">add_circle</span>
-                        </div>
-                        <div className="text-[10px] font-mono text-on-surface/30 uppercase italic">Vazio — adicionar item</div>
-                      </div>
-                      {/* Slot proteção */}
-                      <div className="bg-surface-container-lowest p-3 border border-outline-variant/10 hover:border-secondary/30 transition-all cursor-crosshair group">
-                        <div className="flex justify-between items-center mb-1">
-                          <span className="text-[10px] text-outline uppercase tracking-tighter">Proteção</span>
-                          <span className="material-symbols-outlined text-sm text-outline/40 group-hover:text-secondary transition-colors">add_circle</span>
-                        </div>
-                        <div className="text-[10px] font-mono text-on-surface/30 uppercase italic">Vazio — adicionar item</div>
-                      </div>
-                      {/* Slot artefacto */}
-                      <div className="bg-surface-container-lowest p-3 border border-tertiary/20 hover:border-tertiary/50 transition-all cursor-crosshair group">
-                        <div className="flex justify-between items-center mb-1">
-                          <span className="text-[10px] text-tertiary uppercase tracking-tighter">Artefacto Paranormal</span>
-                          <span className="material-symbols-outlined text-sm text-tertiary/40 group-hover:text-tertiary transition-colors">add_circle</span>
-                        </div>
-                        <div className="text-[10px] font-mono text-on-surface/30 uppercase italic">Vazio — adicionar item</div>
-                      </div>
+                  {/* Spaces tracker */}
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-[10px] font-mono text-on-surface/40 uppercase tracking-widest">Espaços Usados</span>
+                      <span className={cn(
+                        'font-mono text-sm font-bold',
+                        totalSpaces > MAX_SPACES ? 'text-primary-container' : totalSpaces > MAX_SPACES * 0.8 ? 'text-tertiary' : 'text-secondary'
+                      )}>
+                        {totalSpaces}/{MAX_SPACES}
+                      </span>
+                    </div>
+                    <div className="h-1.5 bg-surface-container-lowest">
+                      <div
+                        className={cn(
+                          'h-full transition-all',
+                          totalSpaces > MAX_SPACES ? 'bg-primary-container' : totalSpaces > MAX_SPACES * 0.8 ? 'bg-tertiary' : 'bg-secondary'
+                        )}
+                        style={{ width: `${Math.min(100, (totalSpaces / MAX_SPACES) * 100)}%` }}
+                      />
                     </div>
                   </div>
 
-                  {/* Inventário rápido */}
-                  <div>
-                    <div className="flex justify-between items-center mb-3">
-                      <h4 className="text-[10px] uppercase tracking-widest text-outline">Acesso Rápido</h4>
-                      <span className="text-[10px] font-mono text-on-surface/30">0/30 KG</span>
-                    </div>
-                    <div className="grid grid-cols-4 gap-1.5">
-                      {Array.from({ length: 8 }).map((_, i) => (
-                        <div
-                          key={i}
-                          className="aspect-square bg-surface-container-lowest border border-outline-variant/15 flex items-center justify-center hover:bg-surface-container-high transition-colors cursor-crosshair group"
-                        >
-                          <span className="material-symbols-outlined text-outline/20 group-hover:text-secondary/40 transition-colors text-base">add</span>
-                        </div>
-                      ))}
-                    </div>
+                  {/* Items list */}
+                  <div className="space-y-1 max-h-[420px] overflow-y-auto">
+                    {inventory.length === 0 ? (
+                      <div className="py-8 text-center">
+                        <p className="text-[10px] font-mono text-on-surface/20 uppercase tracking-widest">Inventário vazio</p>
+                      </div>
+                    ) : (
+                      inventory.map(item => {
+                        const isWeapon = item.item_type === 'weapon'
+                        const data = item.item_data as Record<string, unknown>
+                        return (
+                          <div
+                            key={item.id}
+                            className={cn(
+                              'bg-surface-container-lowest p-3 border-l-2 group',
+                              isWeapon ? 'border-primary-container/40 hover:border-primary-container' :
+                              item.item_type === 'armor' ? 'border-secondary/30 hover:border-secondary' :
+                              item.item_type === 'ammo' ? 'border-tertiary/30 hover:border-tertiary' :
+                              'border-outline-variant/20 hover:border-outline-variant'
+                            )}
+                          >
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="flex-1 min-w-0">
+                                <p className="text-xs font-bold text-on-surface uppercase tracking-wide truncate">
+                                  {item.quantity > 1 && <span className="text-secondary mr-1">{item.quantity}×</span>}
+                                  {item.name}
+                                </p>
+                                <div className="flex items-center gap-2 mt-1 flex-wrap">
+                                  {isWeapon && data.damage != null && (
+                                    <span className="text-[10px] font-mono text-tertiary">{String(data.damage)}</span>
+                                  )}
+                                  {isWeapon && data.range != null && (
+                                    <span className="text-[10px] font-mono text-on-surface/30 uppercase">{String(data.range)}</span>
+                                  )}
+                                  <span className="text-[9px] font-mono text-on-surface/25">
+                                    {item.spaces * item.quantity} esp.
+                                  </span>
+                                </div>
+                              </div>
+                              <button
+                                onClick={() => handleRemoveItem(item.id)}
+                                className="opacity-0 group-hover:opacity-100 transition-opacity text-on-surface/30 hover:text-primary-container cursor-crosshair shrink-0"
+                              >
+                                <span className="material-symbols-outlined text-sm">remove_circle</span>
+                              </button>
+                            </div>
+                          </div>
+                        )
+                      })
+                    )}
                   </div>
 
                   {/* Poderes e rituais */}
                   {(character.known_rituals.length > 0 || character.selected_powers.length > 0) && (
                     <div>
-                      <h4 className="text-[10px] uppercase tracking-widest text-tertiary mb-3">Poderes & Rituais</h4>
+                      <h4 className="text-[10px] uppercase tracking-widest text-tertiary mb-2">Poderes & Rituais</h4>
                       <div className="space-y-1">
                         {character.selected_powers.map(p => (
-                          <div key={p} className="bg-surface-container-lowest p-2 border border-primary-container/15 text-[10px] font-mono text-primary uppercase tracking-wide">
-                            {p}
-                          </div>
+                          <div key={p} className="bg-surface-container-lowest p-2 border-l-2 border-primary-container/30 text-[10px] font-mono text-primary uppercase tracking-wide">{p}</div>
                         ))}
                         {character.known_rituals.map(r => (
-                          <div key={r} className="bg-surface-container-lowest p-2 border border-tertiary/15 text-[10px] font-mono text-tertiary uppercase tracking-wide">
-                            {r}
-                          </div>
+                          <div key={r} className="bg-surface-container-lowest p-2 border-l-2 border-tertiary/30 text-[10px] font-mono text-tertiary uppercase tracking-wide">{r}</div>
                         ))}
                       </div>
                     </div>
@@ -497,16 +547,16 @@ export default function CharacterSheetPage() {
               ) : (
                 <div className="flex flex-col items-center justify-center py-12 gap-3">
                   <span className="material-symbols-outlined text-3xl text-on-surface/20">group</span>
-                  <p className="text-[10px] font-mono text-on-surface/30 uppercase tracking-widest text-center">
-                    Arquivo do grupo em breve
-                  </p>
-                  <p className="text-[9px] text-on-surface/20 text-center">
-                    Entra numa campanha para aceder ao inventário partilhado
-                  </p>
+                  <p className="text-[10px] font-mono text-on-surface/30 uppercase tracking-widest text-center">Arquivo do grupo em breve</p>
+                  <p className="text-[9px] text-on-surface/20 text-center">Entra numa campanha para aceder ao inventário partilhado</p>
                 </div>
               )}
 
-              <button className="w-full bg-primary-container text-white py-3 font-bold uppercase tracking-[0.2em] text-xs hover:bg-on-primary-fixed-variant transition-all cursor-crosshair">
+              <button
+                onClick={() => setShowAddItem(true)}
+                className="w-full bg-primary-container text-white py-3 font-bold uppercase tracking-[0.2em] text-xs hover:bg-on-primary-fixed-variant transition-all cursor-crosshair flex items-center justify-center gap-2"
+              >
+                <span className="material-symbols-outlined text-sm">add</span>
                 Adicionar Item
               </button>
             </div>
@@ -521,6 +571,14 @@ export default function CharacterSheetPage() {
           )}
         </aside>
       </main>
+
+      {/* Add Item Modal */}
+      {showAddItem && (
+        <AddItemModal
+          onAdd={(item, qty) => { handleAddItem(item, qty) }}
+          onClose={() => setShowAddItem(false)}
+        />
+      )}
 
       {/* Dice Roll Modal */}
       <DiceRollModal
