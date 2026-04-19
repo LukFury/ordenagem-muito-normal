@@ -16,13 +16,13 @@ interface Props {
 const BASE_PATH = import.meta.env.BASE_URL
 
 export default function DiceRollModal({ isOpen, pending, result, onRollComplete, onClose }: Props) {
-  const containerRef = useRef<HTMLDivElement>(null)
   const diceBoxRef = useRef<InstanceType<typeof DiceBox> | null>(null)
   const [rolling, setRolling] = useState(false)
   const [initialized, setInitialized] = useState(false)
 
+  // Initialize once when modal opens
   useEffect(() => {
-    if (!isOpen || !containerRef.current || initialized) return
+    if (!isOpen || initialized) return
 
     const box = new DiceBox('#dice-canvas-container', {
       assetPath: `${BASE_PATH}assets/`,
@@ -50,6 +50,7 @@ export default function DiceRollModal({ isOpen, pending, result, onRollComplete,
     })
   }, [isOpen, initialized])
 
+  // Roll when initialized and pending
   useEffect(() => {
     if (!initialized || !pending || !diceBoxRef.current) return
     setRolling(true)
@@ -60,6 +61,7 @@ export default function DiceRollModal({ isOpen, pending, result, onRollComplete,
     })
   }, [initialized, pending])
 
+  // Cleanup when modal closes
   useEffect(() => {
     if (!isOpen) {
       setInitialized(false)
@@ -70,22 +72,38 @@ export default function DiceRollModal({ isOpen, pending, result, onRollComplete,
   if (!isOpen || !pending) return null
 
   return (
-    <div className="fixed inset-0 z-[200] flex flex-col" onClick={result ? onClose : undefined}>
-      {/* Dark backdrop */}
-      <div className="absolute inset-0 bg-background/95 backdrop-blur-sm" />
-
-      {/* Scanlines on modal */}
+    <>
+      {/* Full-screen dice canvas — dice-box needs fixed full-screen to render correctly */}
       <div
-        className="absolute inset-0 pointer-events-none"
+        id="dice-canvas-container"
         style={{
-          background: 'linear-gradient(rgba(18,16,16,0) 50%, rgba(0,0,0,0.12) 50%)',
-          backgroundSize: '100% 3px',
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          zIndex: 200,
+          pointerEvents: result ? 'none' : 'auto',
         }}
       />
 
-      <div className="relative flex flex-col h-full">
-        {/* Header */}
-        <div className="flex items-center justify-between px-8 pt-8 pb-4">
+      {/* UI overlay on top of canvas */}
+      <div
+        className="fixed inset-0 z-[201] flex flex-col pointer-events-none"
+        onClick={result ? onClose : undefined}
+        style={{ pointerEvents: result ? 'auto' : 'none' }}
+      >
+        {/* Scanlines */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background: 'linear-gradient(rgba(18,16,16,0) 50%, rgba(0,0,0,0.1) 50%)',
+            backgroundSize: '100% 3px',
+          }}
+        />
+
+        {/* Header bar */}
+        <div className="relative flex items-center justify-between px-8 pt-8 pb-4 bg-background/70 backdrop-blur-sm">
           <div>
             <div className="flex items-center gap-3 mb-1">
               <span className="bg-primary-container text-white px-2 py-0.5 text-[10px] font-bold tracking-widest uppercase">
@@ -101,26 +119,21 @@ export default function DiceRollModal({ isOpen, pending, result, onRollComplete,
           </div>
           <button
             onClick={onClose}
-            className="text-on-surface/30 hover:text-on-surface transition-colors cursor-crosshair"
+            className="text-on-surface/50 hover:text-on-surface transition-colors cursor-crosshair pointer-events-auto"
           >
             <span className="material-symbols-outlined">close</span>
           </button>
         </div>
 
-        {/* Dice canvas */}
-        <div
-          id="dice-canvas-container"
-          ref={containerRef}
-          className="flex-1 relative"
-          style={{ minHeight: 320 }}
-        />
+        {/* Spacer — dice roll in middle of screen */}
+        <div className="flex-1" />
 
-        {/* Result panel */}
-        <div className="px-8 pb-8">
+        {/* Result panel — slides in at bottom */}
+        <div className="relative px-8 pb-8 bg-background/80 backdrop-blur-sm">
           {rolling && (
             <div className="flex items-center gap-3 py-6">
               <div className="flex gap-1">
-                {[0,1,2].map(i => (
+                {[0, 1, 2].map(i => (
                   <div
                     key={i}
                     className="w-1.5 h-1.5 bg-secondary animate-bounce"
@@ -138,32 +151,29 @@ export default function DiceRollModal({ isOpen, pending, result, onRollComplete,
             <div
               className={cn(
                 'border-l-4 p-6 space-y-4',
-                result.isCrit ? 'border-secondary bg-secondary/5' :
-                result.isFumble ? 'border-primary-container bg-primary-container/5' :
-                'border-outline-variant/40 bg-surface-container-low'
+                result.isCrit
+                  ? 'border-secondary bg-secondary/10'
+                  : result.isFumble
+                  ? 'border-primary-container bg-primary-container/10'
+                  : 'border-outline-variant/40 bg-surface-container-low/90'
               )}
             >
               {result.isCrit && (
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="bg-secondary text-on-secondary text-[10px] font-bold px-2 py-0.5 uppercase tracking-widest">
-                    Sucesso Crítico
-                  </span>
-                </div>
+                <span className="bg-secondary text-on-secondary text-[10px] font-bold px-2 py-0.5 uppercase tracking-widest inline-block mb-1">
+                  Sucesso Crítico
+                </span>
               )}
               {result.isFumble && (
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="bg-primary-container text-white text-[10px] font-bold px-2 py-0.5 uppercase tracking-widest">
-                    Falha Crítica
-                  </span>
-                </div>
+                <span className="bg-primary-container text-white text-[10px] font-bold px-2 py-0.5 uppercase tracking-widest inline-block mb-1">
+                  Falha Crítica
+                </span>
               )}
 
-              {/* Breakdown */}
-              <div className="flex items-center gap-3 flex-wrap">
-                <div className="flex items-center gap-1">
-                  <span className="text-[9px] font-mono text-on-surface/30 uppercase">Dado</span>
+              <div className="flex items-center gap-4 flex-wrap">
+                <div className="text-center">
+                  <span className="text-[9px] font-mono text-on-surface/30 block uppercase mb-1">Dado</span>
                   <span className={cn(
-                    'font-mono text-2xl font-bold',
+                    'font-mono text-3xl font-bold',
                     result.isCrit ? 'text-secondary' :
                     result.isFumble ? 'text-primary-container' :
                     'text-on-surface'
@@ -173,39 +183,39 @@ export default function DiceRollModal({ isOpen, pending, result, onRollComplete,
                 </div>
 
                 {result.modifierBreakdown.map(m => (
-                  <div key={m.label} className="flex items-center gap-1">
-                    <span className="text-on-surface/30 font-mono">+</span>
+                  <div key={m.label} className="flex items-center gap-2">
+                    <span className="text-on-surface/30 font-mono text-xl">+</span>
                     <div className="text-center">
-                      <span className="text-[9px] font-mono text-on-surface/30 block uppercase">{m.label}</span>
-                      <span className="font-mono text-lg font-bold text-on-surface">{m.value}</span>
+                      <span className="text-[9px] font-mono text-on-surface/30 block uppercase mb-1">{m.label}</span>
+                      <span className="font-mono text-2xl font-bold text-on-surface">{m.value}</span>
                     </div>
                   </div>
                 ))}
 
-                <span className="text-on-surface/30 font-mono text-xl">=</span>
+                <span className="text-on-surface/30 font-mono text-2xl">=</span>
 
                 <div className="text-center">
-                  <span className="text-[9px] font-mono text-on-surface/30 block uppercase">Total</span>
+                  <span className="text-[9px] font-mono text-on-surface/30 block uppercase mb-1">Total</span>
                   <span className={cn(
-                    'font-mono text-4xl font-bold',
+                    'font-mono text-5xl font-bold',
                     result.isCrit ? 'text-secondary' :
                     result.isFumble ? 'text-primary-container' :
                     result.total >= 20 ? 'text-secondary' :
                     result.total >= 10 ? 'text-on-surface' :
-                    'text-on-surface/50'
+                    'text-on-surface/40'
                   )}>
                     {result.total}
                   </span>
                 </div>
               </div>
 
-              <p className="text-[10px] font-mono text-on-surface/30 uppercase tracking-widest">
+              <p className="text-[10px] font-mono text-on-surface/20 uppercase tracking-widest">
                 Clica em qualquer lado para fechar
               </p>
             </div>
           )}
         </div>
       </div>
-    </div>
+    </>
   )
 }
