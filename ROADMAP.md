@@ -1,0 +1,45 @@
+# Ordenagem Muito Normal — Roadmap
+
+**Stack:** React + TypeScript + Vite + Supabase + Tailwind CSS + shadcn/ui
+
+## Vision
+
+A D&D Beyond-style companion app for Ordem Paranormal RPG. Players create characters, access their sheet during sessions, and join a shared party space with a document canvas.
+
+**Philosophy:** App handles math and tracking, not rules enforcement. Players/GM still make rulings — the app just does the addition, tracks resources, and shows everything clearly.
+
+---
+
+## Phase 1 — Character
+
+- [x] Character creation wizard (6 steps: Conceito, Atributos, Origem, Classe, Perícias, Revisar)
+- [ ] Save character to Supabase
+- [ ] Character sheet with all skill checks separated by type
+  - Roll formula auto-calculated from attributes
+  - Clickable checks (shows dice formula + result)
+- [ ] Resources tracked: PV, PE, Sanidade — click up/down during session
+- [ ] Character photo upload (Supabase Storage)
+- [ ] Personal inventory (items listed, weight auto-summed)
+
+## Phase 2 — Party System
+
+- [ ] Auth + player accounts (Supabase Auth)
+- [ ] Create/join a party via code or link
+- [ ] Party realtime sync (Supabase Realtime)
+- [ ] Shared party inventory — visible and editable by all members in real time
+
+## Phase 3 — Document Canvas
+
+- [ ] Party canvas — pin documents (PDFs, images) everyone can see
+- [ ] Pan, zoom, drag documents on the canvas
+- [ ] Drag items from personal inventory into party inventory
+- [ ] Drag documents from party canvas into personal inventory
+
+---
+
+## Key Decisions
+
+- **No hard-coded rules enforcement** — the app tracks and calculates, it doesn't police table rulings
+- **Supabase** for auth, database, realtime sync, and file storage
+- **dnd-kit** for drag-and-drop interactions
+- **react-konva** or **@use-gesture** for the document canvas

@@ -1,4 +1,5 @@
 import type { CharacterDraft } from '@/pages/CharacterCreatePage'
+import { cn } from '@/lib/utils'
 import skillsData from '@/data/skills.json'
 import originsData from '@/data/origins.json'
 import { getFreeSkillCount } from '@/lib/rules'
@@ -27,8 +28,8 @@ export default function StepSkills({ draft, update }: Props) {
   }
 
   const freeCount = classId ? getFreeSkillCount(classId, draft.attributes.intelecto) : 0
-
   const autoTrained = new Set([...originSkills, ...mandatoryClassSkills])
+
   type SkillEntry = { skillId: string; grade: 'treinado' }
 
   const freeSelected = (draft.skillTraining as SkillEntry[])
@@ -46,25 +47,30 @@ export default function StepSkills({ draft, update }: Props) {
   }
 
   return (
-    <section>
-      <h2>Perícias</h2>
+    <section className="space-y-6">
+      <div>
+        <h2 className="font-cinzel text-2xl font-semibold text-purple-200 tracking-wide mb-2">
+          Perícias
+        </h2>
+      </div>
 
-      {origin && (
-        <p>
-          <strong>Perícias da origem ({origin.id}):</strong>{' '}
-          {originSkills.length > 0 ? originSkills.join(', ') : '2 à escolha do mestre'}
-        </p>
-      )}
-      {mandatoryClassSkills.length > 0 && (
-        <p><strong>Perícias obrigatórias da classe:</strong> {mandatoryClassSkills.join(', ')}</p>
-      )}
-      {classId && (
-        <p>
-          Escolha mais <strong>{freeCount}</strong> perícia(s) ({freeSelected.length}/{freeCount} selecionadas)
-        </p>
-      )}
+      {/* Summary bar */}
+      <div className="rounded-lg border border-purple-900/40 bg-purple-950/20 p-3 space-y-1.5 text-xs text-zinc-400">
+        {originSkills.length > 0 && (
+          <p><span className="text-purple-400 font-medium">Origem:</span> {originSkills.join(', ')}</p>
+        )}
+        {mandatoryClassSkills.length > 0 && (
+          <p><span className="text-purple-400 font-medium">Classe:</span> {mandatoryClassSkills.join(', ')}</p>
+        )}
+        {classId && (
+          <p>
+            <span className="text-purple-400 font-medium">Livres:</span>{' '}
+            {freeSelected.length}/{freeCount} selecionadas
+          </p>
+        )}
+      </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.5rem', marginTop: '1rem' }}>
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
         {skills.map(skill => {
           const isAuto = autoTrained.has(skill.id)
           const isFreeSelected = freeSelected.includes(skill.id)
@@ -74,25 +80,26 @@ export default function StepSkills({ draft, update }: Props) {
             <button
               key={skill.id}
               onClick={() => toggleFree(skill.id)}
-              disabled={isDisabled}
-              style={{
-                textAlign: 'left',
-                padding: '0.5rem',
-                border: isAuto
-                  ? '2px solid #888'
+              disabled={isDisabled && !isAuto}
+              className={cn(
+                'text-left rounded border p-2.5 transition-all duration-150',
+                isAuto
+                  ? 'border-purple-600/50 bg-purple-900/30 cursor-default'
                   : isFreeSelected
-                  ? '2px solid #333'
-                  : '1px solid #ccc',
-                borderRadius: 4,
-                background: isAuto ? '#e8e8e8' : isFreeSelected ? '#f0f0f0' : 'white',
-                cursor: isAuto ? 'default' : isDisabled ? 'not-allowed' : 'pointer',
-                opacity: isDisabled ? 0.5 : 1,
-              }}
+                  ? 'border-purple-500/70 bg-purple-950/40 shadow-[0_0_8px_rgba(147,51,234,0.2)]'
+                  : isDisabled
+                  ? 'border-purple-900/20 bg-[#07050f]/40 opacity-40 cursor-not-allowed'
+                  : 'border-purple-900/40 bg-[#07050f]/60 hover:border-purple-700/60 hover:bg-purple-950/20 cursor-pointer'
+              )}
             >
-              <strong style={{ fontSize: '0.85rem' }}>{skill.name}</strong>
-              <br />
-              <small style={{ fontSize: '0.7rem', color: '#666' }}>{skill.attribute}</small>
-              {isAuto && <small style={{ fontSize: '0.7rem', color: '#888' }}> (automática)</small>}
+              <p className={cn(
+                'text-xs font-medium',
+                isAuto ? 'text-purple-300' : isFreeSelected ? 'text-purple-200' : 'text-zinc-400'
+              )}>
+                {skill.name}
+              </p>
+              <p className="text-[10px] text-zinc-600 mt-0.5">{skill.attribute}</p>
+              {isAuto && <p className="text-[9px] text-purple-600 mt-0.5">automática</p>}
             </button>
           )
         })}
