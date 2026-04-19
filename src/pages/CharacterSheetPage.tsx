@@ -1,12 +1,519 @@
-import { useParams } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { useParams, useNavigate, Link } from 'react-router-dom'
+import { supabase } from '@/lib/supabase'
+import { calculateDerivedStats, getSkillBonus } from '@/lib/rules'
+import type { Attributes, ClassId, NexTier, TrainingGrade, DerivedStats } from '@/types/character'
+import skillsData from '@/data/skills.json'
+import { cn } from '@/lib/utils'
+
+interface Skill { id: string; name: string; attribute: string; trainedOnly: boolean }
+interface SkillTraining { skillId: string; grade: TrainingGrade }
+
+interface Character {
+  id: string
+  name: string
+  concept: string
+  origin_id: string
+  class_id: ClassId
+  trail_id: string
+  nex: NexTier
+  attributes: Attributes
+  skill_training: SkillTraining[]
+  known_rituals: string[]
+  selected_powers: string[]
+  photo_url: string | null
+  notes: string
+}
+
+const ATTR_LABELS: Record<string, string> = {
+  agilidade: 'Agilidade',
+  forca: 'Força',
+  intelecto: 'Intelecto',
+  presenca: 'Presença',
+  vigor: 'Vigor',
+}
+
+const TRAINING_LABELS: Record<TrainingGrade, string> = {
+  destreinado: 'Sem treino',
+  treinado: 'Treinado',
+  veterano: 'Veterano',
+  expert: 'Expert',
+}
+
+function gradeToFill(grade: TrainingGrade): number {
+  return { destreinado: 0, treinado: 2, veterano: 3, expert: 4 }[grade]
+}
+
+function gradeColor(grade: TrainingGrade): string {
+  if (grade === 'expert' || grade === 'veterano') return 'bg-tertiary'
+  if (grade === 'treinado') return 'bg-secondary'
+  return 'bg-surface-container-highest'
+}
+
+const ATTR_ORDER = ['agilidade', 'forca', 'intelecto', 'presenca', 'vigor']
 
 export default function CharacterSheetPage() {
-  const { id } = useParams()
+  const { id } = useParams<{ id: string }>()
+  const navigate = useNavigate()
+  const [character, setCharacter] = useState<Character | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [derived, setDerived] = useState<DerivedStats | null>(null)
+
+  // Resource tracking (session state)
+  const [currentHp, setCurrentHp] = useState(0)
+  const [currentPe, setCurrentPe] = useState(0)
+  const [currentSan, setCurrentSan] = useState(0)
+
+  const [inventoryTab, setInventoryTab] = useState<'pessoal' | 'partido'>('pessoal')
+
+  useEffect(() => {
+    if (!id) return
+    supabase
+      .from('characters')
+      .select('*')
+      .eq('id', id)
+      .single()
+      .then(({ data, error }) => {
+        if (error || !data) { navigate('/'); return }
+        setCharacter(data as Character)
+        const stats = calculateDerivedStats(data.class_id, data.attributes, data.nex)
+        setDerived(stats)
+        setCurrentHp(stats.hp)
+        setCurrentPe(stats.pe)
+        setCurrentSan(stats.san)
+        setLoading(false)
+      })
+  }, [id, navigate])
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-[10px] font-mono text-secondary/50 uppercase tracking-widest animate-pulse">
+          A carregar dossiê...
+        </div>
+      </div>
+    )
+  }
+
+  if (!character || !derived) return null
+
+  const skills = skillsData as Skill[]
+  const trainingMap = new Map(character.skill_training.map(s => [s.skillId, s.grade]))
+
+  const skillsByAttr = ATTR_ORDER.map(attr => ({
+    attr,
+    label: ATTR_LABELS[attr],
+    attrValue: character.attributes[attr as keyof Attributes],
+    skills: skills.filter(s => s.attribute === attr),
+  }))
+
+  const hpPct = Math.max(0, Math.min(100, (currentHp / derived.hp) * 100))
+  const pePct = Math.max(0, Math.min(100, (currentPe / derived.pe) * 100))
+  const sanPct = Math.max(0, Math.min(100, (currentSan / derived.san) * 100))
+
   return (
-    <main style={{ maxWidth: 860, margin: '0 auto', padding: '2rem' }}>
-      <h1>Ficha do Personagem</h1>
-      <p>ID: {id}</p>
-      <p>Em construção.</p>
-    </main>
+    <div className="min-h-screen bg-background text-on-surface overflow-x-hidden">
+      {/* Scanline overlay */}
+      <div
+        className="fixed inset-0 pointer-events-none z-50"
+        style={{
+          background: 'linear-gradient(rgba(18,16,16,0) 50%, rgba(0,0,0,0.08) 50%), linear-gradient(90deg, rgba(255,0,0,0.015), rgba(0,255,0,0.008), rgba(0,0,255,0.015))',
+          backgroundSize: '100% 3px, 3px 100%',
+        }}
+      />
+
+      {/* Header */}
+      <header className="bg-background text-primary-container flex justify-between items-center w-full px-6 py-3 z-40 sticky top-0 border-b border-outline-variant/10">
+        <div className="flex items-center gap-4">
+          <Link to="/">
+            <span className="text-2xl font-headline font-bold italic text-primary-container tracking-tighter uppercase cursor-crosshair">
+              ORDEM PARANORMAL
+            </span>
+          </Link>
+          <nav className="hidden md:flex items-center gap-6 ml-8">
+            <Link to="/" className="text-on-surface/60 hover:text-on-surface transition-opacity uppercase text-[10px] tracking-[0.1em] font-bold">DOSSIÊS</Link>
+            <span className="text-secondary border-b-2 border-secondary pb-1 font-bold tracking-widest uppercase text-[10px]">FICHA</span>
+          </nav>
+        </div>
+        <div className="flex items-center gap-2">
+          <button className="hover:bg-surface-container-high hover:text-secondary transition-all p-1 cursor-crosshair">
+            <span className="material-symbols-outlined text-on-surface/50">settings</span>
+          </button>
+          <button className="hover:bg-surface-container-high hover:text-secondary transition-all p-1 cursor-crosshair">
+            <span className="material-symbols-outlined text-on-surface/50">security</span>
+          </button>
+        </div>
+      </header>
+
+      <main className="max-w-[1600px] mx-auto p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        {/* ── LEFT PANEL: IDENTIDADE + VITAIS ── */}
+        <aside className="lg:col-span-3 space-y-4">
+          {/* Portrait */}
+          <div className="bg-surface-container-lowest p-1">
+            <div className="aspect-[3/4] bg-surface-container relative overflow-hidden group">
+              {character.photo_url ? (
+                <img
+                  src={character.photo_url}
+                  alt="Retrato do agente"
+                  className="w-full h-full object-cover grayscale brightness-75 group-hover:grayscale-0 transition-all duration-500"
+                />
+              ) : (
+                <div className="w-full h-full flex flex-col items-center justify-center gap-3 bg-surface-container-low">
+                  <span className="material-symbols-outlined text-5xl text-on-surface/20">person</span>
+                  <span className="text-[9px] font-mono text-on-surface/20 uppercase tracking-widest">Sem fotografia</span>
+                </div>
+              )}
+              <div className="absolute inset-0 border-2 border-primary-container opacity-20 pointer-events-none" />
+              <div className="absolute bottom-0 left-0 right-0 bg-primary-container/80 backdrop-blur-sm p-2">
+                <p className="text-[10px] font-mono tracking-tighter text-white uppercase leading-none">
+                  Estado: Operacional
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Identity */}
+          <div className="bg-surface-container-low p-4 space-y-4">
+            <div className="space-y-1">
+              <label className="block text-[10px] uppercase tracking-[0.2em] text-secondary">Nome do Agente</label>
+              <h2 className="font-headline text-3xl italic font-bold">{character.name || 'Sem nome'}</h2>
+            </div>
+            {character.concept && (
+              <p className="text-xs text-on-surface-variant italic leading-relaxed">{character.concept}</p>
+            )}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-[10px] uppercase tracking-[0.2em] text-outline">NEX</label>
+                <p className="font-mono text-lg font-bold text-tertiary">{character.nex}</p>
+              </div>
+              <div>
+                <label className="block text-[10px] uppercase tracking-[0.2em] text-outline">Origem</label>
+                <p className="font-mono text-sm uppercase">{character.origin_id || '—'}</p>
+              </div>
+              <div>
+                <label className="block text-[10px] uppercase tracking-[0.2em] text-outline">Classe</label>
+                <p className="font-mono text-sm uppercase">{character.class_id || '—'}</p>
+              </div>
+              <div>
+                <label className="block text-[10px] uppercase tracking-[0.2em] text-outline">Trilha</label>
+                <p className="font-mono text-sm uppercase">{character.trail_id || '—'}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Derived stats */}
+          <div className="bg-surface-container-low p-4 grid grid-cols-2 gap-3">
+            {[
+              { label: 'Defesa', value: derived.defense },
+              { label: 'Lim. PE/turno', value: derived.nexPELimit },
+            ].map(s => (
+              <div key={s.label}>
+                <label className="block text-[9px] uppercase tracking-widest text-outline mb-1">{s.label}</label>
+                <span className="font-mono text-xl font-bold text-on-surface">{s.value}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Vitais */}
+          <div className="bg-surface-container-high p-4 space-y-5">
+            {/* PV */}
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <span className="text-xs font-bold uppercase tracking-widest text-primary">Pontos de Vida</span>
+                <div className="flex items-center gap-2">
+                  <button onClick={() => setCurrentHp(h => Math.max(0, h - 1))} className="w-6 h-6 bg-surface-container text-on-surface/60 hover:text-on-surface text-sm font-mono cursor-crosshair">−</button>
+                  <span className="font-mono text-lg text-primary min-w-[64px] text-center">{currentHp}/{derived.hp}</span>
+                  <button onClick={() => setCurrentHp(h => Math.min(derived.hp, h + 1))} className="w-6 h-6 bg-surface-container text-on-surface/60 hover:text-on-surface text-sm font-mono cursor-crosshair">+</button>
+                </div>
+              </div>
+              <div className="h-3 bg-surface-container-lowest overflow-hidden">
+                <div
+                  className="h-full bg-primary-container transition-all duration-300 relative"
+                  style={{ width: `${hpPct}%` }}
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent to-primary/20" />
+                </div>
+              </div>
+            </div>
+
+            {/* Sanidade */}
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <span className="text-xs font-bold uppercase tracking-widest text-secondary">Sanidade</span>
+                <div className="flex items-center gap-2">
+                  <button onClick={() => setCurrentSan(s => Math.max(0, s - 1))} className="w-6 h-6 bg-surface-container text-on-surface/60 hover:text-on-surface text-sm font-mono cursor-crosshair">−</button>
+                  <span className="font-mono text-lg text-secondary min-w-[64px] text-center">{currentSan}/{derived.san}</span>
+                  <button onClick={() => setCurrentSan(s => Math.min(derived.san, s + 1))} className="w-6 h-6 bg-surface-container text-on-surface/60 hover:text-on-surface text-sm font-mono cursor-crosshair">+</button>
+                </div>
+              </div>
+              <div className="h-3 bg-surface-container-lowest overflow-hidden">
+                <div
+                  className="h-full bg-secondary transition-all duration-300"
+                  style={{ width: `${sanPct}%` }}
+                />
+              </div>
+            </div>
+
+            {/* PE */}
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <span className="text-xs font-bold uppercase tracking-widest text-tertiary">Pontos de Esforço</span>
+                <div className="flex items-center gap-2">
+                  <button onClick={() => setCurrentPe(p => Math.max(0, p - 1))} className="w-6 h-6 bg-surface-container text-on-surface/60 hover:text-on-surface text-sm font-mono cursor-crosshair">−</button>
+                  <span className="font-mono text-lg text-tertiary min-w-[64px] text-center">{currentPe}/{derived.pe}</span>
+                  <button onClick={() => setCurrentPe(p => Math.min(derived.pe, p + 1))} className="w-6 h-6 bg-surface-container text-on-surface/60 hover:text-on-surface text-sm font-mono cursor-crosshair">+</button>
+                </div>
+              </div>
+              <div className="h-3 bg-surface-container-lowest overflow-hidden">
+                <div
+                  className="h-full bg-tertiary transition-all duration-300"
+                  style={{ width: `${pePct}%` }}
+                />
+              </div>
+            </div>
+          </div>
+        </aside>
+
+        {/* ── CENTER PANEL: PERÍCIAS ── */}
+        <section className="lg:col-span-6 space-y-4">
+          <div className="bg-surface-container-low p-6">
+            <div className="flex justify-between items-center mb-8 border-b border-outline-variant/20 pb-4">
+              <h3 className="font-headline text-4xl italic text-on-surface">Dossiê de Perícias</h3>
+              <div className="flex gap-2">
+                <span className="bg-surface-container-highest px-3 py-1 text-[10px] font-mono text-secondary border border-secondary/20">
+                  1d20 + ATRIB + BÓNUS
+                </span>
+              </div>
+            </div>
+
+            <div className="space-y-8">
+              {skillsByAttr.map(({ attr, label, attrValue, skills: attrSkills }) => (
+                <div key={attr}>
+                  <div className="flex items-center gap-3 mb-4">
+                    <span className="text-[9px] font-mono uppercase tracking-[0.25em] text-outline">{label}</span>
+                    <span className="font-mono text-xs text-secondary">{attrValue}</span>
+                    <div className="flex-1 h-px bg-outline-variant/15" />
+                  </div>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-x-8 gap-y-5">
+                    {attrSkills.map(skill => {
+                      const grade = trainingMap.get(skill.id) ?? 'destreinado'
+                      const bonus = getSkillBonus(grade)
+                      const total = attrValue + bonus
+                      const fill = gradeToFill(grade)
+                      const color = gradeColor(grade)
+                      const isTrained = grade !== 'destreinado'
+
+                      return (
+                        <div key={skill.id} className="group cursor-crosshair" title={`${TRAINING_LABELS[grade]} — rola 1d20+${total}`}>
+                          <div className={cn(
+                            'flex justify-between items-end border-b pb-1 mb-1.5 transition-colors',
+                            isTrained ? 'border-secondary/30 group-hover:border-secondary' : 'border-outline-variant/20 group-hover:border-outline-variant/50'
+                          )}>
+                            <span className={cn(
+                              'text-[10px] uppercase tracking-wider transition-colors',
+                              isTrained ? 'text-on-surface group-hover:text-secondary' : 'text-outline/60 group-hover:text-outline'
+                            )}>
+                              {skill.name}
+                              {skill.trainedOnly && !isTrained && (
+                                <span className="ml-1 text-primary-container opacity-60">*</span>
+                              )}
+                            </span>
+                            <span className={cn(
+                              'font-mono text-base font-bold',
+                              grade === 'expert' || grade === 'veterano' ? 'text-tertiary' :
+                              isTrained ? 'text-secondary' : 'text-on-surface/40'
+                            )}>
+                              +{total.toString().padStart(2, '0')}
+                            </span>
+                          </div>
+                          <div className="flex gap-0.5">
+                            {[0,1,2,3].map(i => (
+                              <div
+                                key={i}
+                                className={cn('h-0.5 flex-1', i < fill ? color : 'bg-surface-container-highest')}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-10 bg-surface-container-lowest p-4 relative border-l-4 border-primary-container">
+              <span className="absolute -top-3 left-4 bg-primary-container text-[8px] px-2 font-bold tracking-widest uppercase text-white">
+                Aviso: Instabilidade Paranormal
+              </span>
+              <p className="font-headline italic text-sm text-on-surface-variant leading-relaxed">
+                "O sujeito exibe sensibilidade elevada ao Outro Lado. Exposição prolongada a artefactos ocultistas pode ter alterado permanentemente a perceção da realidade. Recomenda-se avaliação psicológica pós-missão."
+              </p>
+              <div className="mt-4 flex justify-between items-center opacity-40">
+                <span className="font-mono text-[10px] tracking-tighter uppercase">ARQUIVO_ID: VER-{character.id.slice(0, 6).toUpperCase()}</span>
+                <span className="font-mono text-[10px] tracking-tighter uppercase">PROTOCOLO: EXORCISMO DIGITAL</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Atributos brutos */}
+          <div className="bg-surface-container-low p-6">
+            <h4 className="text-[10px] uppercase tracking-widest text-outline mb-4">Atributos Base</h4>
+            <div className="grid grid-cols-5 gap-2">
+              {ATTR_ORDER.map(attr => (
+                <div key={attr} className="bg-surface-container-highest p-3 text-center">
+                  <p className="text-[8px] uppercase tracking-widest text-outline mb-1">{ATTR_LABELS[attr].slice(0, 4)}</p>
+                  <p className="font-mono text-2xl font-bold text-on-surface">
+                    {character.attributes[attr as keyof Attributes]}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── RIGHT PANEL: INVENTÁRIO ── */}
+        <aside className="lg:col-span-3 space-y-4">
+          <div className="bg-surface-container-high flex flex-col">
+            {/* Tabs */}
+            <div className="flex">
+              <button
+                onClick={() => setInventoryTab('pessoal')}
+                className={cn(
+                  'flex-1 py-3 text-[10px] font-bold tracking-widest uppercase transition-colors cursor-crosshair',
+                  inventoryTab === 'pessoal'
+                    ? 'bg-surface-container-highest border-b-2 border-secondary text-secondary'
+                    : 'text-outline bg-surface-container-low hover:bg-surface-container hover:text-on-surface'
+                )}
+              >
+                Dossiê Pessoal
+              </button>
+              <button
+                onClick={() => setInventoryTab('partido')}
+                className={cn(
+                  'flex-1 py-3 text-[10px] font-bold tracking-widest uppercase transition-colors cursor-crosshair',
+                  inventoryTab === 'partido'
+                    ? 'bg-surface-container-highest border-b-2 border-secondary text-secondary'
+                    : 'text-outline bg-surface-container-low hover:bg-surface-container hover:text-on-surface'
+                )}
+              >
+                Arquivo do Grupo
+              </button>
+            </div>
+
+            <div className="p-5 flex-1 space-y-6">
+              {inventoryTab === 'pessoal' ? (
+                <>
+                  {/* Equipamento tático */}
+                  <div>
+                    <h4 className="text-[10px] uppercase tracking-widest text-secondary mb-3">Equipamento Tático</h4>
+                    <div className="space-y-2">
+                      {/* Slot arma */}
+                      <div className="bg-surface-container-lowest p-3 border border-outline-variant/10 hover:border-secondary/30 transition-all cursor-crosshair group">
+                        <div className="flex justify-between items-center mb-1">
+                          <span className="text-[10px] text-outline uppercase tracking-tighter">Arma Principal</span>
+                          <span className="material-symbols-outlined text-sm text-outline/40 group-hover:text-secondary transition-colors">add_circle</span>
+                        </div>
+                        <div className="text-[10px] font-mono text-on-surface/30 uppercase italic">Vazio — adicionar item</div>
+                      </div>
+                      {/* Slot proteção */}
+                      <div className="bg-surface-container-lowest p-3 border border-outline-variant/10 hover:border-secondary/30 transition-all cursor-crosshair group">
+                        <div className="flex justify-between items-center mb-1">
+                          <span className="text-[10px] text-outline uppercase tracking-tighter">Proteção</span>
+                          <span className="material-symbols-outlined text-sm text-outline/40 group-hover:text-secondary transition-colors">add_circle</span>
+                        </div>
+                        <div className="text-[10px] font-mono text-on-surface/30 uppercase italic">Vazio — adicionar item</div>
+                      </div>
+                      {/* Slot artefacto */}
+                      <div className="bg-surface-container-lowest p-3 border border-tertiary/20 hover:border-tertiary/50 transition-all cursor-crosshair group">
+                        <div className="flex justify-between items-center mb-1">
+                          <span className="text-[10px] text-tertiary uppercase tracking-tighter">Artefacto Paranormal</span>
+                          <span className="material-symbols-outlined text-sm text-tertiary/40 group-hover:text-tertiary transition-colors">add_circle</span>
+                        </div>
+                        <div className="text-[10px] font-mono text-on-surface/30 uppercase italic">Vazio — adicionar item</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Inventário rápido */}
+                  <div>
+                    <div className="flex justify-between items-center mb-3">
+                      <h4 className="text-[10px] uppercase tracking-widest text-outline">Acesso Rápido</h4>
+                      <span className="text-[10px] font-mono text-on-surface/30">0/30 KG</span>
+                    </div>
+                    <div className="grid grid-cols-4 gap-1.5">
+                      {Array.from({ length: 8 }).map((_, i) => (
+                        <div
+                          key={i}
+                          className="aspect-square bg-surface-container-lowest border border-outline-variant/15 flex items-center justify-center hover:bg-surface-container-high transition-colors cursor-crosshair group"
+                        >
+                          <span className="material-symbols-outlined text-outline/20 group-hover:text-secondary/40 transition-colors text-base">add</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Poderes e rituais */}
+                  {(character.known_rituals.length > 0 || character.selected_powers.length > 0) && (
+                    <div>
+                      <h4 className="text-[10px] uppercase tracking-widest text-tertiary mb-3">Poderes & Rituais</h4>
+                      <div className="space-y-1">
+                        {character.selected_powers.map(p => (
+                          <div key={p} className="bg-surface-container-lowest p-2 border border-primary-container/15 text-[10px] font-mono text-primary uppercase tracking-wide">
+                            {p}
+                          </div>
+                        ))}
+                        {character.known_rituals.map(r => (
+                          <div key={r} className="bg-surface-container-lowest p-2 border border-tertiary/15 text-[10px] font-mono text-tertiary uppercase tracking-wide">
+                            {r}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-12 gap-3">
+                  <span className="material-symbols-outlined text-3xl text-on-surface/20">group</span>
+                  <p className="text-[10px] font-mono text-on-surface/30 uppercase tracking-widest text-center">
+                    Arquivo do grupo em breve
+                  </p>
+                  <p className="text-[9px] text-on-surface/20 text-center">
+                    Entra numa campanha para aceder ao inventário partilhado
+                  </p>
+                </div>
+              )}
+
+              <button className="w-full bg-primary-container text-white py-3 font-bold uppercase tracking-[0.2em] text-xs hover:bg-on-primary-fixed-variant transition-all cursor-crosshair">
+                Adicionar Item
+              </button>
+            </div>
+          </div>
+
+          {/* Notas */}
+          {character.notes && (
+            <div className="bg-surface-container-low p-4 border-l-4 border-outline-variant/30">
+              <h4 className="text-[9px] font-mono uppercase tracking-widest text-outline mb-2">Notas de Campo</h4>
+              <p className="text-xs text-on-surface-variant leading-relaxed italic">{character.notes}</p>
+            </div>
+          )}
+        </aside>
+      </main>
+
+      {/* Footer */}
+      <footer className="bg-surface-container-lowest flex flex-col md:flex-row justify-between items-center px-10 py-8 gap-4 mt-auto border-t border-outline-variant/10">
+        <div className="flex flex-col gap-1">
+          <span className="font-bold text-primary-container uppercase text-xs">ORDEM PARANORMAL</span>
+          <p className="text-[9px] font-mono text-on-surface/30 uppercase tracking-widest">
+            C.O.P.E. DADOS CLASSIFICADOS - PROTOCOLO: EXORCISMO DIGITAL
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-2 h-2 bg-secondary animate-pulse" />
+          <span className="font-mono text-[10px] text-secondary">CONECTADO // UPLINK C.O.P.E.</span>
+        </div>
+      </footer>
+    </div>
   )
 }
