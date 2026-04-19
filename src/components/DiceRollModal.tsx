@@ -27,6 +27,7 @@ export default function DiceRollModal({ isOpen, pending, result, onRollComplete,
     const box = new DiceBox('#dice-canvas-container', {
       assetPath: `${BASE_PATH}assets/`,
       theme: 'default',
+      scale: 20,
       gravity: 1.2,
       mass: 1,
       friction: 0.8,
@@ -73,7 +74,18 @@ export default function DiceRollModal({ isOpen, pending, result, onRollComplete,
 
   return (
     <>
-      {/* Full-screen dice canvas — dice-box needs fixed full-screen to render correctly */}
+      {/* Force canvas to fill container */}
+      <style>{`
+        #dice-canvas-container canvas {
+          width: 100% !important;
+          height: 100% !important;
+          position: absolute !important;
+          top: 0 !important;
+          left: 0 !important;
+        }
+      `}</style>
+
+      {/* Full-screen dice canvas */}
       <div
         id="dice-canvas-container"
         style={{
