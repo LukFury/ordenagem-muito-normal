@@ -5,6 +5,11 @@ import { useAuth } from '@/contexts/AuthContext'
 import { calculateDerivedStats, getSkillBonus, NEX_ORDER_EXPORTED } from '@/lib/rules'
 import type { Attributes, ClassId, NexTier, TrainingGrade, DerivedStats } from '@/types/character'
 import skillsData from '@/data/skills.json'
+import originsData from '@/data/origins.json'
+import classesData from '@/data/classes.json'
+import powersData from '@/data/powers.json'
+import ritualsData from '@/data/rituals.json'
+import conditionsData from '@/data/conditions.json'
 import { cn } from '@/lib/utils'
 import { useDiceRoller } from '@/hooks/useDiceRoller'
 import DiceRollModal from '@/components/DiceRollModal'
@@ -86,6 +91,7 @@ export default function CharacterSheetPage() {
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
   const photoInputRef = useRef<HTMLInputElement>(null)
   const [levelUpNex, setLevelUpNex] = useState<NexTier | null>(null)
+  const [activeConditions, setActiveConditions] = useState<Set<string>>(new Set())
 
   const [inventoryTab, setInventoryTab] = useState<'pessoal' | 'partido'>('pessoal')
   const [inventory, setInventory] = useState<InventoryItem[]>([])
@@ -177,6 +183,9 @@ export default function CharacterSheetPage() {
     const newPowers = changes.addedPowers?.length
       ? [...character.selected_powers, ...changes.addedPowers]
       : character.selected_powers
+    const newRituals = changes.addedRituals?.length
+      ? [...character.known_rituals, ...changes.addedRituals]
+      : character.known_rituals
 
     const oldDerived = calculateDerivedStats(character.class_id, character.attributes, character.nex)
     const newDerived = calculateDerivedStats(character.class_id, newAttributes, nextNex)
@@ -186,6 +195,7 @@ export default function CharacterSheetPage() {
       attributes: newAttributes,
       skill_training: newSkillTraining,
       selected_powers: newPowers,
+      known_rituals: newRituals,
     }).eq('id', id)
 
     setCharacter(prev => prev ? {
@@ -194,6 +204,7 @@ export default function CharacterSheetPage() {
       attributes: newAttributes,
       skill_training: newSkillTraining,
       selected_powers: newPowers,
+      known_rituals: newRituals,
     } : prev)
     setDerived(newDerived)
     setCurrentHp(h => h + (newDerived.hp - oldDerived.hp))
@@ -233,6 +244,38 @@ export default function CharacterSheetPage() {
   const hpPct = Math.max(0, Math.min(100, (currentHp / derived.hp) * 100))
   const pePct = Math.max(0, Math.min(100, (currentPe / derived.pe) * 100))
   const sanPct = Math.max(0, Math.min(100, (currentSan / derived.san) * 100))
+
+  // Fix 3: Origin power lookup
+  const originData = (originsData as { id: string; name: string; power: { name: string; description: string } }[])
+    .find(o => o.id === character.origin_id)
+
+  // Fix 4: Power & ritual name/description lookup maps
+  type PowerInfo = { id: string; name: string; description: string }
+  const powerLookup = new Map<string, PowerInfo>()
+  for (const cls of classesData as { id: string; classPowers?: PowerInfo[] }[]) {
+    for (const p of cls.classPowers ?? []) powerLookup.set(p.id, p)
+    // trail-first-X entries
+    for (const trail of (cls as { trails?: { id: string; name: string; abilities: Record<string, PowerInfo> }[] }).trails ?? []) {
+      const first = trail.abilities['10%']
+      if (first) powerLookup.set(`trail-first-${trail.id}`, { id: `trail-first-${trail.id}`, name: `[Trilha ${trail.name}] ${first.name}`, description: first.description })
+    }
+  }
+  const pd = powersData as Record<string, unknown>
+  for (const key of ['ocultistaPowers', 'general', 'conhecimento', 'energia', 'morte', 'sangue']) {
+    for (const p of (pd[key] as (PowerInfo & { id: string })[] | undefined) ?? []) powerLookup.set(p.id, p)
+  }
+
+  type RitualInfo = { name: string; summary: string; element: string; circle: number }
+  const ritualLookup = new Map<string, RitualInfo>()
+  const catalog = (ritualsData as { catalog: Record<string, Record<string, { id: string; name: string; summary: string }[]>> }).catalog
+  for (const [circle, elements] of Object.entries(catalog)) {
+    for (const [element, rituals] of Object.entries(elements)) {
+      for (const r of rituals) ritualLookup.set(r.id, { name: r.name, summary: r.summary, element, circle: parseInt(circle) })
+    }
+  }
+
+  // Fix 1: Conditions list
+  const allConditions = (conditionsData as { conditions: { id: string; name: string; category: string; description: string }[] }).conditions
 
   return (
     <div className="min-h-screen bg-background text-on-surface overflow-x-hidden">
@@ -325,6 +368,14 @@ export default function CharacterSheetPage() {
             </div>
             {character.concept && (
               <p className="text-xs text-on-surface-variant italic leading-relaxed">{character.concept}</p>
+            )}
+            {/* Fix 3: Origin power */}
+            {originData?.power && (
+              <div className="bg-surface-container p-3 border-l-2 border-secondary/30">
+                <p className="text-[9px] font-mono uppercase tracking-[0.2em] text-secondary mb-1">Poder de Origem</p>
+                <p className="text-[10px] font-bold text-on-surface uppercase tracking-wide mb-1">{originData.power.name}</p>
+                <p className="text-[10px] text-on-surface-variant leading-relaxed">{originData.power.description}</p>
+              </div>
             )}
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -427,6 +478,54 @@ export default function CharacterSheetPage() {
                 />
               </div>
             </div>
+          </div>
+
+          {/* Fix 1: Conditions tracker */}
+          <div className="bg-surface-container-low p-4">
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="text-[9px] font-mono uppercase tracking-[0.25em] text-outline">Condições</h4>
+              {activeConditions.size > 0 && (
+                <button
+                  onClick={() => setActiveConditions(new Set())}
+                  className="text-[9px] font-mono text-primary-container hover:text-on-surface transition-colors cursor-crosshair uppercase tracking-widest"
+                >
+                  Limpar
+                </button>
+              )}
+            </div>
+            <div className="flex flex-wrap gap-1">
+              {allConditions.map(cond => {
+                const active = activeConditions.has(cond.id)
+                return (
+                  <button
+                    key={cond.id}
+                    title={cond.description}
+                    onClick={() => setActiveConditions(prev => {
+                      const next = new Set(prev)
+                      next.has(cond.id) ? next.delete(cond.id) : next.add(cond.id)
+                      return next
+                    })}
+                    className={cn(
+                      'px-2 py-1 text-[9px] font-mono uppercase tracking-widest transition-all cursor-crosshair',
+                      active
+                        ? 'bg-primary-container text-white'
+                        : 'bg-surface-container text-on-surface/40 hover:text-on-surface/70'
+                    )}
+                  >
+                    {cond.name}
+                  </button>
+                )
+              })}
+            </div>
+            {activeConditions.size > 0 && (
+              <div className="mt-3 space-y-1">
+                {allConditions.filter(c => activeConditions.has(c.id)).map(cond => (
+                  <p key={cond.id} className="text-[9px] text-on-surface-variant leading-relaxed">
+                    <span className="text-primary-container font-bold uppercase">{cond.name}:</span> {cond.description}
+                  </p>
+                ))}
+              </div>
+            )}
           </div>
         </aside>
 
@@ -632,17 +731,55 @@ export default function CharacterSheetPage() {
                     )}
                   </div>
 
-                  {/* Poderes e rituais */}
-                  {(character.known_rituals.length > 0 || character.selected_powers.length > 0) && (
+                  {/* Fix 4: Powers & Rituals with full details */}
+                  {character.selected_powers.length > 0 && (
                     <div>
-                      <h4 className="text-[10px] uppercase tracking-widest text-tertiary mb-2">Poderes & Rituais</h4>
+                      <h4 className="text-[10px] uppercase tracking-widest text-secondary mb-2">Poderes</h4>
                       <div className="space-y-1">
-                        {character.selected_powers.map(p => (
-                          <div key={p} className="bg-surface-container-lowest p-2 border-l-2 border-primary-container/30 text-[10px] font-mono text-primary uppercase tracking-wide">{p}</div>
-                        ))}
-                        {character.known_rituals.map(r => (
-                          <div key={r} className="bg-surface-container-lowest p-2 border-l-2 border-tertiary/30 text-[10px] font-mono text-tertiary uppercase tracking-wide">{r}</div>
-                        ))}
+                        {character.selected_powers.map(pid => {
+                          const info = powerLookup.get(pid)
+                          return (
+                            <details key={pid} className="bg-surface-container-lowest border-l-2 border-secondary/30 group">
+                              <summary className="p-2 cursor-crosshair list-none flex justify-between items-center">
+                                <span className="text-[10px] font-bold text-on-surface uppercase tracking-wide">
+                                  {info?.name ?? pid}
+                                </span>
+                                <span className="material-symbols-outlined text-sm text-outline group-open:rotate-180 transition-transform">expand_more</span>
+                              </summary>
+                              {info?.description && (
+                                <p className="px-2 pb-2 text-[10px] text-on-surface-variant leading-relaxed">{info.description}</p>
+                              )}
+                            </details>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )}
+                  {character.known_rituals.length > 0 && (
+                    <div>
+                      <h4 className="text-[10px] uppercase tracking-widest text-tertiary mb-2">Rituais</h4>
+                      <div className="space-y-1">
+                        {character.known_rituals.map(rid => {
+                          const info = ritualLookup.get(rid)
+                          return (
+                            <details key={rid} className="bg-surface-container-lowest border-l-2 border-tertiary/30 group">
+                              <summary className="p-2 cursor-crosshair list-none flex justify-between items-center">
+                                <div className="flex items-center gap-2 min-w-0">
+                                  <span className="text-[10px] font-bold text-on-surface uppercase tracking-wide truncate">
+                                    {info?.name ?? rid}
+                                  </span>
+                                  {info && (
+                                    <span className="text-[9px] font-mono text-tertiary shrink-0">{info.circle}º · {info.element}</span>
+                                  )}
+                                </div>
+                                <span className="material-symbols-outlined text-sm text-outline group-open:rotate-180 transition-transform shrink-0">expand_more</span>
+                              </summary>
+                              {info?.summary && (
+                                <p className="px-2 pb-2 text-[10px] text-on-surface-variant leading-relaxed">{info.summary}</p>
+                              )}
+                            </details>
+                          )
+                        })}
                       </div>
                     </div>
                   )}
