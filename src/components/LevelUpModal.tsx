@@ -109,17 +109,22 @@ function resolveAutoGrant(ability: string, cls: ClassData): { name: string; desc
   return null
 }
 
-function buildOcultistaPowerPool(selectedPowers: string[]): PowerEntry[] {
-  const pd = powersData as Record<string, unknown>
-  const all: PowerEntry[] = [
-    ...((pd.ocultistaPowers as PowerEntry[]) ?? []),
-    ...((pd.general as PowerEntry[]) ?? []),
-    ...((pd.conhecimento as PowerEntry[]) ?? []),
-    ...((pd.energia as PowerEntry[]) ?? []),
-    ...((pd.morte as PowerEntry[]) ?? []),
-    ...((pd.sangue as PowerEntry[]) ?? []),
-  ]
-  return all.filter(p => p.canChooseMultipleTimes || !selectedPowers.includes(p.id))
+function buildPowerPool(classId: string, selectedPowers: string[]): PowerEntry[] {
+  if (classId === 'ocultista') {
+    const pd = powersData as Record<string, unknown>
+    const all: PowerEntry[] = [
+      ...((pd.ocultistaPowers as PowerEntry[]) ?? []),
+      ...((pd.general as PowerEntry[]) ?? []),
+      ...((pd.conhecimento as PowerEntry[]) ?? []),
+      ...((pd.energia as PowerEntry[]) ?? []),
+      ...((pd.morte as PowerEntry[]) ?? []),
+      ...((pd.sangue as PowerEntry[]) ?? []),
+    ]
+    return all.filter(p => p.canChooseMultipleTimes || !selectedPowers.includes(p.id))
+  }
+  const cls = getClassData(classId)
+  const pool = ((cls as unknown as Record<string, PowerEntry[]>)?.classPowers) ?? []
+  return pool.filter(p => p.canChooseMultipleTimes || !selectedPowers.includes(p.id))
 }
 
 // ── Component ──────────────────────────────────────────────────────────────────
@@ -193,16 +198,10 @@ export default function LevelUpModal({ character, newNex, onConfirm, onClose }: 
 
   // Required choices must be made before confirming
   const attrReady = !needsAttr || chosenAttr !== null
-  const powerReady = powerAbilities.every(pa => {
-    const classId = pa.replace('poder-de-', '')
-    // Stub classes have no pool — skip requirement
-    if (classId !== 'ocultista') return true
-    return chosenPowers[pa] !== undefined
-  })
+  const powerReady = powerAbilities.every(pa => chosenPowers[pa] !== undefined)
   const canConfirm = attrReady && powerReady
 
   const skills = skillsData as SkillEntry[]
-  const ocultistaPowerPool = buildOcultistaPowerPool(character.selected_powers)
 
   return (
     <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
@@ -332,7 +331,7 @@ export default function LevelUpModal({ character, newNex, onConfirm, onClose }: 
           {/* Powers */}
           {powerAbilities.map(powerAbility => {
             const classId = powerAbility.replace('poder-de-', '')
-            const isOcultista = classId === 'ocultista'
+            const powerPool = buildPowerPool(classId, character.selected_powers)
             const chosen = chosenPowers[powerAbility]
 
             return (
@@ -341,48 +340,38 @@ export default function LevelUpModal({ character, newNex, onConfirm, onClose }: 
                   <h3 className="text-[9px] font-mono uppercase tracking-[0.25em] text-outline">
                     Poder de {classId.charAt(0).toUpperCase() + classId.slice(1)}
                   </h3>
-                  {isOcultista && <span className="text-[9px] font-mono text-primary-container">obrigatório</span>}
+                  <span className="text-[9px] font-mono text-primary-container">obrigatório</span>
                 </div>
 
-                {!isOcultista ? (
-                  <div className="bg-surface-container-high p-4 border-l-2 border-outline-variant/20">
-                    <p className="text-[10px] font-mono text-on-surface/40 uppercase tracking-widest">
-                      Lista de poderes de {classId} em breve — o teu NEX será avançado.
-                    </p>
-                  </div>
-                ) : (
-                  <div className="space-y-1 max-h-64 overflow-y-auto">
-                    {ocultistaPowerPool.map(power => {
-                      const isChosen = chosen === power.id
-                      return (
-                        <button
-                          key={power.id}
-                          onClick={() => {
-                            setChosenPowers(prev => ({ ...prev, [powerAbility]: power.id }))
-                          }}
-                          className={cn(
-                            'w-full text-left p-3 transition-all cursor-crosshair border-l-2',
-                            isChosen
-                              ? 'bg-surface-container-highest border-secondary'
-                              : 'bg-surface-container-high border-transparent hover:border-outline-variant/40'
+                <div className="space-y-1 max-h-64 overflow-y-auto">
+                  {powerPool.map(power => {
+                    const isChosen = chosen === power.id
+                    return (
+                      <button
+                        key={power.id}
+                        onClick={() => setChosenPowers(prev => ({ ...prev, [powerAbility]: power.id }))}
+                        className={cn(
+                          'w-full text-left p-3 transition-all cursor-crosshair border-l-2',
+                          isChosen
+                            ? 'bg-surface-container-highest border-secondary'
+                            : 'bg-surface-container-high border-transparent hover:border-outline-variant/40'
+                        )}
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <p className={cn('text-xs font-bold uppercase tracking-wide', isChosen ? 'text-secondary' : 'text-on-surface')}>
+                            {power.name}
+                          </p>
+                          {power.prerequisites && power.prerequisites.length > 0 && (
+                            <span className="text-[9px] font-mono text-outline shrink-0">{power.prerequisites.join(', ')}</span>
                           )}
-                        >
-                          <div className="flex items-center justify-between">
-                            <p className={cn('text-xs font-bold uppercase tracking-wide', isChosen ? 'text-secondary' : 'text-on-surface')}>
-                              {power.name}
-                            </p>
-                            {power.element && (
-                              <span className="text-[9px] font-mono text-tertiary uppercase">{power.element}</span>
-                            )}
-                          </div>
-                          {isChosen && (
-                            <p className="text-[10px] text-on-surface-variant mt-1 leading-relaxed">{power.description}</p>
-                          )}
-                        </button>
-                      )
-                    })}
-                  </div>
-                )}
+                        </div>
+                        {isChosen && (
+                          <p className="text-[10px] text-on-surface-variant mt-1 leading-relaxed">{power.description}</p>
+                        )}
+                      </button>
+                    )
+                  })}
+                </div>
               </section>
             )
           })}

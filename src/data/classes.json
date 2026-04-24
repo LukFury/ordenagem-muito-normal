@@ -58,6 +58,27 @@
       { "nex": "95%", "abilities": ["aumento-de-atributo"] },
       { "nex": "99%", "abilities": ["habilidade-de-trilha"] }
     ],
+    "classPowers": [
+      { "id": "armamento-pesado", "name": "Armamento Pesado", "description": "Você recebe proficiência com armas pesadas.", "prerequisites": ["For 2"] },
+      { "id": "artista-marcial", "name": "Artista Marcial", "description": "Seus ataques desarmados causam 1d6 de dano, podem causar dano letal e se tornam ágeis. Em NEX 35%, o dano aumenta para 1d8 e, em NEX 70%, para 1d10.", "prerequisites": [] },
+      { "id": "ataque-de-oportunidade", "name": "Ataque de Oportunidade", "description": "Sempre que um ser sair voluntariamente de um espaço adjacente ao seu, você pode gastar uma reação e 1 PE para fazer um ataque corpo a corpo contra ele.", "prerequisites": [] },
+      { "id": "combater-com-duas-armas", "name": "Combater com Duas Armas", "description": "Se estiver empunhando duas armas (ao menos uma leve) e fizer a ação agredir, pode fazer dois ataques, um com cada arma. Se fizer isso, sofre –5 em todos os testes de ataque até o próximo turno.", "prerequisites": ["Agi 3", "treinado em Luta ou Pontaria"] },
+      { "id": "combate-defensivo", "name": "Combate Defensivo", "description": "Quando usa a ação agredir, pode combater defensivamente: sofre –5 em testes de ataque, mas recebe +5 na Defesa até o próximo turno.", "prerequisites": ["Int 2"] },
+      { "id": "golpe-demolidor", "name": "Golpe Demolidor", "description": "Quando usa a manobra quebrar ou ataca um objeto, gaste 1 PE para causar dois dados de dano extra do mesmo tipo da arma.", "prerequisites": ["For 2", "treinado em Luta"] },
+      { "id": "golpe-pesado", "name": "Golpe Pesado", "description": "Enquanto estiver empunhando uma arma corpo a corpo, o dano dela aumenta em mais um dado do mesmo tipo.", "prerequisites": [] },
+      { "id": "incansavel", "name": "Incansável", "description": "Uma vez por cena, gaste 2 PE para fazer uma ação de investigação adicional usando Força ou Agilidade como atributo-base do teste.", "prerequisites": [] },
+      { "id": "presteza-atletica", "name": "Presteza Atlética", "description": "Quando faz um teste de facilitar a investigação, gaste 1 PE para usar Força ou Agilidade no lugar do atributo-base. Se passar, o próximo aliado que usar seu bônus também recebe +5 no teste.", "prerequisites": [] },
+      { "id": "protecao-pesada", "name": "Proteção Pesada", "description": "Você recebe proficiência com proteções pesadas.", "prerequisites": ["NEX 30%"] },
+      { "id": "reflexos-defensivos", "name": "Reflexos Defensivos", "description": "Você recebe +2 em Defesa e em testes de resistência.", "prerequisites": ["Agi 2"] },
+      { "id": "saque-rapido", "name": "Saque Rápido", "description": "Saque ou guarde itens como ação livre. Além disso, uma vez por rodada pode recarregar uma arma de disparo como ação livre (regra opcional de munição).", "prerequisites": ["treinado em Iniciativa"] },
+      { "id": "segurar-o-gatilho", "name": "Segurar o Gatilho", "description": "Sempre que acerta um ataque com arma de fogo, pode fazer outro ataque contra o mesmo alvo gastando 2 PE por cada ataque já realizado no turno. Continua enquanto acertar e tiver PE.", "prerequisites": ["NEX 60%"] },
+      { "id": "sentido-tatico", "name": "Sentido Tático", "description": "Gaste ação de movimento e 2 PE para analisar o ambiente. Recebe bônus em Defesa e em testes de resistência igual ao seu Intelecto até o final da cena.", "prerequisites": ["Int 2", "treinado em Percepção", "treinado em Tática"] },
+      { "id": "tanque-de-guerra", "name": "Tanque de Guerra", "description": "Se estiver usando proteção pesada, a Defesa e a resistência a dano que ela fornece aumentam em +2.", "prerequisites": ["Proteção Pesada"] },
+      { "id": "tiro-certeiro", "name": "Tiro Certeiro", "description": "Se estiver usando uma arma de disparo, soma sua Agilidade nas rolagens de dano e ignora a penalidade contra alvos em combate corpo a corpo (mesmo sem usar a ação mirar).", "prerequisites": ["treinado em Pontaria"] },
+      { "id": "tiro-de-cobertura", "name": "Tiro de Cobertura", "description": "Gaste ação padrão e 1 PE para disparar em direção a um ser no alcance. Faça teste de Pontaria contra Vontade do alvo. Se vencer, até o início do próximo turno o alvo não pode se mover e sofre –5 em testes de ataque.", "prerequisites": [] },
+      { "id": "transcender-combatente", "name": "Transcender", "description": "Escolha um poder paranormal. Você recebe o poder escolhido, mas não ganha Sanidade neste avanço de NEX. Pode escolher este poder várias vezes.", "prerequisites": [], "canChooseMultipleTimes": true },
+      { "id": "treinamento-em-pericia-combatente", "name": "Treinamento em Perícia", "description": "Escolha duas perícias e torne-se treinado nelas. A partir de NEX 35%, pode escolher perícias em que já é treinado para se tornar veterano. A partir de NEX 70%, pode escolher perícias veteranas para se tornar expert. Pode escolher várias vezes.", "prerequisites": [], "canChooseMultipleTimes": true }
+    ],
     "trails": [
       {
         "id": "aniquilador",
@@ -174,6 +195,23 @@
       { "nex": "90%", "abilities": ["poder-de-especialista"] },
       { "nex": "95%", "abilities": ["aumento-de-atributo"] },
       { "nex": "99%", "abilities": ["habilidade-de-trilha"] }
+    ],
+    "classPowers": [
+      { "id": "artista-marcial-esp", "name": "Artista Marcial", "description": "Seus ataques desarmados causam 1d6 de dano, podem causar dano letal e contam como armas ágeis. Em NEX 35%, o dano aumenta para 1d8 e, em NEX 70%, para 1d10.", "prerequisites": [] },
+      { "id": "balistica-avancada", "name": "Balística Avançada", "description": "Você recebe proficiência com armas táticas de fogo e +2 em rolagens de dano com armas de fogo.", "prerequisites": [] },
+      { "id": "conhecimento-aplicado", "name": "Conhecimento Aplicado", "description": "Quando faz um teste de perícia (exceto Luta e Pontaria), gaste 2 PE para mudar o atributo-base da perícia para Intelecto.", "prerequisites": ["Int 2"] },
+      { "id": "hacker", "name": "Hacker", "description": "Você recebe +5 em testes de Tecnologia para invadir sistemas e reduz o tempo necessário para hackear qualquer sistema para uma ação completa.", "prerequisites": ["treinado em Tecnologia"] },
+      { "id": "maos-rapidas", "name": "Mãos Rápidas", "description": "Ao fazer um teste de Crime, gaste 1 PE para fazê-lo como ação livre.", "prerequisites": ["Agi 3", "treinado em Crime"] },
+      { "id": "mochila-de-utilidades", "name": "Mochila de Utilidades", "description": "Um item a sua escolha (exceto armas) conta como uma categoria abaixo e ocupa 1 espaço a menos.", "prerequisites": [] },
+      { "id": "movimento-tatico", "name": "Movimento Tático", "description": "Gaste 1 PE para ignorar a penalidade em deslocamento por terreno difícil e por escalar até o final do turno.", "prerequisites": ["treinado em Atletismo"] },
+      { "id": "na-trilha-certa", "name": "Na Trilha Certa", "description": "Sempre que tiver sucesso em um teste para procurar pistas, gaste 1 PE para receber +dado bônus no próximo teste. Os custos e bônus são cumulativos.", "prerequisites": [] },
+      { "id": "nerd", "name": "Nerd", "description": "Uma vez por cena, gaste 2 PE para fazer um teste de Atualidades (DT 20). Se passar, recebe uma informação útil para a cena (dica de pista, fraqueza de inimigo, etc.).", "prerequisites": [] },
+      { "id": "ninja-urbano", "name": "Ninja Urbano", "description": "Você recebe proficiência com armas táticas de ataque corpo a corpo e de disparo (exceto de fogo) e +2 em rolagens de dano com essas armas.", "prerequisites": [] },
+      { "id": "pensamento-agil", "name": "Pensamento Ágil", "description": "Uma vez por rodada, durante uma cena de investigação, gaste 2 PE para fazer uma ação de procurar pistas adicional.", "prerequisites": [] },
+      { "id": "perito-em-explosivos", "name": "Perito em Explosivos", "description": "Soma seu Intelecto na DT para resistir aos seus explosivos e pode excluir dos efeitos da explosão um número de alvos igual ao seu Intelecto.", "prerequisites": [] },
+      { "id": "primeira-impressao", "name": "Primeira Impressão", "description": "Você recebe +2 dados bônus no primeiro teste de Diplomacia, Enganação, Intimidação ou Intuição que fizer em uma cena.", "prerequisites": [] },
+      { "id": "transcender-especialista", "name": "Transcender", "description": "Escolha um poder paranormal. Você recebe o poder escolhido, mas não ganha Sanidade neste avanço de NEX. Pode escolher este poder várias vezes.", "prerequisites": [], "canChooseMultipleTimes": true },
+      { "id": "treinamento-em-pericia-especialista", "name": "Treinamento em Perícia", "description": "Escolha duas perícias e torne-se treinado nelas. A partir de NEX 35%, pode escolher perícias em que já é treinado para se tornar veterano. A partir de NEX 70%, pode escolher perícias veteranas para se tornar expert. Pode escolher várias vezes.", "prerequisites": [], "canChooseMultipleTimes": true }
     ],
     "trails": [
       {
