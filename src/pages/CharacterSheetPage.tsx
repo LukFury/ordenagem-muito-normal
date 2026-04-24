@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
+import { useAuth } from '@/contexts/AuthContext'
 import { calculateDerivedStats, getSkillBonus } from '@/lib/rules'
 import type { Attributes, ClassId, NexTier, TrainingGrade, DerivedStats } from '@/types/character'
 import skillsData from '@/data/skills.json'
@@ -71,6 +72,7 @@ const ATTR_ORDER = ['agilidade', 'forca', 'intelecto', 'presenca', 'vigor']
 export default function CharacterSheetPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const { user } = useAuth()
   const [character, setCharacter] = useState<Character | null>(null)
   const [loading, setLoading] = useState(true)
   const [derived, setDerived] = useState<DerivedStats | null>(null)
@@ -79,6 +81,9 @@ export default function CharacterSheetPage() {
   const [currentHp, setCurrentHp] = useState(0)
   const [currentPe, setCurrentPe] = useState(0)
   const [currentSan, setCurrentSan] = useState(0)
+
+  const [uploadingPhoto, setUploadingPhoto] = useState(false)
+  const photoInputRef = useRef<HTMLInputElement>(null)
 
   const [inventoryTab, setInventoryTab] = useState<'pessoal' | 'partido'>('pessoal')
   const [inventory, setInventory] = useState<InventoryItem[]>([])
@@ -154,6 +159,22 @@ export default function CharacterSheetPage() {
     if (!error && data) setInventory(prev => [...prev, data as InventoryItem])
   }
 
+  async function handlePhotoUpload(file: File) {
+    if (!user || !id) return
+    setUploadingPhoto(true)
+    const ext = file.name.split('.').pop()
+    const path = `${user.id}/${id}.${ext}`
+    const { error: uploadError } = await supabase.storage
+      .from('character-photos')
+      .upload(path, file, { upsert: true })
+    if (!uploadError) {
+      const { data: { publicUrl } } = supabase.storage.from('character-photos').getPublicUrl(path)
+      await supabase.from('characters').update({ photo_url: publicUrl }).eq('id', id)
+      setCharacter(prev => prev ? { ...prev, photo_url: publicUrl } : prev)
+    }
+    setUploadingPhoto(false)
+  }
+
   async function handleRemoveItem(itemId: string) {
     await supabase.from('inventory_items').delete().eq('id', itemId)
     setInventory(prev => prev.filter(i => i.id !== itemId))
@@ -210,7 +231,10 @@ export default function CharacterSheetPage() {
         <aside className="lg:col-span-3 space-y-4">
           {/* Portrait */}
           <div className="bg-surface-container-lowest p-1">
-            <div className="aspect-[3/4] bg-surface-container relative overflow-hidden group">
+            <div
+              className="aspect-[3/4] bg-surface-container relative overflow-hidden group cursor-crosshair"
+              onClick={() => photoInputRef.current?.click()}
+            >
               {character.photo_url ? (
                 <img
                   src={character.photo_url}
@@ -224,12 +248,30 @@ export default function CharacterSheetPage() {
                 </div>
               )}
               <div className="absolute inset-0 border-2 border-primary-container opacity-20 pointer-events-none" />
+              {/* Upload overlay */}
+              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2 pointer-events-none">
+                {uploadingPhoto ? (
+                  <span className="text-[10px] font-mono text-white uppercase tracking-widest animate-pulse">A carregar...</span>
+                ) : (
+                  <>
+                    <span className="material-symbols-outlined text-white text-2xl">upload</span>
+                    <span className="text-[9px] font-mono text-white uppercase tracking-widest">Alterar foto</span>
+                  </>
+                )}
+              </div>
               <div className="absolute bottom-0 left-0 right-0 bg-primary-container/80 backdrop-blur-sm p-2">
                 <p className="text-[10px] font-mono tracking-tighter text-white uppercase leading-none">
                   Estado: Operacional
                 </p>
               </div>
             </div>
+            <input
+              ref={photoInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={e => { const f = e.target.files?.[0]; if (f) handlePhotoUpload(f) }}
+            />
           </div>
 
           {/* Identity */}
