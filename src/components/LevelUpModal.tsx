@@ -176,6 +176,8 @@ export default function LevelUpModal({ character, newNex, onConfirm, onClose }: 
   const [trainingUpgrades, setTrainingUpgrades] = useState<Record<string, TrainingGrade>>({})
   const [chosenPowers, setChosenPowers] = useState<Record<string, string>>({})
   const [chosenRituals, setChosenRituals] = useState<Record<string, string>>({})
+  // aprender-ritual sub-choice: powerAbility key → ritual id
+  const [aprenderRitualChoices, setAprenderRitualChoices] = useState<Record<string, string>>({})
 
   const upgradeCount = Object.keys(trainingUpgrades).length
   const remainingUpgrades = trainingCount - upgradeCount
@@ -214,16 +216,26 @@ export default function LevelUpModal({ character, newNex, onConfirm, onClose }: 
     }
     const powers = Object.values(chosenPowers).filter(Boolean)
     if (powers.length > 0) changes.addedPowers = powers
-    const rituals = Object.values(chosenRituals).filter(Boolean)
+    const rituals = [
+      ...Object.values(chosenRituals).filter(Boolean),
+      ...Object.values(aprenderRitualChoices).filter(Boolean),
+    ]
     if (rituals.length > 0) changes.addedRituals = rituals
     return changes
   }
 
+  // Which power slots had aprender-ritual chosen and therefore need a ritual sub-choice
+  const aprenderRitualSlots = powerAbilities.filter(pa => chosenPowers[pa] === 'aprender-ritual')
+
+  const nexNumericForModal = parseInt(newNex.replace('%', ''))
+  const highNex = nexNumericForModal >= 45
+
   const attrReady = !needsAttr || chosenAttr !== null
   const powerReady = powerAbilities.every(pa => chosenPowers[pa] !== undefined)
+  const aprenderReady = aprenderRitualSlots.every(pa => aprenderRitualChoices[pa] !== undefined)
   const ritualReady = ritualAbilities.every(ra => chosenRituals[ra] !== undefined)
   const versatilReady = !needsVersatilidade || chosenPowers['versatilidade'] !== undefined
-  const canConfirm = attrReady && powerReady && ritualReady && versatilReady
+  const canConfirm = attrReady && powerReady && aprenderReady && ritualReady && versatilReady
 
   // ── Render ───────────────────────────────────────────────────────────────────
 
@@ -430,6 +442,56 @@ export default function LevelUpModal({ character, newNex, onConfirm, onClose }: 
                           )}
                         </div>
                         {isChosen && <p className="text-[10px] text-on-surface-variant mt-1 leading-relaxed">{power.description}</p>}
+                      </button>
+                    )
+                  })}
+                </div>
+              </section>
+            )
+          })}
+
+          {/* Aprender Ritual sub-picker — one per power slot where aprender-ritual was chosen */}
+          {aprenderRitualSlots.map((pa, i) => {
+            const pool = highNex
+              ? [1, 2, 3, 4].flatMap(c => getRitualsForCircle(c, character.known_rituals).map(r => ({ ...r, circle: c })))
+              : getRitualsForCircle(1, character.known_rituals).map(r => ({ ...r, circle: 1 }))
+            const chosen = aprenderRitualChoices[pa]
+            return (
+              <section key={`aprender-${pa}-${i}`}>
+                <div className="flex items-center gap-3 mb-3">
+                  <h3 className="text-[9px] font-mono uppercase tracking-[0.25em] text-outline">
+                    Aprender Ritual {aprenderRitualSlots.length > 1 ? `(${i + 1})` : ''} — {highNex ? 'Qualquer Círculo' : '1º Círculo'}
+                  </h3>
+                  <span className="text-[9px] font-mono text-primary-container">obrigatório</span>
+                </div>
+                <p className="text-[10px] text-on-surface/50 mb-3 uppercase tracking-wide">
+                  Escolha um ritual para aprender
+                </p>
+                <div className="space-y-1 max-h-56 overflow-y-auto">
+                  {pool.map(ritual => {
+                    const isChosen = chosen === ritual.id
+                    return (
+                      <button
+                        key={ritual.id}
+                        onClick={() => setAprenderRitualChoices(prev => ({ ...prev, [pa]: ritual.id }))}
+                        className={cn(
+                          'w-full text-left p-3 transition-all cursor-crosshair border-l-2',
+                          isChosen
+                            ? 'bg-surface-container-highest border-tertiary'
+                            : 'bg-surface-container-high border-transparent hover:border-outline-variant/40'
+                        )}
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <p className={cn('text-xs font-bold uppercase tracking-wide', isChosen ? 'text-tertiary' : 'text-on-surface')}>
+                            {ritual.name}
+                          </p>
+                          <span className="text-[9px] font-mono text-outline uppercase shrink-0">
+                            {ritual.circle}º · {ritual.element}
+                          </span>
+                        </div>
+                        {isChosen && (
+                          <p className="text-[10px] text-on-surface-variant mt-1 leading-relaxed">{ritual.summary}</p>
+                        )}
                       </button>
                     )
                   })}

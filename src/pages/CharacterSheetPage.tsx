@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
-import { calculateDerivedStats, getSkillBonus, NEX_ORDER_EXPORTED } from '@/lib/rules'
+import { calculateDerivedStats, getSkillBonus, getPassiveSkillBonuses, getConditionModifiers, NEX_ORDER_EXPORTED } from '@/lib/rules'
 import type { Attributes, ClassId, NexTier, TrainingGrade, DerivedStats } from '@/types/character'
 import skillsData from '@/data/skills.json'
 import originsData from '@/data/origins.json'
@@ -109,7 +109,7 @@ export default function CharacterSheetPage() {
       if (error || !data) { navigate('/'); return }
       setCharacter(data as Character)
       setInventory((inv ?? []) as InventoryItem[])
-      const stats = calculateDerivedStats(data.class_id, data.attributes, data.nex, data.selected_powers, data.trail_id)
+      const stats = calculateDerivedStats(data.class_id, data.attributes, data.nex, data.selected_powers, data.trail_id, data.origin_id)
       setDerived(stats)
       setCurrentHp(stats.hp)
       setCurrentPe(stats.pe)
@@ -140,15 +140,17 @@ export default function CharacterSheetPage() {
     skills: skills.filter(s => s.attribute === attr),
   }))
 
-  function rollSkill(skillName: string, attrKey: string, attrValue: number, grade: TrainingGrade) {
+  function rollSkill(skillName: string, attrKey: string, attrValue: number, grade: TrainingGrade, extraBonus: number = 0) {
     const bonus = getSkillBonus(grade)
+    const total = attrValue + bonus + extraBonus
     roll({
       label: skillName,
       notation: '1d20',
-      modifier: attrValue + bonus,
+      modifier: total,
       modifierBreakdown: [
         { label: ATTR_LABELS[attrKey], value: attrValue },
         ...(bonus > 0 ? [{ label: 'Treino', value: bonus }] : []),
+        ...(extraBonus !== 0 ? [{ label: 'Bónus/Penalidade', value: extraBonus }] : []),
       ],
     })
   }
@@ -188,8 +190,8 @@ export default function CharacterSheetPage() {
       ? [...character.known_rituals, ...changes.addedRituals]
       : character.known_rituals
 
-    const oldDerived = calculateDerivedStats(character.class_id, character.attributes, character.nex, character.selected_powers, character.trail_id)
-    const newDerived = calculateDerivedStats(character.class_id, newAttributes, nextNex, newPowers, character.trail_id)
+    const oldDerived = calculateDerivedStats(character.class_id, character.attributes, character.nex, character.selected_powers, character.trail_id, character.origin_id)
+    const newDerived = calculateDerivedStats(character.class_id, newAttributes, nextNex, newPowers, character.trail_id, character.origin_id)
 
     await supabase.from('characters').update({
       nex: nextNex,
@@ -269,14 +271,16 @@ export default function CharacterSheetPage() {
   const armorBonus = inventory
     .filter(i => i.item_type === 'armor')
     .reduce((sum, i) => sum + (Number((i.item_data as Record<string, unknown>).defenseBonus) || 0), 0)
-  const effectiveDefense = derived.defense + armorBonus
+  const condMods = getConditionModifiers(activeConditions)
+  const effectiveDefense = derived.defense + armorBonus + condMods.defenseBonus
+  const passiveSkillBonuses = getPassiveSkillBonuses(character.selected_powers, character.origin_id)
 
   const hpPct = Math.max(0, Math.min(100, (currentHp / derived.hp) * 100))
   const pePct = Math.max(0, Math.min(100, (currentPe / derived.pe) * 100))
   const sanPct = Math.max(0, Math.min(100, (currentSan / derived.san) * 100))
 
-  // Fix 3: Origin power lookup
-  const originData = (originsData as { id: string; name: string; power: { name: string; description: string } }[])
+  type OriginPower = { name: string; description: string; peCost?: number }
+  const originData = (originsData as { id: string; name: string; power: OriginPower }[])
     .find(o => o.id === character.origin_id)
 
   // Power & ritual lookup maps
@@ -417,12 +421,25 @@ export default function CharacterSheetPage() {
             {character.concept && (
               <p className="text-xs text-on-surface-variant italic leading-relaxed">{character.concept}</p>
             )}
-            {/* Fix 3: Origin power */}
             {originData?.power && (
               <div className="bg-surface-container p-3 border-l-2 border-secondary/30">
                 <p className="text-[9px] font-mono uppercase tracking-[0.2em] text-secondary mb-1">Poder de Origem</p>
                 <p className="text-[10px] font-bold text-on-surface uppercase tracking-wide mb-1">{originData.power.name}</p>
                 <p className="text-[10px] text-on-surface-variant leading-relaxed">{originData.power.description}</p>
+                {originData.power.peCost != null && (
+                  <button
+                    onClick={() => activatePower(originData.power.peCost!, originData.power.name)}
+                    disabled={currentPe < originData.power.peCost!}
+                    className={cn(
+                      'mt-2 w-full py-1 text-[9px] font-bold uppercase tracking-widest transition-all',
+                      currentPe >= originData.power.peCost!
+                        ? 'bg-transparent text-secondary border border-outline-variant/20 hover:border-secondary/50 cursor-crosshair'
+                        : 'bg-transparent text-outline/40 border border-outline-variant/10 cursor-not-allowed'
+                    )}
+                  >
+                    Ativar ({originData.power.peCost} PE)
+                  </button>
+                )}
               </div>
             )}
             <div className="grid grid-cols-2 gap-4">
@@ -458,15 +475,19 @@ export default function CharacterSheetPage() {
 
           {/* Derived stats */}
           <div className="bg-surface-container-low p-4 grid grid-cols-2 gap-3">
-            {[
-              { label: armorBonus > 0 ? `Defesa (+${armorBonus} armadura)` : 'Defesa', value: effectiveDefense },
-              { label: 'Lim. PE/turno', value: derived.nexPELimit },
-            ].map(s => (
-              <div key={s.label}>
-                <label className="block text-[9px] uppercase tracking-widest text-outline mb-1">{s.label}</label>
-                <span className="font-mono text-xl font-bold text-on-surface">{s.value}</span>
-              </div>
-            ))}
+            <div>
+              <label className="block text-[9px] uppercase tracking-widest text-outline mb-1">
+                {armorBonus > 0 ? `Defesa (+${armorBonus})` : 'Defesa'}
+                {condMods.defenseBonus < 0 && <span className="text-primary-container"> ({condMods.defenseBonus})</span>}
+              </label>
+              <span className={cn('font-mono text-xl font-bold', condMods.defenseBonus < 0 ? 'text-primary-container' : 'text-on-surface')}>
+                {effectiveDefense}
+              </span>
+            </div>
+            <div>
+              <label className="block text-[9px] uppercase tracking-widest text-outline mb-1">Lim. PE/turno</label>
+              <span className="font-mono text-xl font-bold text-on-surface">{derived.nexPELimit}</span>
+            </div>
           </div>
 
           {/* Vitais */}
@@ -590,28 +611,36 @@ export default function CharacterSheetPage() {
             </div>
 
             <div className="space-y-8">
-              {skillsByAttr.map(({ attr, label, attrValue, skills: attrSkills }) => (
+              {skillsByAttr.map(({ attr, label, attrValue, skills: attrSkills }) => {
+                const attrCondPenalty = condMods.attrPenalty[attr] ?? 0
+                return (
                 <div key={attr}>
                   <div className="flex items-center gap-3 mb-4">
                     <span className="text-[9px] font-mono uppercase tracking-[0.25em] text-outline">{label}</span>
-                    <span className="font-mono text-xs text-secondary">{attrValue}</span>
+                    <span className={cn('font-mono text-xs', attrCondPenalty < 0 ? 'text-primary-container' : 'text-secondary')}>
+                      {attrValue}{attrCondPenalty < 0 && <span className="text-[9px]"> ({attrCondPenalty})</span>}
+                    </span>
                     <div className="flex-1 h-px bg-outline-variant/15" />
                   </div>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-x-8 gap-y-5">
                     {attrSkills.map(skill => {
                       const grade = trainingMap.get(skill.id) ?? 'destreinado'
                       const bonus = getSkillBonus(grade)
-                      const total = attrValue + bonus
+                      const passive = passiveSkillBonuses[skill.id] ?? 0
+                      const condPenalty = attrCondPenalty + (condMods.skillPenalty[skill.id] ?? 0) + condMods.globalSkillPenalty
+                      const extraBonus = passive + condPenalty
+                      const total = attrValue + bonus + extraBonus
                       const fill = gradeToFill(grade)
                       const color = gradeColor(grade)
                       const isTrained = grade !== 'destreinado'
+                      const hasExtra = extraBonus !== 0
 
                       return (
                         <div
                           key={skill.id}
                           className="group cursor-crosshair"
                           title={`${TRAINING_LABELS[grade]} — clica para rolar 1d20+${total}`}
-                          onClick={() => rollSkill(skill.name, skill.attribute, attrValue, grade)}
+                          onClick={() => rollSkill(skill.name, skill.attribute, attrValue, grade, extraBonus)}
                         >
                           <div className={cn(
                             'flex justify-between items-end border-b pb-1 mb-1.5 transition-colors',
@@ -628,6 +657,8 @@ export default function CharacterSheetPage() {
                             </span>
                             <span className={cn(
                               'font-mono text-base font-bold',
+                              condPenalty < 0 ? 'text-primary-container' :
+                              hasExtra ? 'text-tertiary' :
                               grade === 'expert' || grade === 'veterano' ? 'text-tertiary' :
                               isTrained ? 'text-secondary' : 'text-on-surface/40'
                             )}>
@@ -647,7 +678,8 @@ export default function CharacterSheetPage() {
                     })}
                   </div>
                 </div>
-              ))}
+                )
+              })}
             </div>
 
             <div className="mt-10 bg-surface-container-lowest p-4 relative border-l-4 border-primary-container">

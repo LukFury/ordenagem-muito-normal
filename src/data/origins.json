@@ -7,7 +7,8 @@
     "trainedSkills": ["ciencias", "investigacao"],
     "power": {
       "name": "Saber é Poder",
-      "description": "Quando faz um teste usando Intelecto, você pode gastar 2 PE para receber +5 nesse teste."
+      "description": "Quando faz um teste usando Intelecto, você pode gastar 2 PE para receber +5 nesse teste.",
+      "peCost": 2
     }
   },
   {
@@ -51,7 +52,8 @@
     "trainedSkills": ["acrobacia", "atletismo"],
     "power": {
       "name": "110%",
-      "description": "Quando faz um teste de perícia usando Força ou Agilidade (exceto Luta e Pontaria), você pode gastar 2 PE para receber +5 nesse teste."
+      "description": "Quando faz um teste de perícia usando Força ou Agilidade (exceto Luta e Pontaria), você pode gastar 2 PE para receber +5 nesse teste.",
+      "peCost": 2
     }
   },
   {
@@ -118,7 +120,8 @@
     "trainedSkills": ["diplomacia", "profissao"],
     "power": {
       "name": "Processo Otimizado",
-      "description": "Sempre que faz um teste de perícia durante um teste estendido, ou uma ação para revisar documentos (físicos ou digitais), pode pagar 2 PE para receber +5 nesse teste."
+      "description": "Sempre que faz um teste de perícia durante um teste estendido, ou uma ação para revisar documentos (físicos ou digitais), pode pagar 2 PE para receber +5 nesse teste.",
+      "peCost": 2
     }
   },
   {
@@ -129,7 +132,8 @@
     "trainedSkills": ["investigacao", "percepcao"],
     "power": {
       "name": "Faro para Pistas",
-      "description": "Uma vez por cena, quando fizer um teste para procurar pistas, você pode gastar 1 PE para receber +5 nesse teste."
+      "description": "Uma vez por cena, quando fizer um teste para procurar pistas, você pode gastar 1 PE para receber +5 nesse teste.",
+      "peCost": 1
     }
   },
   {
@@ -162,7 +166,8 @@
     "trainedSkills": ["iniciativa", "intimidacao"],
     "power": {
       "name": "Posição de Combate",
-      "description": "No primeiro turno de cada cena de ação, você pode gastar 2 PE para receber uma ação de movimento adicional."
+      "description": "No primeiro turno de cada cena de ação, você pode gastar 2 PE para receber uma ação de movimento adicional.",
+      "peCost": 2
     }
   },
   {
@@ -217,7 +222,8 @@
     "trainedSkills": ["intuicao", "vontade"],
     "power": {
       "name": "Espírito Cívico",
-      "description": "Sempre que faz um teste para ajudar, você pode gastar 1 PE para aumentar o bônus concedido em +2."
+      "description": "Sempre que faz um teste para ajudar, você pode gastar 1 PE para aumentar o bônus concedido em +2.",
+      "peCost": 1
     }
   },
   {
@@ -250,7 +256,8 @@
     "trainedSkills": ["adestramento", "sobrevivencia"],
     "power": {
       "name": "Desbravador",
-      "description": "Quando faz um teste de Adestramento ou Sobrevivência, você pode gastar 2 PE para receber +5 nesse teste. Além disso, você não sofre penalidade em deslocamento por terreno difícil."
+      "description": "Quando faz um teste de Adestramento ou Sobrevivência, você pode gastar 2 PE para receber +5 nesse teste. Além disso, você não sofre penalidade em deslocamento por terreno difícil.",
+      "peCost": 2
     }
   },
   {
@@ -261,7 +268,8 @@
     "trainedSkills": ["crime", "enganacao"],
     "power": {
       "name": "Impostor",
-      "description": "Uma vez por cena, você pode gastar 2 PE para substituir um teste de perícia qualquer por um teste de Enganação."
+      "description": "Uma vez por cena, você pode gastar 2 PE para substituir um teste de perícia qualquer por um teste de Enganação.",
+      "peCost": 2
     }
   },
   {

@@ -23,6 +23,7 @@ export function calculateDerivedStats(
   nex: NexTier,
   selectedPowers: string[] = [],
   trailId: string = '',
+  originId: string = '',
 ): DerivedStats {
   const classData = (classesData as Array<{
     id: string
@@ -61,21 +62,36 @@ export function calculateDerivedStats(
   // Passive power bonuses
   let hpBonus = 0
   let peBonus = 0
+  let sanBonus = 0
   let defenseBonus = 0
+  let nexPELimitBonus = 0
 
-  // Sangue de Ferro: +2 PV per NEX level
   if (selectedPowers.includes('sangue-de-ferro')) hpBonus += nexIndex * 2
-  // Potencial Aprimorado: +1 PE per NEX level
-  if (selectedPowers.includes('potencial-aprimorado')) peBonus += nexIndex * 1
-  // Precognição: +2 Defesa
+  if (selectedPowers.includes('potencial-aprimorado')) peBonus += nexIndex
   if (selectedPowers.includes('precognicao')) defenseBonus += 2
+  if (selectedPowers.includes('encarar-a-morte')) nexPELimitBonus += 1
 
   // Tropa de Choque trail — Casca Grossa (unlocked at NEX 10%): +1 PV per 5% NEX
   if (trailId === 'tropa-de-choque' && nexIndex >= 1) {
     hpBonus += Math.floor(nexNumeric / 5)
   }
 
-  return { hp: hp + hpBonus, pe: pe + peBonus, san, defense: defense + defenseBonus, nexPELimit }
+  // Origin passive bonuses
+  if (originId === 'desgarrado') hpBonus += Math.floor(nexNumeric / 5)
+  if (originId === 'policial') defenseBonus += 2
+  if (originId === 'universitario') {
+    peBonus += 1 + Math.floor(nexIndex / 2)
+    nexPELimitBonus += 1
+  }
+  if (originId === 'vitima') sanBonus += Math.floor(nexNumeric / 5)
+
+  return {
+    hp: hp + hpBonus,
+    pe: pe + peBonus,
+    san: san + sanBonus,
+    defense: defense + defenseBonus,
+    nexPELimit: nexPELimit + nexPELimitBonus,
+  }
 }
 
 export function getSkillBonus(grade: TrainingGrade): number {
@@ -117,3 +133,82 @@ export function validateAttributes(attributes: Attributes): string[] {
 }
 
 export const NEX_ORDER_EXPORTED = NEX_ORDER
+
+export function getPassiveSkillBonuses(
+  selectedPowers: string[],
+  _originId: string,
+): Record<string, number> {
+  const bonuses: Record<string, number> = {}
+  const add = (id: string, n: number) => { bonuses[id] = (bonuses[id] ?? 0) + n }
+
+  if (selectedPowers.includes('sensitivo')) {
+    add('diplomacia', 5); add('intimidacao', 5); add('intuicao', 5)
+  }
+  if (selectedPowers.includes('visao-do-oculto')) {
+    add('percepcao', 5)
+  }
+
+  return bonuses
+}
+
+function resolveConditions(active: Set<string>): Set<string> {
+  const r = new Set(active)
+  if (r.has('exausto'))    { r.add('debilitado'); r.add('lento'); r.add('vulneravel') }
+  if (r.has('fatigado'))   { r.add('fraco'); r.add('vulneravel') }
+  if (r.has('enredado'))   { r.add('lento'); r.add('vulneravel') }
+  if (r.has('agarrado'))   { r.add('desprevenido') }
+  if (r.has('atordoado'))  { r.add('desprevenido') }
+  if (r.has('cego'))       { r.add('desprevenido'); r.add('lento') }
+  if (r.has('surpreendido')) { r.add('desprevenido') }
+  if (r.has('paralisado')) { r.add('indefeso') }
+  if (r.has('petrificado')) { r.add('inconsciente') }
+  if (r.has('inconsciente')) { r.add('indefeso') }
+  if (r.has('indefeso'))   { r.add('desprevenido') }
+  return r
+}
+
+export interface ConditionModifiers {
+  defenseBonus: number
+  globalSkillPenalty: number
+  attrPenalty: Record<string, number>
+  skillPenalty: Record<string, number>
+}
+
+export function getConditionModifiers(activeConditions: Set<string>): ConditionModifiers {
+  const r = resolveConditions(activeConditions)
+  const has = (id: string) => r.has(id)
+
+  let defenseBonus = 0
+  let globalSkillPenalty = 0
+  const attrPenalty: Record<string, number> = {}
+  const skillPenalty: Record<string, number> = {}
+
+  const addAttr = (a: string, v: number) => { attrPenalty[a] = (attrPenalty[a] ?? 0) + v }
+  const addSkill = (s: string, v: number) => { skillPenalty[s] = (skillPenalty[s] ?? 0) + v }
+
+  // Global test penalty (only worst applies — abalado → apavorado escalation)
+  if (has('apavorado')) globalSkillPenalty -= 10
+  else if (has('abalado')) globalSkillPenalty -= 5
+
+  // Defense — indefeso supersedes desprevenido for defense
+  if (has('vulneravel')) defenseBonus -= 2
+  if (has('indefeso')) defenseBonus -= 10
+  else if (has('desprevenido')) defenseBonus -= 5
+
+  // Agi / Força / Vigor (worst of fraco/debilitado applies, they don't stack)
+  if (has('debilitado')) { addAttr('agilidade', -10); addAttr('forca', -10); addAttr('vigor', -10) }
+  else if (has('fraco')) { addAttr('agilidade', -5); addAttr('forca', -5); addAttr('vigor', -5) }
+  // cego: -10 on Agi/Força-based skills (independent of fraco/debilitado)
+  if (has('cego')) { addAttr('agilidade', -10); addAttr('forca', -10) }
+
+  // Intelecto / Presença (worst of frustrado/esmorecido)
+  if (has('esmorecido')) { addAttr('intelecto', -10); addAttr('presenca', -10) }
+  else if (has('frustrado')) { addAttr('intelecto', -5); addAttr('presenca', -5) }
+
+  // Per-skill
+  if (has('fascinado')) addSkill('percepcao', -10)
+  else if (has('ofuscado')) addSkill('percepcao', -5)
+  if (has('surdo')) addSkill('iniciativa', -10)
+
+  return { defenseBonus, globalSkillPenalty, attrPenalty, skillPenalty }
+}
