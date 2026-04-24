@@ -109,7 +109,7 @@ export default function CharacterSheetPage() {
       if (error || !data) { navigate('/'); return }
       setCharacter(data as Character)
       setInventory((inv ?? []) as InventoryItem[])
-      const stats = calculateDerivedStats(data.class_id, data.attributes, data.nex)
+      const stats = calculateDerivedStats(data.class_id, data.attributes, data.nex, data.selected_powers, data.trail_id)
       setDerived(stats)
       setCurrentHp(stats.hp)
       setCurrentPe(stats.pe)
@@ -188,8 +188,8 @@ export default function CharacterSheetPage() {
       ? [...character.known_rituals, ...changes.addedRituals]
       : character.known_rituals
 
-    const oldDerived = calculateDerivedStats(character.class_id, character.attributes, character.nex)
-    const newDerived = calculateDerivedStats(character.class_id, newAttributes, nextNex)
+    const oldDerived = calculateDerivedStats(character.class_id, character.attributes, character.nex, character.selected_powers, character.trail_id)
+    const newDerived = calculateDerivedStats(character.class_id, newAttributes, nextNex, newPowers, character.trail_id)
 
     await supabase.from('characters').update({
       nex: nextNex,

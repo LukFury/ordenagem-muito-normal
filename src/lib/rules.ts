@@ -20,7 +20,9 @@ export function getPELimit(nex: NexTier): number {
 export function calculateDerivedStats(
   classId: ClassId,
   attributes: Attributes,
-  nex: NexTier
+  nex: NexTier,
+  selectedPowers: string[] = [],
+  trailId: string = '',
 ): DerivedStats {
   const classData = (classesData as Array<{
     id: string
@@ -30,7 +32,8 @@ export function calculateDerivedStats(
 
   if (!classData) throw new Error(`Unknown class: ${classId}`)
 
-  const nexIndex = getNexIndex(nex) // 0 = 5%, 1 = 10%, etc. — number of advances = nexIndex
+  const nexIndex = getNexIndex(nex) // 0 = 5%, 1 = 10%, etc.
+  const nexNumeric = parseInt(nex.replace('%', ''))
 
   const { initialStats, perNEXGains } = classData
 
@@ -55,7 +58,24 @@ export function calculateDerivedStats(
 
   const nexPELimit = getPELimit(nex)
 
-  return { hp, pe, san, defense, nexPELimit }
+  // Passive power bonuses
+  let hpBonus = 0
+  let peBonus = 0
+  let defenseBonus = 0
+
+  // Sangue de Ferro: +2 PV per NEX level
+  if (selectedPowers.includes('sangue-de-ferro')) hpBonus += nexIndex * 2
+  // Potencial Aprimorado: +1 PE per NEX level
+  if (selectedPowers.includes('potencial-aprimorado')) peBonus += nexIndex * 1
+  // Precognição: +2 Defesa
+  if (selectedPowers.includes('precognicao')) defenseBonus += 2
+
+  // Tropa de Choque trail — Casca Grossa (unlocked at NEX 10%): +1 PV per 5% NEX
+  if (trailId === 'tropa-de-choque' && nexIndex >= 1) {
+    hpBonus += Math.floor(nexNumeric / 5)
+  }
+
+  return { hp: hp + hpBonus, pe: pe + peBonus, san, defense: defense + defenseBonus, nexPELimit }
 }
 
 export function getSkillBonus(grade: TrainingGrade): number {
