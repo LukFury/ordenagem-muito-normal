@@ -19,7 +19,8 @@ A D&D Beyond-style companion app for Ordem Paranormal RPG. Players create charac
   - Clickable checks (shows dice formula + result via 3D dice modal)
 - [x] Resources tracked: PV, PE, Sanidade — click up/down during session
 - [x] Personal inventory (64 items, spaces tracker, item detail modal, armor auto-applies to defense)
-- [ ] Character photo upload (Supabase Storage)
+- [x] Character photo upload (Supabase Storage)
+- [ ] NEX level up — advance tier, recalculate derived stats, persist to Supabase
 
 ## Phase 2 — Party System
 

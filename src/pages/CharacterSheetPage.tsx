@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
-import { calculateDerivedStats, getSkillBonus } from '@/lib/rules'
+import { calculateDerivedStats, getSkillBonus, NEX_ORDER_EXPORTED } from '@/lib/rules'
 import type { Attributes, ClassId, NexTier, TrainingGrade, DerivedStats } from '@/types/character'
 import skillsData from '@/data/skills.json'
 import { cn } from '@/lib/utils'
@@ -159,6 +159,21 @@ export default function CharacterSheetPage() {
     if (!error && data) setInventory(prev => [...prev, data as InventoryItem])
   }
 
+  async function handleNexUp() {
+    if (!character || !id) return
+    const currentIndex = NEX_ORDER_EXPORTED.indexOf(character.nex)
+    if (currentIndex === -1 || currentIndex >= NEX_ORDER_EXPORTED.length - 1) return
+    const nextNex = NEX_ORDER_EXPORTED[currentIndex + 1]
+    const oldDerived = calculateDerivedStats(character.class_id, character.attributes, character.nex)
+    const newDerived = calculateDerivedStats(character.class_id, character.attributes, nextNex)
+    await supabase.from('characters').update({ nex: nextNex }).eq('id', id)
+    setCharacter(prev => prev ? { ...prev, nex: nextNex } : prev)
+    setDerived(newDerived)
+    setCurrentHp(h => h + (newDerived.hp - oldDerived.hp))
+    setCurrentPe(p => p + (newDerived.pe - oldDerived.pe))
+    setCurrentSan(s => s + (newDerived.san - oldDerived.san))
+  }
+
   async function handlePhotoUpload(file: File) {
     if (!user || !id) return
     setUploadingPhoto(true)
@@ -285,8 +300,19 @@ export default function CharacterSheetPage() {
             )}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-[10px] uppercase tracking-[0.2em] text-outline">NEX</label>
-                <p className="font-mono text-lg font-bold text-tertiary">{character.nex}</p>
+                <label className="block text-[10px] uppercase tracking-[0.2em] text-outline mb-1">NEX</label>
+                <div className="flex items-center gap-2">
+                  <span className="font-mono text-lg font-bold text-tertiary">{character.nex}</span>
+                  {character.nex !== '99%' && (
+                    <button
+                      onClick={handleNexUp}
+                      title="Subir NEX"
+                      className="bg-primary-container text-white text-[9px] font-bold uppercase tracking-widest px-2 py-1 hover:bg-on-primary-fixed-variant transition-colors cursor-crosshair"
+                    >
+                      + NEX
+                    </button>
+                  )}
+                </div>
               </div>
               <div>
                 <label className="block text-[10px] uppercase tracking-[0.2em] text-outline">Origem</label>
