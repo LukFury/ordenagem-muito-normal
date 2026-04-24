@@ -98,6 +98,7 @@ export default function CharacterSheetPage() {
   const [showAddItem, setShowAddItem] = useState(false)
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null)
   const { isOpen: diceOpen, pending: dicePending, result: diceResult, roll, onRollComplete, close: closeDice } = useDiceRoller()
+  const rollPurposeRef = useRef<'skill' | 'damage' | 'heal'>('skill')
 
   useEffect(() => {
     if (!id) return
@@ -234,6 +235,35 @@ export default function CharacterSheetPage() {
     setInventory(prev => prev.filter(i => i.id !== itemId))
   }
 
+  function castRitual(ritual: RitualInfo) {
+    if (currentPe < ritual.peCost) return
+    setCurrentPe(p => Math.max(0, p - ritual.peCost))
+    if (ritual.damage) {
+      rollPurposeRef.current = 'damage'
+      roll({ label: `${ritual.name}${ritual.damageType ? ` — ${ritual.damageType}` : ''}`, notation: ritual.damage, modifier: 0, modifierBreakdown: [] })
+    } else if (ritual.heal) {
+      rollPurposeRef.current = 'heal'
+      roll({ label: `${ritual.name} — Cura`, notation: ritual.heal, modifier: 0, modifierBreakdown: [] })
+    }
+  }
+
+  function activatePower(peCost: number, name: string, rollData?: { notation: string; isHeal?: boolean }) {
+    if (!derived || currentPe < peCost) return
+    setCurrentPe(p => Math.max(0, p - peCost))
+    if (rollData) {
+      rollPurposeRef.current = rollData.isHeal ? 'heal' : 'damage'
+      roll({ label: name, notation: rollData.notation, modifier: 0, modifierBreakdown: [] })
+    }
+  }
+
+  function handleDiceClose() {
+    if (rollPurposeRef.current === 'heal' && diceResult && derived) {
+      setCurrentHp(h => Math.min(derived.hp, h + diceResult.total))
+    }
+    rollPurposeRef.current = 'skill'
+    closeDice()
+  }
+
   const totalSpaces = inventory.reduce((sum, i) => sum + (i.spaces * i.quantity), 0)
   const MAX_SPACES = 30
   const armorBonus = inventory
@@ -249,8 +279,8 @@ export default function CharacterSheetPage() {
   const originData = (originsData as { id: string; name: string; power: { name: string; description: string } }[])
     .find(o => o.id === character.origin_id)
 
-  // Fix 4: Power & ritual name/description lookup maps
-  type PowerInfo = { id: string; name: string; description: string }
+  // Power & ritual lookup maps
+  type PowerInfo = { id: string; name: string; description: string; peCost?: number; action?: string; damage?: string; damageType?: string; heal?: string; peCostNote?: string }
   const powerLookup = new Map<string, PowerInfo>()
   for (const cls of classesData as { id: string; classPowers?: PowerInfo[] }[]) {
     for (const p of cls.classPowers ?? []) powerLookup.set(p.id, p)
@@ -265,16 +295,34 @@ export default function CharacterSheetPage() {
     for (const p of (pd[key] as (PowerInfo & { id: string })[] | undefined) ?? []) powerLookup.set(p.id, p)
   }
 
-  type RitualInfo = { name: string; summary: string; element: string; circle: number }
+  type RitualInfo = {
+    id: string; name: string; summary: string; description: string;
+    element: string; circle: number; peCost: number;
+    execution: string; range: string; target: string; duration: string;
+    resistance: string | null; damage: string | null; damageType: string | null; heal: string | null
+  }
   const ritualLookup = new Map<string, RitualInfo>()
-  const catalog = (ritualsData as { catalog: Record<string, Record<string, { id: string; name: string; summary: string }[]>> }).catalog
+  type _RawRitual = Omit<RitualInfo, 'element' | 'circle'>
+  const catalog = (ritualsData as { catalog: Record<string, Record<string, _RawRitual[]>> }).catalog
   for (const [circle, elements] of Object.entries(catalog)) {
     for (const [element, rituals] of Object.entries(elements)) {
-      for (const r of rituals) ritualLookup.set(r.id, { name: r.name, summary: r.summary, element, circle: parseInt(circle) })
+      for (const r of rituals) ritualLookup.set(r.id, { ...r, element, circle: parseInt(circle) })
     }
   }
 
-  // Fix 1: Conditions list
+  // Trail abilities unlocked at or below current NEX
+  type TrailAbility = { name: string; description: string; peCost?: number | null; action?: string; heal?: string; damage?: string; damageType?: string; peCostNote?: string; nex: string; trailName: string }
+  type ClassWithTrails = { id: string; trails?: { id: string; name: string; abilities: Record<string, Omit<TrailAbility, 'nex' | 'trailName'>> }[] }
+  const classDataForTrail = (classesData as ClassWithTrails[]).find(c => c.id === character.class_id)
+  const trailDataForChar = classDataForTrail?.trails?.find(t => t.id === character.trail_id)
+  const nexNumeric = parseInt(character.nex.replace('%', ''))
+  const unlockedTrailAbilities: TrailAbility[] = trailDataForChar
+    ? Object.entries(trailDataForChar.abilities)
+        .filter(([nex]) => parseInt(nex.replace('%', '')) <= nexNumeric)
+        .map(([nex, ab]) => ({ ...ab, nex, trailName: trailDataForChar.name }))
+    : []
+
+  // Conditions list
   const allConditions = (conditionsData as { conditions: { id: string; name: string; category: string; description: string }[] }).conditions
 
   return (
@@ -731,52 +779,153 @@ export default function CharacterSheetPage() {
                     )}
                   </div>
 
-                  {/* Fix 4: Powers & Rituals with full details */}
+                  {/* Powers */}
                   {character.selected_powers.length > 0 && (
                     <div>
                       <h4 className="text-[10px] uppercase tracking-widest text-secondary mb-2">Poderes</h4>
                       <div className="space-y-1">
                         {character.selected_powers.map(pid => {
                           const info = powerLookup.get(pid)
+                          const hasCost = !!(info?.peCost && info.peCost > 0)
+                          const hasRoll = !!(info?.damage || info?.heal)
+                          const canUse = hasCost && currentPe >= (info?.peCost ?? 0)
                           return (
                             <details key={pid} className="bg-surface-container-lowest border-l-2 border-secondary/30 group">
-                              <summary className="p-2 cursor-crosshair list-none flex justify-between items-center">
-                                <span className="text-[10px] font-bold text-on-surface uppercase tracking-wide">
+                              <summary className="p-2 cursor-crosshair list-none flex justify-between items-center gap-2">
+                                <span className="text-[10px] font-bold text-on-surface uppercase tracking-wide flex-1 truncate">
                                   {info?.name ?? pid}
                                 </span>
-                                <span className="material-symbols-outlined text-sm text-outline group-open:rotate-180 transition-transform">expand_more</span>
+                                {hasCost && <span className="text-[9px] font-mono text-tertiary shrink-0">{info!.peCost} PE</span>}
+                                <span className="material-symbols-outlined text-sm text-outline group-open:rotate-180 transition-transform shrink-0">expand_more</span>
                               </summary>
-                              {info?.description && (
-                                <p className="px-2 pb-2 text-[10px] text-on-surface-variant leading-relaxed">{info.description}</p>
-                              )}
+                              <div className="px-2 pb-2 space-y-1.5">
+                                {info?.description && <p className="text-[10px] text-on-surface-variant leading-relaxed">{info.description}</p>}
+                                {info?.peCostNote && <p className="text-[9px] font-mono text-outline italic">{info.peCostNote}</p>}
+                                {(info?.damage || info?.heal) && (
+                                  <p className="text-[10px] font-mono text-tertiary">
+                                    {info.damage ? `Dano: ${info.damage}${info.damageType ? ` (${info.damageType})` : ''}` : `Cura: ${info.heal}`}
+                                  </p>
+                                )}
+                                {hasCost && (
+                                  <button
+                                    onClick={e => { e.preventDefault(); activatePower(info!.peCost!, info!.name, hasRoll ? { notation: info!.damage ?? info!.heal!, isHeal: !!info!.heal } : undefined) }}
+                                    disabled={!canUse}
+                                    className={cn(
+                                      'w-full py-1 text-[9px] font-bold uppercase tracking-widest transition-all',
+                                      canUse
+                                        ? 'bg-secondary/15 text-secondary hover:bg-secondary/25 border border-secondary/30 cursor-crosshair'
+                                        : 'bg-surface-container text-outline/40 cursor-not-allowed'
+                                    )}
+                                  >
+                                    Ativar ({info!.peCost} PE)
+                                  </button>
+                                )}
+                              </div>
                             </details>
                           )
                         })}
                       </div>
                     </div>
                   )}
+
+                  {/* Rituals */}
                   {character.known_rituals.length > 0 && (
                     <div>
                       <h4 className="text-[10px] uppercase tracking-widest text-tertiary mb-2">Rituais</h4>
                       <div className="space-y-1">
                         {character.known_rituals.map(rid => {
                           const info = ritualLookup.get(rid)
+                          const canCast = info != null && currentPe >= info.peCost
                           return (
                             <details key={rid} className="bg-surface-container-lowest border-l-2 border-tertiary/30 group">
-                              <summary className="p-2 cursor-crosshair list-none flex justify-between items-center">
-                                <div className="flex items-center gap-2 min-w-0">
+                              <summary className="p-2 cursor-crosshair list-none flex justify-between items-center gap-2">
+                                <div className="flex items-center gap-2 min-w-0 flex-1">
                                   <span className="text-[10px] font-bold text-on-surface uppercase tracking-wide truncate">
                                     {info?.name ?? rid}
                                   </span>
-                                  {info && (
-                                    <span className="text-[9px] font-mono text-tertiary shrink-0">{info.circle}º · {info.element}</span>
-                                  )}
+                                  {info && <span className="text-[9px] font-mono text-tertiary shrink-0">{info.circle}º · {info.element}</span>}
                                 </div>
+                                {info && <span className="text-[9px] font-mono text-tertiary/70 shrink-0">{info.peCost} PE</span>}
                                 <span className="material-symbols-outlined text-sm text-outline group-open:rotate-180 transition-transform shrink-0">expand_more</span>
                               </summary>
-                              {info?.summary && (
-                                <p className="px-2 pb-2 text-[10px] text-on-surface-variant leading-relaxed">{info.summary}</p>
-                              )}
+                              <div className="px-2 pb-2 space-y-1.5">
+                                {info && (
+                                  <>
+                                    <div className="grid grid-cols-2 gap-x-4 gap-y-0.5">
+                                      <span className="text-[9px] font-mono text-outline">Exec.: <span className="text-on-surface/60">{info.execution}</span></span>
+                                      <span className="text-[9px] font-mono text-outline">Alcance: <span className="text-on-surface/60">{info.range || '—'}</span></span>
+                                      <span className="text-[9px] font-mono text-outline col-span-2">Alvo: <span className="text-on-surface/60">{info.target}</span></span>
+                                      <span className="text-[9px] font-mono text-outline col-span-2">Duração: <span className="text-on-surface/60">{info.duration}</span></span>
+                                      {info.resistance && <span className="text-[9px] font-mono text-outline col-span-2">Res.: <span className="text-on-surface/60">{info.resistance}</span></span>}
+                                    </div>
+                                    {(info.damage || info.heal) && (
+                                      <p className="text-[10px] font-mono text-primary-container">
+                                        {info.damage ? `Dano: ${info.damage}${info.damageType ? ` (${info.damageType})` : ''}` : `Cura: ${info.heal}`}
+                                      </p>
+                                    )}
+                                    <p className="text-[10px] text-on-surface-variant leading-relaxed">{info.description}</p>
+                                    <button
+                                      onClick={e => { e.preventDefault(); castRitual(info) }}
+                                      disabled={!canCast}
+                                      className={cn(
+                                        'w-full py-1.5 text-[9px] font-bold uppercase tracking-widest transition-all',
+                                        canCast
+                                          ? 'bg-tertiary/15 text-tertiary hover:bg-tertiary/25 border border-tertiary/30 cursor-crosshair'
+                                          : 'bg-surface-container text-outline/40 cursor-not-allowed'
+                                      )}
+                                    >
+                                      Conjurar ({info.peCost} PE){info.damage ? ` · ${info.damage}` : info.heal ? ` · cura ${info.heal}` : ''}
+                                    </button>
+                                  </>
+                                )}
+                              </div>
+                            </details>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Trail abilities */}
+                  {unlockedTrailAbilities.length > 0 && (
+                    <div>
+                      <h4 className="text-[10px] uppercase tracking-widest text-on-surface/40 mb-2">Trilha · {trailDataForChar?.name}</h4>
+                      <div className="space-y-1">
+                        {unlockedTrailAbilities.map((ab, i) => {
+                          const hasCost = !!(ab.peCost && ab.peCost > 0)
+                          const hasRoll = !!(ab.damage || ab.heal)
+                          const canUse = !hasCost || currentPe >= (ab.peCost ?? 0)
+                          return (
+                            <details key={i} className="bg-surface-container-lowest border-l-2 border-on-surface/15 group">
+                              <summary className="p-2 cursor-crosshair list-none flex justify-between items-center gap-2">
+                                <span className="text-[10px] font-bold text-on-surface/70 uppercase tracking-wide flex-1 truncate">{ab.name}</span>
+                                {hasCost && <span className="text-[9px] font-mono text-tertiary shrink-0">{ab.peCost} PE</span>}
+                                <span className="text-[9px] font-mono text-outline/40 shrink-0">{ab.nex}</span>
+                                <span className="material-symbols-outlined text-sm text-outline/50 group-open:rotate-180 transition-transform shrink-0">expand_more</span>
+                              </summary>
+                              <div className="px-2 pb-2 space-y-1.5">
+                                <p className="text-[10px] text-on-surface-variant leading-relaxed">{ab.description}</p>
+                                {ab.peCostNote && <p className="text-[9px] font-mono text-outline italic">{ab.peCostNote}</p>}
+                                {(ab.damage || ab.heal) && (
+                                  <p className="text-[10px] font-mono text-tertiary">
+                                    {ab.damage ? `Dano: ${ab.damage}${ab.damageType ? ` (${ab.damageType})` : ''}` : `Cura: ${ab.heal}`}
+                                  </p>
+                                )}
+                                {hasCost && (
+                                  <button
+                                    onClick={e => { e.preventDefault(); activatePower(ab.peCost!, ab.name, hasRoll ? { notation: ab.damage ?? ab.heal!, isHeal: !!ab.heal } : undefined) }}
+                                    disabled={!canUse}
+                                    className={cn(
+                                      'w-full py-1 text-[9px] font-bold uppercase tracking-widest transition-all',
+                                      canUse
+                                        ? 'bg-on-surface/10 text-on-surface/60 hover:bg-on-surface/15 border border-on-surface/15 cursor-crosshair'
+                                        : 'bg-surface-container text-outline/40 cursor-not-allowed'
+                                    )}
+                                  >
+                                    Ativar ({ab.peCost} PE)
+                                  </button>
+                                )}
+                              </div>
                             </details>
                           )
                         })}
@@ -849,7 +998,7 @@ export default function CharacterSheetPage() {
         pending={dicePending}
         result={diceResult}
         onRollComplete={onRollComplete}
-        onClose={closeDice}
+        onClose={handleDiceClose}
       />
 
       {/* Footer */}
