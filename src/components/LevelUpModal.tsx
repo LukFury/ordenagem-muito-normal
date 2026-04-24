@@ -130,6 +130,26 @@ function buildVersatilidadePool(cls: ClassData, trailId: string, selectedPowers:
   return [...classPools, ...otherTrailFirstPowers]
 }
 
+const ELEMENT_LABELS: Record<string, string> = {
+  conhecimento: 'Conhecimento',
+  energia: 'Energia',
+  morte: 'Morte',
+  sangue: 'Sangue',
+}
+const ELEMENT_IDS = ['conhecimento', 'energia', 'morte', 'sangue'] as const
+
+function buildExpansaoPool(currentClassId: string, selectedPowers: string[]): (PowerEntry & { className: string })[] {
+  return (['combatente', 'especialista', 'ocultista'] as const)
+    .filter(id => id !== currentClassId)
+    .flatMap(id => {
+      const cls = getClassData(id)
+      const powers = ((cls as unknown as Record<string, PowerEntry[]>)?.classPowers) ?? []
+      return powers
+        .filter(p => !selectedPowers.includes(p.id))
+        .map(p => ({ ...p, className: id }))
+    })
+}
+
 function getRitualsForCircle(circle: number, knownRituals: string[]): RitualEntry[] {
   const catalog = (ritualsData as Record<string, unknown>).catalog as Record<string, Record<string, RitualEntry[]>>
   const circleData = catalog[String(circle)]
@@ -176,8 +196,9 @@ export default function LevelUpModal({ character, newNex, onConfirm, onClose }: 
   const [trainingUpgrades, setTrainingUpgrades] = useState<Record<string, TrainingGrade>>({})
   const [chosenPowers, setChosenPowers] = useState<Record<string, string>>({})
   const [chosenRituals, setChosenRituals] = useState<Record<string, string>>({})
-  // aprender-ritual sub-choice: powerAbility key → ritual id
   const [aprenderRitualChoices, setAprenderRitualChoices] = useState<Record<string, string>>({})
+  const [resistirElementoChoices, setResistirElementoChoices] = useState<Record<string, string>>({})
+  const [expansaoChoices, setExpansaoChoices] = useState<Record<string, string>>({})
 
   const upgradeCount = Object.keys(trainingUpgrades).length
   const remainingUpgrades = trainingCount - upgradeCount
@@ -214,8 +235,17 @@ export default function LevelUpModal({ character, newNex, onConfirm, onClose }: 
       for (const [skillId, newGrade] of Object.entries(trainingUpgrades)) map.set(skillId, newGrade)
       changes.upgradedTraining = Array.from(map.entries()).map(([skillId, grade]) => ({ skillId, grade }))
     }
-    const powers = Object.values(chosenPowers).filter(Boolean)
-    if (powers.length > 0) changes.addedPowers = powers
+    const powers = Object.entries(chosenPowers)
+      .filter(([, pid]) => Boolean(pid))
+      .map(([slot, pid]) => {
+        if (pid === 'resistir-elemento') {
+          const element = resistirElementoChoices[slot]
+          return element ? `resistir-elemento-${element}` : pid
+        }
+        return pid
+      })
+    const expansaoExtras = Object.values(expansaoChoices).filter(Boolean)
+    if (powers.length > 0 || expansaoExtras.length > 0) changes.addedPowers = [...powers, ...expansaoExtras]
     const rituals = [
       ...Object.values(chosenRituals).filter(Boolean),
       ...Object.values(aprenderRitualChoices).filter(Boolean),
@@ -224,8 +254,9 @@ export default function LevelUpModal({ character, newNex, onConfirm, onClose }: 
     return changes
   }
 
-  // Which power slots had aprender-ritual chosen and therefore need a ritual sub-choice
   const aprenderRitualSlots = powerAbilities.filter(pa => chosenPowers[pa] === 'aprender-ritual')
+  const resistirSlots = powerAbilities.filter(pa => chosenPowers[pa] === 'resistir-elemento')
+  const expansaoSlots = powerAbilities.filter(pa => chosenPowers[pa] === 'expansao-de-conhecimento')
 
   const nexNumericForModal = parseInt(newNex.replace('%', ''))
   const highNex = nexNumericForModal >= 45
@@ -233,9 +264,11 @@ export default function LevelUpModal({ character, newNex, onConfirm, onClose }: 
   const attrReady = !needsAttr || chosenAttr !== null
   const powerReady = powerAbilities.every(pa => chosenPowers[pa] !== undefined)
   const aprenderReady = aprenderRitualSlots.every(pa => aprenderRitualChoices[pa] !== undefined)
+  const resistirReady = resistirSlots.every(pa => resistirElementoChoices[pa] !== undefined)
+  const expansaoReady = expansaoSlots.every(pa => expansaoChoices[pa] !== undefined)
   const ritualReady = ritualAbilities.every(ra => chosenRituals[ra] !== undefined)
   const versatilReady = !needsVersatilidade || chosenPowers['versatilidade'] !== undefined
-  const canConfirm = attrReady && powerReady && aprenderReady && ritualReady && versatilReady
+  const canConfirm = attrReady && powerReady && aprenderReady && resistirReady && expansaoReady && ritualReady && versatilReady
 
   // ── Render ───────────────────────────────────────────────────────────────────
 
@@ -492,6 +525,92 @@ export default function LevelUpModal({ character, newNex, onConfirm, onClose }: 
                         {isChosen && (
                           <p className="text-[10px] text-on-surface-variant mt-1 leading-relaxed">{ritual.summary}</p>
                         )}
+                      </button>
+                    )
+                  })}
+                </div>
+              </section>
+            )
+          })}
+
+          {/* Resistir a Elemento sub-picker */}
+          {resistirSlots.map((pa, i) => {
+            const chosen = resistirElementoChoices[pa]
+            return (
+              <section key={`resistir-${pa}-${i}`}>
+                <div className="flex items-center gap-3 mb-3">
+                  <h3 className="text-[9px] font-mono uppercase tracking-[0.25em] text-outline">
+                    Resistir a — Escolha o Elemento {resistirSlots.length > 1 ? `(${i + 1})` : ''}
+                  </h3>
+                  <span className="text-[9px] font-mono text-primary-container">obrigatório</span>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  {ELEMENT_IDS.map(el => {
+                    const isChosen = chosen === el
+                    return (
+                      <button
+                        key={el}
+                        onClick={() => setResistirElementoChoices(prev => ({ ...prev, [pa]: el }))}
+                        className={cn(
+                          'p-3 text-left transition-all cursor-crosshair border-l-2',
+                          isChosen
+                            ? 'bg-surface-container-highest border-secondary'
+                            : 'bg-surface-container-high border-transparent hover:border-outline-variant/40'
+                        )}
+                      >
+                        <p className={cn('text-xs font-bold uppercase tracking-wide', isChosen ? 'text-secondary' : 'text-on-surface')}>
+                          {ELEMENT_LABELS[el]}
+                        </p>
+                        {isChosen && (
+                          <p className="text-[10px] text-on-surface-variant mt-0.5">Resistência 10 contra {ELEMENT_LABELS[el]}</p>
+                        )}
+                      </button>
+                    )
+                  })}
+                </div>
+              </section>
+            )
+          })}
+
+          {/* Expansão de Conhecimento sub-picker */}
+          {expansaoSlots.map((pa, i) => {
+            const pool = buildExpansaoPool(character.class_id, character.selected_powers)
+            const chosen = expansaoChoices[pa]
+            return (
+              <section key={`expansao-${pa}-${i}`}>
+                <div className="flex items-center gap-3 mb-3">
+                  <h3 className="text-[9px] font-mono uppercase tracking-[0.25em] text-outline">
+                    Expansão de Conhecimento — Poder de Outra Classe {expansaoSlots.length > 1 ? `(${i + 1})` : ''}
+                  </h3>
+                  <span className="text-[9px] font-mono text-primary-container">obrigatório</span>
+                </div>
+                <p className="text-[10px] text-on-surface/50 mb-3 uppercase tracking-wide">
+                  Pré-requisitos ainda se aplicam
+                </p>
+                <div className="space-y-1 max-h-64 overflow-y-auto">
+                  {pool.map(power => {
+                    const isChosen = chosen === power.id
+                    return (
+                      <button
+                        key={power.id}
+                        onClick={() => setExpansaoChoices(prev => ({ ...prev, [pa]: power.id }))}
+                        className={cn(
+                          'w-full text-left p-3 transition-all cursor-crosshair border-l-2',
+                          isChosen
+                            ? 'bg-surface-container-highest border-secondary'
+                            : 'bg-surface-container-high border-transparent hover:border-outline-variant/40'
+                        )}
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <p className={cn('text-xs font-bold uppercase tracking-wide', isChosen ? 'text-secondary' : 'text-on-surface')}>
+                            {power.name}
+                          </p>
+                          <span className="text-[9px] font-mono text-outline/60 shrink-0 capitalize">{power.className}</span>
+                        </div>
+                        {power.prerequisites && power.prerequisites.length > 0 && !isChosen && (
+                          <p className="text-[9px] font-mono text-outline/40 mt-0.5">Req: {power.prerequisites.join(', ')}</p>
+                        )}
+                        {isChosen && <p className="text-[10px] text-on-surface-variant mt-1 leading-relaxed">{power.description}</p>}
                       </button>
                     )
                   })}

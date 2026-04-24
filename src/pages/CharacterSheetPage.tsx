@@ -298,6 +298,12 @@ export default function CharacterSheetPage() {
   for (const key of ['ocultistaPowers', 'general', 'conhecimento', 'energia', 'morte', 'sangue']) {
     for (const p of (pd[key] as (PowerInfo & { id: string })[] | undefined) ?? []) powerLookup.set(p.id, p)
   }
+  // Dynamic entries for resistir-elemento-{element}
+  const ELEMENT_LABELS_SHEET: Record<string, string> = { conhecimento: 'Conhecimento', energia: 'Energia', morte: 'Morte', sangue: 'Sangue' }
+  for (const [el, label] of Object.entries(ELEMENT_LABELS_SHEET)) {
+    const id = `resistir-elemento-${el}`
+    powerLookup.set(id, { id, name: `Resistir a ${label}`, description: `Resistência 10 contra ${label}. Este poder conta como um poder de ${label}.` })
+  }
 
   type RitualInfo = {
     id: string; name: string; summary: string; description: string;
@@ -998,6 +1004,8 @@ export default function CharacterSheetPage() {
         <ItemDetailModal
           item={selectedItem}
           attributes={character.attributes}
+          meleeDamageBonus={character.origin_id === 'lutador' ? 2 : 0}
+          firearmDamageBonus={character.origin_id === 'militar' ? 2 : 0}
           onRoll={(label, notation, modifier, breakdown) => {
             setSelectedItem(null)
             roll({ label, notation, modifier, modifierBreakdown: breakdown })

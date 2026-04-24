@@ -5,6 +5,8 @@ import type { Attributes } from '@/types/character'
 interface Props {
   item: InventoryItem
   attributes: Attributes
+  meleeDamageBonus?: number
+  firearmDamageBonus?: number
   onRoll: (label: string, notation: string, modifier: number, breakdown: { label: string; value: number }[]) => void
   onClose: () => void
 }
@@ -31,7 +33,7 @@ function parseDamageOptions(damage: string): { label: string; notation: string }
   return [{ label: clean, notation: clean }]
 }
 
-export default function ItemDetailModal({ item, attributes, onRoll, onClose }: Props) {
+export default function ItemDetailModal({ item, attributes, meleeDamageBonus = 0, firearmDamageBonus = 0, onRoll, onClose }: Props) {
   const d = item.item_data as Record<string, unknown>
   const isWeapon = item.item_type === 'weapon'
   const isArmor = item.item_type === 'armor'
@@ -84,10 +86,13 @@ export default function ItemDetailModal({ item, attributes, onRoll, onClose }: P
   }
 
   function handleDamage(notation: string, label: string) {
-    // Arco Composto adds Forca to damage
     const addsForca = item.item_id === 'arco-composto'
-    const mod = addsForca ? attributes.forca : 0
-    const breakdown = addsForca ? [{ label: 'Força', value: attributes.forca }] : []
+    const originBonus = isRanged ? firearmDamageBonus : meleeDamageBonus
+    const mod = (addsForca ? attributes.forca : 0) + originBonus
+    const breakdown: { label: string; value: number }[] = [
+      ...(addsForca ? [{ label: 'Força', value: attributes.forca }] : []),
+      ...(originBonus > 0 ? [{ label: 'Bónus de Origem', value: originBonus }] : []),
+    ]
     onRoll(`Dano — ${item.name} (${label})`, notation, mod, breakdown)
   }
 
