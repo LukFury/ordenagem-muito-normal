@@ -10,6 +10,7 @@ import { useDiceRoller } from '@/hooks/useDiceRoller'
 import DiceRollModal from '@/components/DiceRollModal'
 import AddItemModal, { type FlatItem } from '@/components/inventory/AddItemModal'
 import ItemDetailModal from '@/components/inventory/ItemDetailModal'
+import LevelUpModal, { type LevelUpChanges } from '@/components/LevelUpModal'
 
 interface Skill { id: string; name: string; attribute: string; trainedOnly: boolean }
 interface SkillTraining { skillId: string; grade: TrainingGrade }
@@ -84,6 +85,7 @@ export default function CharacterSheetPage() {
 
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
   const photoInputRef = useRef<HTMLInputElement>(null)
+  const [levelUpNex, setLevelUpNex] = useState<NexTier | null>(null)
 
   const [inventoryTab, setInventoryTab] = useState<'pessoal' | 'partido'>('pessoal')
   const [inventory, setInventory] = useState<InventoryItem[]>([])
@@ -159,19 +161,45 @@ export default function CharacterSheetPage() {
     if (!error && data) setInventory(prev => [...prev, data as InventoryItem])
   }
 
-  async function handleNexUp() {
-    if (!character || !id) return
+  function handleNexUp() {
+    if (!character) return
     const currentIndex = NEX_ORDER_EXPORTED.indexOf(character.nex)
     if (currentIndex === -1 || currentIndex >= NEX_ORDER_EXPORTED.length - 1) return
-    const nextNex = NEX_ORDER_EXPORTED[currentIndex + 1]
+    setLevelUpNex(NEX_ORDER_EXPORTED[currentIndex + 1])
+  }
+
+  async function handleLevelUpConfirm(changes: LevelUpChanges) {
+    if (!character || !id || !levelUpNex) return
+    const nextNex = levelUpNex
+
+    const newAttributes = changes.newAttributes ?? character.attributes
+    const newSkillTraining = changes.upgradedTraining ?? character.skill_training
+    const newPowers = changes.addedPowers?.length
+      ? [...character.selected_powers, ...changes.addedPowers]
+      : character.selected_powers
+
     const oldDerived = calculateDerivedStats(character.class_id, character.attributes, character.nex)
-    const newDerived = calculateDerivedStats(character.class_id, character.attributes, nextNex)
-    await supabase.from('characters').update({ nex: nextNex }).eq('id', id)
-    setCharacter(prev => prev ? { ...prev, nex: nextNex } : prev)
+    const newDerived = calculateDerivedStats(character.class_id, newAttributes, nextNex)
+
+    await supabase.from('characters').update({
+      nex: nextNex,
+      attributes: newAttributes,
+      skill_training: newSkillTraining,
+      selected_powers: newPowers,
+    }).eq('id', id)
+
+    setCharacter(prev => prev ? {
+      ...prev,
+      nex: nextNex,
+      attributes: newAttributes,
+      skill_training: newSkillTraining,
+      selected_powers: newPowers,
+    } : prev)
     setDerived(newDerived)
     setCurrentHp(h => h + (newDerived.hp - oldDerived.hp))
     setCurrentPe(p => p + (newDerived.pe - oldDerived.pe))
     setCurrentSan(s => s + (newDerived.san - oldDerived.san))
+    setLevelUpNex(null)
   }
 
   async function handlePhotoUpload(file: File) {
@@ -665,6 +693,16 @@ export default function CharacterSheetPage() {
         <AddItemModal
           onAdd={(item, qty) => { handleAddItem(item, qty) }}
           onClose={() => setShowAddItem(false)}
+        />
+      )}
+
+      {/* Level Up Modal */}
+      {levelUpNex && character && (
+        <LevelUpModal
+          character={character}
+          newNex={levelUpNex}
+          onConfirm={handleLevelUpConfirm}
+          onClose={() => setLevelUpNex(null)}
         />
       )}
 
