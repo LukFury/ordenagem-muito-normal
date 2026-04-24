@@ -239,7 +239,7 @@ export default function CharacterSheetPage() {
                 <img
                   src={character.photo_url}
                   alt="Retrato do agente"
-                  className="w-full h-full object-cover grayscale brightness-75 group-hover:grayscale-0 transition-all duration-500"
+                  className="w-full h-full object-cover transition-all duration-500"
                 />
               ) : (
                 <div className="w-full h-full flex flex-col items-center justify-center gap-3 bg-surface-container-low">
