@@ -813,8 +813,8 @@ export default function CharacterSheetPage() {
                                     className={cn(
                                       'w-full py-1 text-[9px] font-bold uppercase tracking-widest transition-all',
                                       canUse
-                                        ? 'bg-secondary/15 text-secondary hover:bg-secondary/25 border border-secondary/30 cursor-crosshair'
-                                        : 'bg-surface-container text-outline/40 cursor-not-allowed'
+                                        ? 'bg-transparent text-secondary border border-outline-variant/20 hover:border-secondary/50 cursor-crosshair'
+                                        : 'bg-transparent text-outline/40 border border-outline-variant/10 cursor-not-allowed'
                                     )}
                                   >
                                     Ativar ({info!.peCost} PE)
@@ -852,11 +852,11 @@ export default function CharacterSheetPage() {
                                 {info && (
                                   <>
                                     <div className="grid grid-cols-2 gap-x-4 gap-y-0.5">
-                                      <span className="text-[9px] font-mono text-outline">Exec.: <span className="text-on-surface/60">{info.execution}</span></span>
-                                      <span className="text-[9px] font-mono text-outline">Alcance: <span className="text-on-surface/60">{info.range || '—'}</span></span>
-                                      <span className="text-[9px] font-mono text-outline col-span-2">Alvo: <span className="text-on-surface/60">{info.target}</span></span>
-                                      <span className="text-[9px] font-mono text-outline col-span-2">Duração: <span className="text-on-surface/60">{info.duration}</span></span>
-                                      {info.resistance && <span className="text-[9px] font-mono text-outline col-span-2">Res.: <span className="text-on-surface/60">{info.resistance}</span></span>}
+                                      <span className="text-[9px] font-mono text-outline uppercase tracking-wider">Exec.: <span className="normal-case text-on-surface/60">{info.execution}</span></span>
+                                      <span className="text-[9px] font-mono text-outline uppercase tracking-wider">Alcance: <span className="normal-case text-on-surface/60">{info.range || '—'}</span></span>
+                                      <span className="text-[9px] font-mono text-outline uppercase tracking-wider col-span-2">Alvo: <span className="normal-case text-on-surface/60">{info.target}</span></span>
+                                      <span className="text-[9px] font-mono text-outline uppercase tracking-wider col-span-2">Duração: <span className="normal-case text-on-surface/60">{info.duration}</span></span>
+                                      {info.resistance && <span className="text-[9px] font-mono text-outline uppercase tracking-wider col-span-2">Res.: <span className="normal-case text-on-surface/60">{info.resistance}</span></span>}
                                     </div>
                                     {(info.damage || info.heal) && (
                                       <p className="text-[10px] font-mono text-primary-container">
@@ -870,8 +870,8 @@ export default function CharacterSheetPage() {
                                       className={cn(
                                         'w-full py-1.5 text-[9px] font-bold uppercase tracking-widest transition-all',
                                         canCast
-                                          ? 'bg-tertiary/15 text-tertiary hover:bg-tertiary/25 border border-tertiary/30 cursor-crosshair'
-                                          : 'bg-surface-container text-outline/40 cursor-not-allowed'
+                                          ? 'bg-transparent text-tertiary border border-outline-variant/20 hover:border-tertiary/50 cursor-crosshair'
+                                          : 'bg-transparent text-outline/40 border border-outline-variant/10 cursor-not-allowed'
                                       )}
                                     >
                                       Conjurar ({info.peCost} PE){info.damage ? ` · ${info.damage}` : info.heal ? ` · cura ${info.heal}` : ''}
@@ -918,8 +918,8 @@ export default function CharacterSheetPage() {
                                     className={cn(
                                       'w-full py-1 text-[9px] font-bold uppercase tracking-widest transition-all',
                                       canUse
-                                        ? 'bg-on-surface/10 text-on-surface/60 hover:bg-on-surface/15 border border-on-surface/15 cursor-crosshair'
-                                        : 'bg-surface-container text-outline/40 cursor-not-allowed'
+                                        ? 'bg-transparent text-on-surface/50 border border-outline-variant/20 hover:border-outline-variant/50 cursor-crosshair'
+                                        : 'bg-transparent text-outline/40 border border-outline-variant/10 cursor-not-allowed'
                                     )}
                                   >
                                     Ativar ({ab.peCost} PE)
