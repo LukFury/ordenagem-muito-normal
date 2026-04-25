@@ -43,6 +43,7 @@ interface Character {
   attributes: Attributes
   skill_training: SkillTraining[]
   known_rituals: string[]
+  class_rituals: string[]
   selected_powers: string[]
   photo_url: string | null
   notes: string
@@ -113,7 +114,7 @@ export default function CharacterSheetPage() {
       supabase.from('inventory_items').select('*').eq('character_id', id).order('created_at'),
     ]).then(([{ data, error }, { data: inv }]) => {
       if (error || !data) { navigate('/'); return }
-      setCharacter(data as Character)
+      setCharacter({ ...data, class_rituals: data.class_rituals ?? [] } as Character)
       setInventory((inv ?? []) as InventoryItem[])
       const stats = calculateDerivedStats(data.class_id, data.attributes, data.nex, data.selected_powers, data.trail_id, data.origin_id)
       setDerived(stats)
@@ -193,9 +194,13 @@ export default function CharacterSheetPage() {
     const newPowers = changes.addedPowers?.length
       ? [...character.selected_powers, ...changes.addedPowers]
       : character.selected_powers
-    const newRituals = changes.addedRituals?.length
-      ? [...character.known_rituals, ...changes.addedRituals]
+    const allNewRituals = [...(changes.addedRituals ?? []), ...(changes.addedClassRituals ?? [])]
+    const newRituals = allNewRituals.length
+      ? [...character.known_rituals, ...allNewRituals]
       : character.known_rituals
+    const newClassRituals = changes.addedClassRituals?.length
+      ? [...character.class_rituals, ...changes.addedClassRituals]
+      : character.class_rituals
 
     const oldDerived = calculateDerivedStats(character.class_id, character.attributes, character.nex, character.selected_powers, character.trail_id, character.origin_id)
     const newDerived = calculateDerivedStats(character.class_id, newAttributes, nextNex, newPowers, character.trail_id, character.origin_id)
@@ -206,6 +211,7 @@ export default function CharacterSheetPage() {
       skill_training: newSkillTraining,
       selected_powers: newPowers,
       known_rituals: newRituals,
+      class_rituals: newClassRituals,
     }).eq('id', id)
 
     setCharacter(prev => prev ? {
@@ -215,6 +221,7 @@ export default function CharacterSheetPage() {
       skill_training: newSkillTraining,
       selected_powers: newPowers,
       known_rituals: newRituals,
+      class_rituals: newClassRituals,
     } : prev)
     setDerived(newDerived)
     setCurrentHp(h => h + (newDerived.hp - oldDerived.hp))
@@ -1019,9 +1026,9 @@ export default function CharacterSheetPage() {
                         {character.attributes.intelecto > 0 && (
                           <span className={cn(
                             'text-[9px] font-mono uppercase tracking-widest',
-                            character.known_rituals.length > character.attributes.intelecto ? 'text-primary-container' : 'text-on-surface/30'
+                            (character.known_rituals.length - character.class_rituals.length) > character.attributes.intelecto ? 'text-primary-container' : 'text-on-surface/30'
                           )}>
-                            {character.known_rituals.length}/{character.attributes.intelecto} (via poder)
+                            {character.known_rituals.length - character.class_rituals.length}/{character.attributes.intelecto} (via poder)
                           </span>
                         )}
                       </div>

@@ -10,6 +10,7 @@ create table public.characters (
   attributes jsonb not null default '{"agilidade":1,"forca":1,"intelecto":1,"presenca":1,"vigor":1}',
   skill_training jsonb not null default '[]',
   known_rituals jsonb not null default '[]',
+  class_rituals jsonb not null default '[]',
   selected_powers jsonb not null default '[]',
   patronage integer not null default 0,
   notes text not null default '',

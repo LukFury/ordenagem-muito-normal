@@ -26,6 +26,7 @@ export interface LevelUpChanges {
   upgradedTraining?: SkillTraining[]
   addedPowers?: string[]
   addedRituals?: string[]
+  addedClassRituals?: string[]
 }
 
 interface Props {
@@ -246,11 +247,10 @@ export default function LevelUpModal({ character, newNex, onConfirm, onClose }: 
       })
     const expansaoExtras = Object.values(expansaoChoices).filter(Boolean)
     if (powers.length > 0 || expansaoExtras.length > 0) changes.addedPowers = [...powers, ...expansaoExtras]
-    const rituals = [
-      ...Object.values(chosenRituals).filter(Boolean),
-      ...Object.values(aprenderRitualChoices).filter(Boolean),
-    ]
-    if (rituals.length > 0) changes.addedRituals = rituals
+    const classRituals = Object.values(chosenRituals).filter(Boolean)
+    const powerRituals = Object.values(aprenderRitualChoices).filter(Boolean)
+    if (powerRituals.length > 0) changes.addedRituals = powerRituals
+    if (classRituals.length > 0) changes.addedClassRituals = classRituals
     return changes
   }
 

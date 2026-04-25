@@ -42,6 +42,7 @@ export interface Character {
   attributes: Attributes
   skillTraining: SkillTraining[]
   knownRituals: string[]
+  classRituals: string[]
   selectedPowers: string[]
   patronage: number
   notes: string

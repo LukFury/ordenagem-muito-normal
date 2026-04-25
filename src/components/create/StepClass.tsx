@@ -16,7 +16,7 @@ export default function StepClass({ draft, update }: Props) {
   const selectedClass = classes.find(c => c.id === draft.classId)
 
   function selectClass(id: ClassId) {
-    update({ classId: id, trailId: '' })
+    update({ classId: id, trailId: '', knownRituals: [], classRituals: [] })
   }
 
   return (

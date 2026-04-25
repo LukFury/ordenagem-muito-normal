@@ -11,6 +11,7 @@ import StepAttributes from '@/components/create/StepAttributes'
 import StepOrigin from '@/components/create/StepOrigin'
 import StepClass from '@/components/create/StepClass'
 import StepSkills from '@/components/create/StepSkills'
+import StepRituals from '@/components/create/StepRituals'
 import StepReview from '@/components/create/StepReview'
 
 export interface CharacterDraft {
@@ -23,6 +24,7 @@ export interface CharacterDraft {
   attributes: Attributes
   skillTraining: { skillId: string; grade: 'treinado' }[]
   knownRituals: string[]
+  classRituals: string[]
   selectedPowers: string[]
 }
 
@@ -36,14 +38,18 @@ const INITIAL_DRAFT: CharacterDraft = {
   attributes: { agilidade: 1, forca: 1, intelecto: 1, presenca: 1, vigor: 1 },
   skillTraining: [],
   knownRituals: [],
+  classRituals: [],
   selectedPowers: [],
 }
-
-const STEPS = ['Conceito', 'Atributos', 'Origem', 'Classe', 'Perícias', 'Revisar']
 
 export default function CharacterCreatePage() {
   const [step, setStep] = useState(0)
   const [draft, setDraft] = useState<CharacterDraft>(INITIAL_DRAFT)
+
+  const isOcultista = draft.classId === 'ocultista'
+  const STEPS = isOcultista
+    ? ['Conceito', 'Atributos', 'Origem', 'Classe', 'Perícias', 'Rituais', 'Revisar']
+    : ['Conceito', 'Atributos', 'Origem', 'Classe', 'Perícias', 'Revisar']
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState('')
   const navigate = useNavigate()
@@ -77,6 +83,7 @@ export default function CharacterCreatePage() {
       attributes: draft.attributes,
       skill_training: draft.skillTraining,
       known_rituals: draft.knownRituals,
+      class_rituals: draft.classRituals,
       selected_powers: draft.selectedPowers,
     })
 
@@ -159,7 +166,11 @@ export default function CharacterCreatePage() {
           {step === 2 && <StepOrigin draft={draft} update={update} />}
           {step === 3 && <StepClass draft={draft} update={update} />}
           {step === 4 && <StepSkills draft={draft} update={update} />}
-          {step === 5 && (
+          {step === 5 && isOcultista && <StepRituals draft={draft} update={update} />}
+          {step === 5 && !isOcultista && (
+            <StepReview draft={draft} derivedStats={derivedStats} onSave={handleSave} saving={saving} saveError={saveError} />
+          )}
+          {step === 6 && (
             <StepReview draft={draft} derivedStats={derivedStats} onSave={handleSave} saving={saving} saveError={saveError} />
           )}
         </div>
@@ -180,7 +191,8 @@ export default function CharacterCreatePage() {
             {step < STEPS.length - 1 && (
               <button
                 onClick={next}
-                className="px-6 py-3 bg-primary-container hover:bg-on-primary-fixed-variant text-on-primary-container font-bold text-[10px] uppercase tracking-widest transition-all flex items-center gap-3 group cursor-crosshair"
+                disabled={isOcultista && step === 5 && draft.classRituals.length < 3}
+                className="px-6 py-3 bg-primary-container hover:bg-on-primary-fixed-variant text-on-primary-container font-bold text-[10px] uppercase tracking-widest transition-all flex items-center gap-3 group cursor-crosshair disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <span>Próximo: {STEPS[step + 1]}</span>
                 <span className="material-symbols-outlined text-sm group-hover:translate-x-1 transition-transform">arrow_forward_ios</span>
