@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
-import { calculateDerivedStats, getSkillBonus, getPassiveSkillBonuses, getConditionModifiers, NEX_ORDER_EXPORTED } from '@/lib/rules'
+import { calculateDerivedStats, getSkillBonus, getPassiveSkillBonuses, getConditionModifiers, NEX_ORDER_EXPORTED, getNexIndex } from '@/lib/rules'
 import type { Attributes, ClassId, NexTier, TrainingGrade, DerivedStats } from '@/types/character'
 import skillsData from '@/data/skills.json'
 import originsData from '@/data/origins.json'
@@ -93,6 +93,7 @@ export default function CharacterSheetPage() {
   const [levelUpNex, setLevelUpNex] = useState<NexTier | null>(null)
   const [activeConditions, setActiveConditions] = useState<Set<string>>(new Set())
 
+  const [sentidoTaticoActive, setSentidoTaticoActive] = useState(false)
   const [inventoryTab, setInventoryTab] = useState<'pessoal' | 'partido'>('pessoal')
   const [inventory, setInventory] = useState<InventoryItem[]>([])
   const [showAddItem, setShowAddItem] = useState(false)
@@ -268,12 +269,18 @@ export default function CharacterSheetPage() {
   }
 
   const totalSpaces = inventory.reduce((sum, i) => sum + (i.spaces * i.quantity), 0)
-  const MAX_SPACES = 30
+  const nexIdx = getNexIndex(character.nex)
+  const hasTiroCerteiro = character.selected_powers.includes('tiro-certeiro')
+  const hasMiraDeElite = character.trail_id === 'atirador-de-elite' && nexIdx >= 1
+  const hasInventarioOtimizado = character.trail_id === 'tecnico' && nexIdx >= 1
+  const hasSentidoTatico = character.selected_powers.includes('sentido-tatico')
+  const hasPresencaPoderosa = character.trail_id === 'intuitivo' && nexIdx >= 7
+  const MAX_SPACES = (character.attributes.forca + (hasInventarioOtimizado ? character.attributes.intelecto : 0)) * 5
   const armorBonus = inventory
     .filter(i => i.item_type === 'armor')
     .reduce((sum, i) => sum + (Number((i.item_data as Record<string, unknown>).defenseBonus) || 0), 0)
   const condMods = getConditionModifiers(activeConditions)
-  const effectiveDefense = derived.defense + armorBonus + condMods.defenseBonus
+  const effectiveDefense = derived.defense + armorBonus + condMods.defenseBonus + (sentidoTaticoActive ? character.attributes.intelecto : 0)
   const passiveSkillBonuses = getPassiveSkillBonuses(character.selected_powers, character.origin_id)
 
   const hpPct = Math.max(0, Math.min(100, (currentHp / derived.hp) * 100))
@@ -447,6 +454,14 @@ export default function CharacterSheetPage() {
                     Ativar ({originData.power.peCost} PE)
                   </button>
                 )}
+                {character.origin_id === 'religioso' && (
+                  <button
+                    onClick={() => roll({ label: 'Acalentar — Sanidade', notation: '1d6', modifier: character.attributes.presenca, modifierBreakdown: [{ label: 'Presença', value: character.attributes.presenca }] })}
+                    className="mt-2 w-full py-1 text-[9px] font-bold uppercase tracking-widest bg-transparent text-secondary border border-outline-variant/20 hover:border-secondary/50 cursor-crosshair transition-all"
+                  >
+                    Acalentar — 1d6+{character.attributes.presenca} SAN
+                  </button>
+                )}
               </div>
             )}
             <div className="grid grid-cols-2 gap-4">
@@ -486,13 +501,33 @@ export default function CharacterSheetPage() {
               <label className="block text-[9px] uppercase tracking-widest text-outline mb-1">
                 {armorBonus > 0 ? `Defesa (+${armorBonus})` : 'Defesa'}
                 {condMods.defenseBonus < 0 && <span className="text-primary-container"> ({condMods.defenseBonus})</span>}
+                {sentidoTaticoActive && <span className="text-tertiary"> (+{character.attributes.intelecto})</span>}
               </label>
-              <span className={cn('font-mono text-xl font-bold', condMods.defenseBonus < 0 ? 'text-primary-container' : 'text-on-surface')}>
-                {effectiveDefense}
-              </span>
+              <div className="flex items-center gap-2">
+                <span className={cn('font-mono text-xl font-bold', condMods.defenseBonus < 0 ? 'text-primary-container' : 'text-on-surface')}>
+                  {effectiveDefense}
+                </span>
+                {hasSentidoTatico && (
+                  <button
+                    onClick={() => setSentidoTaticoActive(v => !v)}
+                    title={sentidoTaticoActive ? 'Desativar Sentido Tático' : 'Ativar Sentido Tático (2 PE)'}
+                    className={cn(
+                      'text-[8px] font-mono px-1.5 py-0.5 uppercase tracking-widest transition-all cursor-crosshair border',
+                      sentidoTaticoActive
+                        ? 'text-tertiary border-tertiary/60 bg-tertiary/10'
+                        : 'text-outline/40 border-outline-variant/20 hover:border-outline/40 hover:text-outline/70'
+                    )}
+                  >
+                    ST
+                  </button>
+                )}
+              </div>
             </div>
             <div>
-              <label className="block text-[9px] uppercase tracking-widest text-outline mb-1">Lim. PE/turno</label>
+              <label className="block text-[9px] uppercase tracking-widest text-outline mb-1">
+                Lim. PE/turno
+                {hasPresencaPoderosa && <span className="text-tertiary"> (+{character.attributes.presenca} rituais)</span>}
+              </label>
               <span className="font-mono text-xl font-bold text-on-surface">{derived.nexPELimit}</span>
             </div>
           </div>
@@ -870,7 +905,17 @@ export default function CharacterSheetPage() {
                   {/* Rituals */}
                   {character.known_rituals.length > 0 && (
                     <div>
-                      <h4 className="text-[10px] uppercase tracking-widest text-tertiary mb-2">Rituais</h4>
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="text-[10px] uppercase tracking-widest text-tertiary">Rituais</h4>
+                        {character.attributes.intelecto > 0 && (
+                          <span className={cn(
+                            'text-[9px] font-mono uppercase tracking-widest',
+                            character.known_rituals.length > character.attributes.intelecto ? 'text-primary-container' : 'text-on-surface/30'
+                          )}>
+                            {character.known_rituals.length}/{character.attributes.intelecto} (via poder)
+                          </span>
+                        )}
+                      </div>
                       <div className="space-y-1">
                         {character.known_rituals.map(rid => {
                           const info = ritualLookup.get(rid)
@@ -1007,6 +1052,8 @@ export default function CharacterSheetPage() {
           attributes={character.attributes}
           meleeDamageBonus={character.origin_id === 'lutador' ? 2 : 0}
           firearmDamageBonus={character.origin_id === 'militar' ? 2 : 0}
+          hasTiroCerteiro={hasTiroCerteiro}
+          hasMiraDeElite={hasMiraDeElite}
           onRoll={(label, notation, modifier, breakdown) => {
             setSelectedItem(null)
             roll({ label, notation, modifier, modifierBreakdown: breakdown })

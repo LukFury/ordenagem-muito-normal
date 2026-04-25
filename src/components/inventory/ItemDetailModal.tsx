@@ -7,6 +7,8 @@ interface Props {
   attributes: Attributes
   meleeDamageBonus?: number
   firearmDamageBonus?: number
+  hasTiroCerteiro?: boolean
+  hasMiraDeElite?: boolean
   onRoll: (label: string, notation: string, modifier: number, breakdown: { label: string; value: number }[]) => void
   onClose: () => void
 }
@@ -33,7 +35,7 @@ function parseDamageOptions(damage: string): { label: string; notation: string }
   return [{ label: clean, notation: clean }]
 }
 
-export default function ItemDetailModal({ item, attributes, meleeDamageBonus = 0, firearmDamageBonus = 0, onRoll, onClose }: Props) {
+export default function ItemDetailModal({ item, attributes, meleeDamageBonus = 0, firearmDamageBonus = 0, hasTiroCerteiro = false, hasMiraDeElite = false, onRoll, onClose }: Props) {
   const d = item.item_data as Record<string, unknown>
   const isWeapon = item.item_type === 'weapon'
   const isArmor = item.item_type === 'armor'
@@ -86,11 +88,34 @@ export default function ItemDetailModal({ item, attributes, meleeDamageBonus = 0
   }
 
   function handleDamage(notation: string, label: string) {
-    const addsForca = item.item_id === 'arco-composto'
+    const isArremessavel = special.includes('arremessavel')
+    const isFirearm = hasAmmo && item.item_id !== 'arco-composto'
     const originBonus = isRanged ? firearmDamageBonus : meleeDamageBonus
-    const mod = (addsForca ? attributes.forca : 0) + originBonus
-    const breakdown: { label: string; value: number }[] = [
-      ...(addsForca ? [{ label: 'Força', value: attributes.forca }] : []),
+
+    let statVal = 0
+    const statEntries: { label: string; value: number }[] = []
+
+    if (isAgil) {
+      statVal += attributes.agilidade
+      statEntries.push({ label: 'Agilidade', value: attributes.agilidade })
+    } else if (!isRanged || isArremessavel || item.item_id === 'arco-composto') {
+      statVal += attributes.forca
+      statEntries.push({ label: 'Força', value: attributes.forca })
+    }
+
+    if (hasTiroCerteiro && isFirearm && !isAgil) {
+      statVal += attributes.agilidade
+      statEntries.push({ label: 'Agilidade (Tiro Certeiro)', value: attributes.agilidade })
+    }
+
+    if (hasMiraDeElite && ammo === 'balas-longas') {
+      statVal += attributes.intelecto
+      statEntries.push({ label: 'Intelecto (Mira de Elite)', value: attributes.intelecto })
+    }
+
+    const mod = statVal + originBonus
+    const breakdown = [
+      ...statEntries,
       ...(originBonus > 0 ? [{ label: 'Bónus de Origem', value: originBonus }] : []),
     ]
     onRoll(`Dano — ${item.name} (${label})`, notation, mod, breakdown)
