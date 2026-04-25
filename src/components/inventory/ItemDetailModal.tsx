@@ -17,6 +17,11 @@ interface Props {
   favoritaCategoryReduction?: number
   favoritaMargemBonus?: number
   favoritaExtraDie?: boolean
+  ataqueEspecialTiers?: { cost: number; bonus: number }[]
+  combateDefensivoActive?: boolean
+  duasArmasActive?: boolean
+  currentPe?: number
+  onSpendPe?: (amount: number) => void
   onToggleFavorita?: () => void
   onRoll: (label: string, notation: string, modifier: number, breakdown: { label: string; value: number }[]) => void
   onClose: () => void
@@ -49,7 +54,6 @@ function applyMargemAmeaca(critical: string, bonus: number): string {
 
 function parseDamageOptions(damage: string): { label: string; notation: string }[] {
   if (!damage || damage === 'varies') return []
-  // Strip non-dice suffixes like "+veneno"
   const clean = damage.replace(/\+[^d0-9].*/i, '')
   if (clean.includes('/')) {
     const [oneMao, duasMaos] = clean.split('/')
@@ -61,12 +65,18 @@ function parseDamageOptions(damage: string): { label: string; notation: string }
   return [{ label: clean, notation: clean }]
 }
 
-export default function ItemDetailModal({ item, attributes, meleeDamageBonus = 0, firearmDamageBonus = 0, hasTiroCerteiro = false, hasMiraDeElite = false, hasGolpePesado = false, hasTecnicaLetal = false, hasNinjaUrbano = false, isFavorita = false, isAniquilador = false, favoritaCategoryReduction = 0, favoritaMargemBonus = 0, favoritaExtraDie = false, onToggleFavorita, onRoll, onClose }: Props) {
+export default function ItemDetailModal({
+  item, attributes, meleeDamageBonus = 0, firearmDamageBonus = 0,
+  hasTiroCerteiro = false, hasMiraDeElite = false, hasGolpePesado = false,
+  hasTecnicaLetal = false, hasNinjaUrbano = false, isFavorita = false,
+  isAniquilador = false, favoritaCategoryReduction = 0, favoritaMargemBonus = 0,
+  favoritaExtraDie = false, ataqueEspecialTiers = [], combateDefensivoActive = false,
+  duasArmasActive = false, currentPe = 0, onSpendPe, onToggleFavorita, onRoll, onClose,
+}: Props) {
   const d = item.item_data as Record<string, unknown>
   const isWeapon = item.item_type === 'weapon'
   const isArmor = item.item_type === 'armor'
 
-  // Pre-cast all fields to avoid unknown in JSX
   const damage = d.damage != null ? String(d.damage) : null
   const critical = d.critical != null ? String(d.critical) : null
   const range = d.range != null ? String(d.range) : null
@@ -78,18 +88,15 @@ export default function ItemDetailModal({ item, attributes, meleeDamageBonus = 0
 
   const damageOptions = isWeapon ? parseDamageOptions(damage ?? '') : []
 
-  // Determine attack attribute
   const hasRange = !!(d.range)
   const hasAmmo = !!(d.ammo)
   const isAgil = Array.isArray(d.special) && (d.special as string[]).includes('agil')
   const isRanged = hasRange || hasAmmo
   const isMelee = !isRanged
 
-  // Critical threshold after passive margem de ameaça bonuses
   const totalMargemBonus = (hasTecnicaLetal && isMelee ? 2 : 0) + (isFavorita ? favoritaMargemBonus : 0)
   const displayCritical = totalMargemBonus > 0 && critical ? applyMargemAmeaca(critical, totalMargemBonus) : critical
 
-  // Extra dice from Golpe Pesado and Máquina de Matar (favorita)
   const diceToAdd = (hasGolpePesado && isMelee ? 1 : 0) + (isFavorita && favoritaExtraDie ? 1 : 0)
 
   let attackAttr: keyof Attributes
@@ -111,17 +118,27 @@ export default function ItemDetailModal({ item, attributes, meleeDamageBonus = 0
   }
 
   const attackMod = attributes[attackAttr]
+  const cdPenalty = combateDefensivoActive ? -5 : 0
+  const duasPenalty = duasArmasActive ? -5 : 0
+  const attackModDisplay = attackMod + cdPenalty + duasPenalty
+  const hasPenalties = combateDefensivoActive || duasArmasActive
 
-  function handleAttack() {
+  function handleAttack(aeBonus = 0, aePeCost = 0) {
+    if (aePeCost > 0) onSpendPe?.(aePeCost)
     onRoll(
       `Ataque — ${item.name}`,
       '1d20',
-      attackMod,
-      [{ label: attackLabel, value: attackMod }]
+      attackModDisplay + aeBonus,
+      [
+        { label: attackLabel, value: attackMod },
+        ...(aeBonus > 0 ? [{ label: 'Ataque Especial', value: aeBonus }] : []),
+        ...(cdPenalty !== 0 ? [{ label: 'Combate Defensivo', value: cdPenalty }] : []),
+        ...(duasPenalty !== 0 ? [{ label: 'Duas Armas', value: duasPenalty }] : []),
+      ]
     )
   }
 
-  function handleDamage(notation: string, label: string) {
+  function handleDamage(notation: string, label: string, aeBonus = 0, aePeCost = 0) {
     const isArremessavel = special.includes('arremessavel')
     const isFirearm = hasAmmo && item.item_id !== 'arco-composto'
     const category = d.category != null ? String(d.category) : '0'
@@ -154,11 +171,14 @@ export default function ItemDetailModal({ item, attributes, meleeDamageBonus = 0
       statEntries.push({ label: 'Intelecto (Mira de Elite)', value: attributes.intelecto })
     }
 
-    const mod = statVal + baseBonus + ninjaBonus
+    if (aePeCost > 0) onSpendPe?.(aePeCost)
+
+    const mod = statVal + baseBonus + ninjaBonus + aeBonus
     const breakdown = [
       ...statEntries,
       ...(baseBonus > 0 ? [{ label: 'Bónus', value: baseBonus }] : []),
       ...(ninjaBonus > 0 ? [{ label: 'Ninja Urbano', value: ninjaBonus }] : []),
+      ...(aeBonus > 0 ? [{ label: 'Ataque Especial', value: aeBonus }] : []),
       ...(diceToAdd > 0 ? [{ label: diceToAdd === 1 ? '+1 dado extra' : `+${diceToAdd} dados extra`, value: 0 }] : []),
     ]
     onRoll(`Dano — ${item.name} (${label})`, effectiveNotation, mod, breakdown)
@@ -298,16 +318,48 @@ export default function ItemDetailModal({ item, attributes, meleeDamageBonus = 0
         {isWeapon && (
           <div className="px-6 pb-6 space-y-2 border-t border-outline-variant/15 pt-4">
             <p className="text-[9px] font-mono text-on-surface/30 uppercase tracking-widest mb-3">
-              Ações — {skillLabel} ({attackLabel} {attackMod > 0 ? `+${attackMod}` : attackMod})
+              Ações — {skillLabel} ({attackLabel} {attackModDisplay >= 0 ? `+${attackModDisplay}` : attackModDisplay}
+              {hasPenalties && (
+                <span className="text-primary-container/70">
+                  {combateDefensivoActive && ' −5 CD'}{duasArmasActive && ' −5 2A'}
+                </span>
+              )})
             </p>
+
+            {/* Base attack */}
             <button
-              onClick={handleAttack}
+              onClick={() => handleAttack()}
               className="w-full py-3 bg-primary-container hover:bg-on-primary-fixed-variant text-white font-bold text-[10px] uppercase tracking-widest transition-all cursor-crosshair flex items-center justify-center gap-3"
             >
               <span className="material-symbols-outlined text-sm">target</span>
-              Rolar Ataque — 1d20+{attackMod}
+              Rolar Ataque — 1d20{attackModDisplay >= 0 ? `+${attackModDisplay}` : attackModDisplay}
             </button>
 
+            {/* Ataque Especial — attack bonus buttons */}
+            {ataqueEspecialTiers.length > 0 && (
+              <div className="space-y-1">
+                <p className="text-[8px] font-mono text-on-surface/25 uppercase tracking-widest">Ataque Especial — bónus de ataque</p>
+                <div className="flex gap-1.5 flex-wrap">
+                  {ataqueEspecialTiers.map(t => (
+                    <button
+                      key={`ae-atk-${t.cost}`}
+                      onClick={() => handleAttack(t.bonus, t.cost)}
+                      disabled={currentPe < t.cost}
+                      className={cn(
+                        'flex-1 py-2 text-[9px] font-bold uppercase tracking-widest border transition-all',
+                        currentPe >= t.cost
+                          ? 'bg-transparent text-secondary border-secondary/40 hover:border-secondary/70 cursor-crosshair'
+                          : 'bg-transparent text-outline/25 border-outline-variant/10 cursor-not-allowed'
+                      )}
+                    >
+                      +{t.bonus} atk · {t.cost} PE
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Base damage — 1 option */}
             {damageOptions.length === 1 && (
               <button
                 onClick={() => handleDamage(damageOptions[0].notation, damageOptions[0].label)}
@@ -318,6 +370,7 @@ export default function ItemDetailModal({ item, attributes, meleeDamageBonus = 0
               </button>
             )}
 
+            {/* Base damage — 2 options */}
             {damageOptions.length === 2 && (
               <div className="grid grid-cols-2 gap-2">
                 {damageOptions.map(opt => (
@@ -337,6 +390,57 @@ export default function ItemDetailModal({ item, attributes, meleeDamageBonus = 0
               <p className="text-[10px] font-mono text-on-surface/30 text-center uppercase tracking-widest">
                 Dano variável — consulta o mestre
               </p>
+            )}
+
+            {/* Ataque Especial — damage bonus buttons */}
+            {ataqueEspecialTiers.length > 0 && damageOptions.length > 0 && (
+              <div className="space-y-1">
+                <p className="text-[8px] font-mono text-on-surface/25 uppercase tracking-widest">Ataque Especial — bónus de dano</p>
+                {damageOptions.length === 1 ? (
+                  <div className="flex gap-1.5 flex-wrap">
+                    {ataqueEspecialTiers.map(t => (
+                      <button
+                        key={`ae-dmg-${t.cost}`}
+                        onClick={() => handleDamage(damageOptions[0].notation, damageOptions[0].label, t.bonus, t.cost)}
+                        disabled={currentPe < t.cost}
+                        className={cn(
+                          'flex-1 py-2 text-[9px] font-bold uppercase tracking-widest border transition-all',
+                          currentPe >= t.cost
+                            ? 'bg-transparent text-tertiary border-tertiary/40 hover:border-tertiary/70 cursor-crosshair'
+                            : 'bg-transparent text-outline/25 border-outline-variant/10 cursor-not-allowed'
+                        )}
+                      >
+                        +{t.bonus} dano · {t.cost} PE
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="space-y-1">
+                    {damageOptions.map(opt => (
+                      <div key={opt.notation} className="flex gap-1.5">
+                        <span className="text-[8px] font-mono text-outline/40 uppercase tracking-widest self-center w-16 shrink-0">
+                          {opt.label.split(' ')[0]}
+                        </span>
+                        {ataqueEspecialTiers.map(t => (
+                          <button
+                            key={`ae-dmg-${opt.notation}-${t.cost}`}
+                            onClick={() => handleDamage(opt.notation, opt.label, t.bonus, t.cost)}
+                            disabled={currentPe < t.cost}
+                            className={cn(
+                              'flex-1 py-1.5 text-[9px] font-bold uppercase tracking-widest border transition-all',
+                              currentPe >= t.cost
+                                ? 'bg-transparent text-tertiary border-tertiary/40 hover:border-tertiary/70 cursor-crosshair'
+                                : 'bg-transparent text-outline/25 border-outline-variant/10 cursor-not-allowed'
+                            )}
+                          >
+                            +{t.bonus} · {t.cost} PE
+                          </button>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             )}
 
             {isAniquilador && onToggleFavorita && (

@@ -103,6 +103,8 @@ export default function CharacterSheetPage() {
   const [inventoryTab, setInventoryTab] = useState<'pessoal' | 'partido'>('pessoal')
   const [peritoPickerOpen, setPeritoPickerOpen] = useState(false)
   const [peritoPickerSelected, setPeritoPickerSelected] = useState<string[]>([])
+  const [duasArmasActive, setDuasArmasActive] = useState(false)
+  const [primeiraImpressaoUsed, setPrimeiraImpressaoUsed] = useState(false)
   const [inventory, setInventory] = useState<InventoryItem[]>([])
   const [showAddItem, setShowAddItem] = useState(false)
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null)
@@ -210,6 +212,47 @@ export default function CharacterSheetPage() {
     const newPowers = [...filtered, ...skillIds.map(s => `perito-skill-${s}`)]
     await supabase.from('characters').update({ selected_powers: newPowers }).eq('id', id)
     setCharacter(prev => prev ? { ...prev, selected_powers: newPowers } : prev)
+  }
+
+  function spendPe(amount: number) {
+    setCurrentPe(p => Math.max(0, p - amount))
+  }
+
+  function rollWithConhecimentoAplicado(skillName: string, grade: TrainingGrade, extraBonus: number) {
+    if (currentPe < 2) return
+    setCurrentPe(p => Math.max(0, p - 2))
+    const intVal = character!.attributes.intelecto
+    const numDice = intVal >= 1 ? intVal : 2
+    const mode = intVal === 0 ? 'lowest' : 'highest'
+    const bonus = getSkillBonus(grade)
+    roll({
+      label: `${skillName} (Conhecimento Aplicado)`,
+      notation: `${numDice}d20`,
+      mode,
+      modifier: bonus + extraBonus,
+      modifierBreakdown: [
+        { label: 'Intelecto', value: intVal },
+        ...(bonus > 0 ? [{ label: 'Treino', value: bonus }] : []),
+        ...(extraBonus !== 0 ? [{ label: 'Bónus/Penalidade', value: extraBonus }] : []),
+      ],
+    })
+  }
+
+  function rollWithPrimeiraImpressao(skillName: string, attrValue: number, grade: TrainingGrade, extraBonus: number) {
+    const bonus = getSkillBonus(grade)
+    const base = attrValue >= 1 ? attrValue : 2
+    roll({
+      label: `${skillName} (Primeira Impressão)`,
+      notation: `${base + 2}d20`,
+      mode: 'highest',
+      modifier: bonus + extraBonus,
+      modifierBreakdown: [
+        ...(bonus > 0 ? [{ label: 'Treino', value: bonus }] : []),
+        { label: 'Primeira Impressão (+2d)', value: 0 },
+        ...(extraBonus !== 0 ? [{ label: 'Bónus/Penalidade', value: extraBonus }] : []),
+      ],
+    })
+    setPrimeiraImpressaoUsed(true)
   }
 
   async function handleAddItem(item: FlatItem, quantity: number) {
@@ -370,6 +413,22 @@ export default function CharacterSheetPage() {
   const artistaMarcialDamage = hasArtistaMarcialEsp
     ? (nexIdx >= 13 ? '1d10' : nexIdx >= 6 ? '1d8' : '1d6')
     : null
+  // Combatente powers
+  const hasArtistaMarcialComb = character.selected_powers.includes('artista-marcial')
+  const artistaMarcialCombDamage = hasArtistaMarcialComb
+    ? (nexIdx >= 13 ? '1d10' : nexIdx >= 6 ? '1d8' : '1d6')
+    : null
+  const hasCombaterDuasArmas = character.selected_powers.includes('combater-com-duas-armas')
+  // Especialista extra powers
+  const hasConhecimentoAplicado = character.selected_powers.includes('conhecimento-aplicado')
+  const hasPrimeiraImpressao = character.selected_powers.includes('primeira-impressao')
+  // Ataque Especial tiers (all unlocked tiers available to spend)
+  const ataqueEspecialTiers = [
+    { id: 'ataque-especial-2pe', cost: 2, bonus: 5 },
+    { id: 'ataque-especial-3pe', cost: 3, bonus: 10 },
+    { id: 'ataque-especial-4pe', cost: 4, bonus: 15 },
+    { id: 'ataque-especial-5pe', cost: 5, bonus: 20 },
+  ].filter(t => character.selected_powers.includes(t.id))
   // Eclético
   const hasEcletico = character.selected_powers.includes('ecletico')
   const ecleticoCanVet = character.selected_powers.includes('engenhosidade-veterano')
@@ -789,7 +848,38 @@ export default function CharacterSheetPage() {
             </div>
           </div>
 
-          {/* Artista Marcial — unarmed attack stats */}
+          {/* Combater com Duas Armas toggle + Ataque Especial indicator */}
+          {(hasCombaterDuasArmas || ataqueEspecialTiers.length > 0) && (
+            <div className="mt-3 flex items-center gap-3 flex-wrap">
+              {ataqueEspecialTiers.length > 0 && (
+                <div className="flex items-center gap-2">
+                  <span className="text-[9px] uppercase tracking-widest text-outline">Atq. Especial</span>
+                  <span className="font-mono text-[10px] text-secondary">
+                    +{ataqueEspecialTiers[ataqueEspecialTiers.length - 1].bonus} / {ataqueEspecialTiers[ataqueEspecialTiers.length - 1].cost} PE
+                  </span>
+                </div>
+              )}
+              {hasCombaterDuasArmas && (
+                <div className="flex items-center gap-2 ml-auto">
+                  <span className="text-[9px] uppercase tracking-widest text-outline">Duas Armas</span>
+                  <button
+                    onClick={() => setDuasArmasActive(v => !v)}
+                    title="Combater com Duas Armas: −5 em todos os ataques até ao próximo turno"
+                    className={cn(
+                      'text-[8px] font-mono px-2 py-0.5 uppercase tracking-widest border transition-all cursor-crosshair',
+                      duasArmasActive
+                        ? 'text-primary-container border-primary-container/60 bg-primary-container/10'
+                        : 'text-outline/40 border-outline-variant/20 hover:border-outline/40 hover:text-outline/70'
+                    )}
+                  >
+                    {duasArmasActive ? '−5 atk ativo' : 'inativo'}
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Artista Marcial — unarmed attack stats (Especialista) */}
           {hasArtistaMarcialEsp && (
             <div className="bg-surface-container-low p-4 border-t border-outline-variant/10">
               <span className="text-[9px] uppercase tracking-widest text-outline mb-2 block">Desarmado (Artista Marcial)</span>
@@ -812,6 +902,41 @@ export default function CharacterSheetPage() {
                     label: 'Dano — Desarmado',
                     notation: artistaMarcialDamage!,
                     modifier: (character.attributes.agilidade) + (character.origin_id === 'lutador' ? 2 : 0),
+                    modifierBreakdown: [
+                      { label: 'Agilidade', value: character.attributes.agilidade },
+                      ...(character.origin_id === 'lutador' ? [{ label: 'Bónus', value: 2 }] : []),
+                    ],
+                  })}
+                >
+                  Rolar dano
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Artista Marcial — unarmed attack stats (Combatente) */}
+          {hasArtistaMarcialComb && (
+            <div className="bg-surface-container-low p-4 border-t border-outline-variant/10">
+              <span className="text-[9px] uppercase tracking-widest text-outline mb-2 block">Desarmado (Artista Marcial)</span>
+              <div className="flex items-center gap-4">
+                <div>
+                  <span className="text-[8px] font-mono text-outline uppercase">Ataque</span>
+                  <p className="font-mono text-sm font-bold text-on-surface">Agi ({character.attributes.agilidade})</p>
+                </div>
+                <div>
+                  <span className="text-[8px] font-mono text-outline uppercase">Dano</span>
+                  <p className="font-mono text-sm font-bold text-on-surface">
+                    {artistaMarcialCombDamage}
+                    {character.origin_id === 'lutador' ? ' +2' : ''}
+                    <span className="text-[9px] text-outline ml-1">letal, ágil</span>
+                  </p>
+                </div>
+                <button
+                  className="ml-auto text-[8px] font-mono uppercase tracking-widest text-outline/50 border border-outline-variant/20 hover:border-outline/40 hover:text-outline/80 px-2 py-1 cursor-crosshair transition-colors"
+                  onClick={() => roll({
+                    label: 'Dano — Desarmado',
+                    notation: artistaMarcialCombDamage!,
+                    modifier: character.attributes.agilidade + (character.origin_id === 'lutador' ? 2 : 0),
                     modifierBreakdown: [
                       { label: 'Agilidade', value: character.attributes.agilidade },
                       ...(character.origin_id === 'lutador' ? [{ label: 'Bónus', value: 2 }] : []),
@@ -956,6 +1081,19 @@ export default function CharacterSheetPage() {
               </div>
             </div>
 
+            {/* Primeira Impressão — reset banner */}
+            {hasPrimeiraImpressao && primeiraImpressaoUsed && (
+              <div className="mb-4 flex items-center justify-between bg-surface-container-highest border-l-2 border-primary-container/40 px-3 py-2">
+                <span className="text-[9px] font-mono text-outline uppercase tracking-widest">Primeira Impressão — usada nesta cena</span>
+                <button
+                  onClick={() => setPrimeiraImpressaoUsed(false)}
+                  className="text-[8px] font-mono text-outline/50 hover:text-on-surface cursor-crosshair uppercase tracking-widest transition-colors"
+                >
+                  Resetar
+                </button>
+              </div>
+            )}
+
             {/* Perito skill picker */}
             {peritoTier && (
               <div className="mb-6 bg-surface-container-highest border-l-2 border-tertiary/40 p-3">
@@ -1062,7 +1200,10 @@ export default function CharacterSheetPage() {
                             ...(ecleticoCanExp && gradeIdx < 3 ? [{ grade: 'expert' as TrainingGrade, cost: 6, label: 'E' }] : []),
                           ]
                         : []
-                      const showButtons = isPerito || ecOptions.length > 0
+                      const PI_SKILLS = ['diplomacia', 'enganacao', 'intimidacao', 'intuicao']
+                      const isCA = hasConhecimentoAplicado && skill.id !== 'luta' && skill.id !== 'pontaria'
+                      const isPI = hasPrimeiraImpressao && !primeiraImpressaoUsed && PI_SKILLS.includes(skill.id)
+                      const showButtons = isPerito || ecOptions.length > 0 || isCA || isPI
 
                       return (
                         <div
@@ -1139,6 +1280,30 @@ export default function CharacterSheetPage() {
                                   )}
                                 >
                                   P·{peritoTier.die}·{peritoTier.cost}
+                                </button>
+                              )}
+                              {isCA && (
+                                <button
+                                  title={`Conhecimento Aplicado: usa Intelecto (${character.attributes.intelecto}) no lugar do atributo-base (2 PE)`}
+                                  disabled={currentPe < 2}
+                                  onClick={() => rollWithConhecimentoAplicado(skill.name, grade, extraBonus)}
+                                  className={cn(
+                                    'text-[7px] font-mono uppercase px-1.5 py-0.5 border transition-colors cursor-crosshair',
+                                    currentPe >= 2
+                                      ? 'border-secondary/40 text-secondary/70 hover:border-secondary hover:text-secondary'
+                                      : 'border-outline-variant/15 text-outline/25 cursor-not-allowed'
+                                  )}
+                                >
+                                  CA·{character.attributes.intelecto}·2PE
+                                </button>
+                              )}
+                              {isPI && (
+                                <button
+                                  title="Primeira Impressão: +2 dados bônus neste teste (1× por cena)"
+                                  onClick={() => rollWithPrimeiraImpressao(skill.name, attrValue, grade, extraBonus)}
+                                  className="text-[7px] font-mono uppercase px-1.5 py-0.5 border transition-colors cursor-crosshair border-primary-container/50 text-primary-container/80 hover:border-primary-container hover:text-primary-container"
+                                >
+                                  PI·+2d
                                 </button>
                               )}
                             </div>
@@ -1285,11 +1450,21 @@ export default function CharacterSheetPage() {
                   </div>
 
                   {/* Powers */}
-                  {character.selected_powers.length > 0 && (
+                  {character.selected_powers.some(pid =>
+                    !pid.startsWith('ataque-especial-') &&
+                    !pid.startsWith('perito-') &&
+                    pid !== 'ecletico' &&
+                    !pid.startsWith('engenhosidade-')
+                  ) && (
                     <div>
                       <h4 className="text-[10px] uppercase tracking-widest text-secondary mb-2">Poderes</h4>
                       <div className="space-y-1">
-                        {character.selected_powers.map(pid => {
+                        {character.selected_powers.filter(pid =>
+                          !pid.startsWith('ataque-especial-') &&
+                          !pid.startsWith('perito-') &&
+                          pid !== 'ecletico' &&
+                          !pid.startsWith('engenhosidade-')
+                        ).map(pid => {
                           const info = powerLookup.get(pid)
                           const hasCost = !!(info?.peCost && info.peCost > 0)
                           const hasRoll = !!(info?.damage || info?.heal)
@@ -1493,6 +1668,11 @@ export default function CharacterSheetPage() {
           favoritaCategoryReduction={favoritaCategoryReduction}
           favoritaMargemBonus={favoritaMargemBonus}
           favoritaExtraDie={favoritaExtraDie}
+          ataqueEspecialTiers={ataqueEspecialTiers}
+          combateDefensivoActive={combateDefensivoActive}
+          duasArmasActive={duasArmasActive}
+          currentPe={currentPe}
+          onSpendPe={spendPe}
           onToggleFavorita={() => handleToggleFavorita(selectedItem)}
           onRoll={(label, notation, modifier, breakdown) => {
             setSelectedItem(null)
