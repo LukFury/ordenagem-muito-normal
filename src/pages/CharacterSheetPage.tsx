@@ -140,15 +140,16 @@ export default function CharacterSheetPage() {
     skills: skills.filter(s => s.attribute === attr),
   }))
 
-  function rollSkill(skillName: string, attrKey: string, attrValue: number, grade: TrainingGrade, extraBonus: number = 0) {
+  function rollSkill(skillName: string, _attrKey: string, attrValue: number, grade: TrainingGrade, extraBonus: number = 0) {
     const bonus = getSkillBonus(grade)
-    const total = attrValue + bonus + extraBonus
+    const numDice = attrValue >= 1 ? attrValue : 2
+    const mode = attrValue === 0 ? 'lowest' : 'highest'
     roll({
       label: skillName,
-      notation: '1d20',
-      modifier: total,
+      notation: `${numDice}d20`,
+      mode,
+      modifier: bonus + extraBonus,
       modifierBreakdown: [
-        { label: ATTR_LABELS[attrKey], value: attrValue },
         ...(bonus > 0 ? [{ label: 'Treino', value: bonus }] : []),
         ...(extraBonus !== 0 ? [{ label: 'Bónus/Penalidade', value: extraBonus }] : []),
       ],

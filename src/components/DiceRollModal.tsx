@@ -183,14 +183,27 @@ export default function DiceRollModal({ isOpen, pending, result, onRollComplete,
 
               <div className="flex items-center gap-4 flex-wrap">
                 <div className="text-center">
-                  <span className="text-[9px] font-mono text-on-surface/30 block uppercase mb-1">Dado</span>
+                  <span className="text-[9px] font-mono text-on-surface/30 block uppercase mb-1">
+                    {result.mode === 'highest' ? `Melhor de ${result.rolls.length}` :
+                     result.mode === 'lowest'  ? `Pior de ${result.rolls.length}` :
+                     'Dado'}
+                  </span>
                   <span className={cn(
                     'font-mono text-3xl font-bold',
                     result.isCrit ? 'text-secondary' :
                     result.isFumble ? 'text-primary-container' :
                     'text-on-surface'
                   )}>
-                    [{result.rolls.join('+')}]
+                    {(() => {
+                      const mode = result.mode ?? 'sum'
+                      if (mode === 'sum') return `[${result.rolls.join('+')}]`
+                      let marked = false
+                      const parts = result.rolls.map(r => {
+                        if (!marked && r === result.selectedRoll) { marked = true; return `<${r}>` }
+                        return String(r)
+                      })
+                      return `[${parts.join(', ')}]`
+                    })()}
                   </span>
                 </div>
 
