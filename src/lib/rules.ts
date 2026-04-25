@@ -68,9 +68,13 @@ export function calculateDerivedStats(
   const nexTier = nexIndex + 1 // counts tiers reached: 5%=1, 10%=2, …, 99%=20
 
   if (selectedPowers.includes('sangue-de-ferro')) hpBonus += nexTier * 2
-  if (selectedPowers.includes('potencial-aprimorado')) peBonus += nexIndex
+  if (selectedPowers.includes('potencial-aprimorado')) {
+    peBonus += selectedPowers.includes('potencial-aprimorado-afinidade') ? nexTier * 2 : nexTier
+  }
   if (selectedPowers.includes('precognicao')) defenseBonus += 2
-  if (selectedPowers.includes('encarar-a-morte')) nexPELimitBonus += 1
+  if (selectedPowers.includes('encarar-a-morte')) {
+    nexPELimitBonus += selectedPowers.includes('encarar-a-morte-afinidade') ? 2 : 1
+  }
 
   // Tropa de Choque trail — Casca Grossa (unlocked at NEX 10%): +1 PV per 5% NEX tier
   if (trailId === 'tropa-de-choque' && nexIndex >= 1) {

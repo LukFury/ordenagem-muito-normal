@@ -155,6 +155,13 @@
       "afinidade": "Durante cenas de ação, seu limite de gasto de PE aumenta em +2 (para um total de +3)."
     },
     {
+      "id": "encarar-a-morte-afinidade",
+      "name": "Encarar a Morte (Afinidade)",
+      "element": "morte",
+      "description": "Durante cenas de ação, seu limite de gasto de PE aumenta em +2 (para um total de +3, em vez de +1).",
+      "prerequisites": ["encarar-a-morte"]
+    },
+    {
       "id": "escapar-da-morte",
       "name": "Escapar da Morte",
       "element": "morte",
@@ -171,6 +178,13 @@
       "description": "A Morte lhe concede potencial latente de momentos roubados de outro lugar. Você recebe +1 ponto de esforço por NEX. Quando sobe de NEX, os PE que recebe por este poder aumentam de acordo.",
       "prerequisites": [],
       "afinidade": "Você recebe +1 PE adicional por NEX (para um total de +2 PE por NEX)."
+    },
+    {
+      "id": "potencial-aprimorado-afinidade",
+      "name": "Potencial Aprimorado (Afinidade)",
+      "element": "morte",
+      "description": "Você recebe +1 PE adicional por NEX (para um total de +2 PE por NEX).",
+      "prerequisites": ["potencial-aprimorado"]
     },
     {
       "id": "potencial-reaproveitado",
