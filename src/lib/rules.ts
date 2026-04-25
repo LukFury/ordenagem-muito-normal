@@ -148,6 +148,8 @@ export const NEX_ORDER_EXPORTED = NEX_ORDER
 export function getPassiveSkillBonuses(
   selectedPowers: string[],
   _originId: string,
+  trailId: string = '',
+  nexIndex: number = 0,
 ): Record<string, number> {
   const bonuses: Record<string, number> = {}
   const add = (id: string, n: number) => { bonuses[id] = (bonuses[id] ?? 0) + n }
@@ -157,6 +159,10 @@ export function getPassiveSkillBonuses(
   }
   if (selectedPowers.includes('visao-do-oculto')) {
     add('percepcao', 5)
+  }
+  // Operações Especiais – Iniciativa Aprimorada unlocks at NEX 10% (nexIndex >= 1)
+  if (trailId === 'operacoes-especiais' && nexIndex >= 1) {
+    add('iniciativa', 5)
   }
 
   return bonuses

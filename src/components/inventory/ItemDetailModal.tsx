@@ -9,6 +9,14 @@ interface Props {
   firearmDamageBonus?: number
   hasTiroCerteiro?: boolean
   hasMiraDeElite?: boolean
+  hasGolpePesado?: boolean
+  hasTecnicaLetal?: boolean
+  isFavorita?: boolean
+  isAniquilador?: boolean
+  favoritaCategoryReduction?: number
+  favoritaMargemBonus?: number
+  favoritaExtraDie?: boolean
+  onToggleFavorita?: () => void
   onRoll: (label: string, notation: string, modifier: number, breakdown: { label: string; value: number }[]) => void
   onClose: () => void
 }
@@ -19,6 +27,23 @@ const DAMAGE_TYPE_LABELS: Record<string, string> = {
 
 const RANGE_LABELS: Record<string, string> = {
   curto: 'Curto', medio: 'Médio', longo: 'Longo',
+}
+
+function addDie(notation: string): string {
+  const match = notation.match(/^(\d+)(d\d+.*)$/)
+  if (!match) return notation
+  return `${parseInt(match[1]) + 1}${match[2]}`
+}
+
+function applyMargemAmeaca(critical: string, bonus: number): string {
+  const parts = critical.split('/')
+  const threshPart = parts.find(p => /^\d+$/.test(p))
+  const multPart = parts.find(p => /^x\d+$/.test(p))
+  const threshold = threshPart ? parseInt(threshPart) : 20
+  const newThreshold = threshold - bonus
+  const pieces: string[] = [String(newThreshold)]
+  if (multPart) pieces.push(multPart)
+  return pieces.join('/')
 }
 
 function parseDamageOptions(damage: string): { label: string; notation: string }[] {
@@ -35,7 +60,7 @@ function parseDamageOptions(damage: string): { label: string; notation: string }
   return [{ label: clean, notation: clean }]
 }
 
-export default function ItemDetailModal({ item, attributes, meleeDamageBonus = 0, firearmDamageBonus = 0, hasTiroCerteiro = false, hasMiraDeElite = false, onRoll, onClose }: Props) {
+export default function ItemDetailModal({ item, attributes, meleeDamageBonus = 0, firearmDamageBonus = 0, hasTiroCerteiro = false, hasMiraDeElite = false, hasGolpePesado = false, hasTecnicaLetal = false, isFavorita = false, isAniquilador = false, favoritaCategoryReduction = 0, favoritaMargemBonus = 0, favoritaExtraDie = false, onToggleFavorita, onRoll, onClose }: Props) {
   const d = item.item_data as Record<string, unknown>
   const isWeapon = item.item_type === 'weapon'
   const isArmor = item.item_type === 'armor'
@@ -57,6 +82,14 @@ export default function ItemDetailModal({ item, attributes, meleeDamageBonus = 0
   const hasAmmo = !!(d.ammo)
   const isAgil = Array.isArray(d.special) && (d.special as string[]).includes('agil')
   const isRanged = hasRange || hasAmmo
+  const isMelee = !isRanged
+
+  // Critical threshold after passive margem de ameaça bonuses
+  const totalMargemBonus = (hasTecnicaLetal && isMelee ? 2 : 0) + (isFavorita ? favoritaMargemBonus : 0)
+  const displayCritical = totalMargemBonus > 0 && critical ? applyMargemAmeaca(critical, totalMargemBonus) : critical
+
+  // Extra dice from Golpe Pesado and Máquina de Matar (favorita)
+  const diceToAdd = (hasGolpePesado && isMelee ? 1 : 0) + (isFavorita && favoritaExtraDie ? 1 : 0)
 
   let attackAttr: keyof Attributes
   let attackLabel: string
@@ -92,6 +125,9 @@ export default function ItemDetailModal({ item, attributes, meleeDamageBonus = 0
     const isFirearm = hasAmmo && item.item_id !== 'arco-composto'
     const originBonus = isRanged ? firearmDamageBonus : meleeDamageBonus
 
+    let effectiveNotation = notation
+    for (let i = 0; i < diceToAdd; i++) effectiveNotation = addDie(effectiveNotation)
+
     let statVal = 0
     const statEntries: { label: string; value: number }[] = []
 
@@ -117,8 +153,9 @@ export default function ItemDetailModal({ item, attributes, meleeDamageBonus = 0
     const breakdown = [
       ...statEntries,
       ...(originBonus > 0 ? [{ label: 'Bónus de Origem', value: originBonus }] : []),
+      ...(diceToAdd > 0 ? [{ label: diceToAdd === 1 ? '+1 dado extra' : `+${diceToAdd} dados extra`, value: 0 }] : []),
     ]
-    onRoll(`Dano — ${item.name} (${label})`, notation, mod, breakdown)
+    onRoll(`Dano — ${item.name} (${label})`, effectiveNotation, mod, breakdown)
   }
 
   const borderColor = isWeapon ? 'border-primary-container' :
@@ -147,6 +184,11 @@ export default function ItemDetailModal({ item, attributes, meleeDamageBonus = 0
                  item.item_type === 'armorMod' ? 'Modificação' :
                  item.item_type === 'ammo' ? 'Munição' : 'Geral'}
               </span>
+              {isFavorita && (
+                <span className="text-[9px] font-bold uppercase tracking-widest px-1.5 py-0.5 border text-tertiary border-tertiary/60 bg-tertiary/10">
+                  Favorita
+                </span>
+              )}
               {item.quantity > 1 && (
                 <span className="text-[9px] font-mono text-secondary">×{item.quantity}</span>
               )}
@@ -172,7 +214,10 @@ export default function ItemDetailModal({ item, attributes, meleeDamageBonus = 0
             {isWeapon && critical && (
               <div>
                 <p className="text-[9px] font-mono text-on-surface/30 uppercase tracking-widest mb-0.5">Crítico</p>
-                <p className="font-mono text-lg font-bold text-on-surface">{critical}</p>
+                <p className="font-mono text-lg font-bold text-on-surface">{displayCritical}</p>
+                {totalMargemBonus > 0 && (
+                  <p className="text-[8px] font-mono text-tertiary/70 line-through">{critical}</p>
+                )}
               </div>
             )}
             {isWeapon && range && (
@@ -208,13 +253,18 @@ export default function ItemDetailModal({ item, attributes, meleeDamageBonus = 0
           </div>
 
           {/* Special rules */}
-          {special.length > 0 && (
+          {(special.length > 0 || (isFavorita && favoritaCategoryReduction > 0)) && (
             <div className="mt-3 flex gap-2 flex-wrap">
               {special.map(s => (
                 <span key={s} className="text-[9px] font-bold uppercase tracking-widest text-secondary border border-secondary/30 px-1.5 py-0.5">
                   {s}
                 </span>
               ))}
+              {isFavorita && favoritaCategoryReduction > 0 && (
+                <span className="text-[9px] font-bold uppercase tracking-widest text-tertiary border border-tertiary/40 px-1.5 py-0.5">
+                  cat. −{['I', 'II', 'III'][favoritaCategoryReduction - 1] ?? favoritaCategoryReduction}
+                </span>
+              )}
             </div>
           )}
         </div>
@@ -281,6 +331,20 @@ export default function ItemDetailModal({ item, attributes, meleeDamageBonus = 0
               <p className="text-[10px] font-mono text-on-surface/30 text-center uppercase tracking-widest">
                 Dano variável — consulta o mestre
               </p>
+            )}
+
+            {isAniquilador && onToggleFavorita && (
+              <button
+                onClick={onToggleFavorita}
+                className={cn(
+                  'w-full py-2 text-[9px] font-bold uppercase tracking-widest transition-all cursor-crosshair border',
+                  isFavorita
+                    ? 'text-tertiary border-tertiary/60 bg-tertiary/10 hover:bg-tertiary/20'
+                    : 'text-outline/50 border-outline-variant/30 hover:border-outline/50 hover:text-on-surface/70'
+                )}
+              >
+                {isFavorita ? 'Remover Favorita' : 'Marcar como Favorita'}
+              </button>
             )}
           </div>
         )}

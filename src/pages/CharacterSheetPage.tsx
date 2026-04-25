@@ -280,6 +280,22 @@ export default function CharacterSheetPage() {
     closeDice()
   }
 
+  async function handleToggleFavorita(item: InventoryItem) {
+    const isCurrentlyFavorita = !!(item.item_data as Record<string, unknown>).isFavorita
+    if (!isCurrentlyFavorita) {
+      const others = inventory.filter(i => i.id !== item.id && (i.item_data as Record<string, unknown>).isFavorita)
+      for (const other of others) {
+        const newData = { ...other.item_data, isFavorita: false }
+        await supabase.from('inventory_items').update({ item_data: newData }).eq('id', other.id)
+        setInventory(prev => prev.map(i => i.id === other.id ? { ...i, item_data: newData } : i))
+      }
+    }
+    const newData = { ...item.item_data, isFavorita: !isCurrentlyFavorita }
+    await supabase.from('inventory_items').update({ item_data: newData }).eq('id', item.id)
+    setInventory(prev => prev.map(i => i.id === item.id ? { ...i, item_data: newData } : i))
+    setSelectedItem(prev => prev?.id === item.id ? { ...prev, item_data: newData } : prev)
+  }
+
   const totalSpaces = inventory.reduce((sum, i) => sum + (i.spaces * i.quantity), 0)
   const nexIdx = getNexIndex(character.nex)
   const hasTiroCerteiro = character.selected_powers.includes('tiro-certeiro')
@@ -294,15 +310,38 @@ export default function CharacterSheetPage() {
   const hasEmbaralhar = character.known_rituals.includes('embaralhar')
   const hasArmaduraDeSangue = character.known_rituals.includes('armadura-de-sangue')
   const hasVelocidadeMortal = character.known_rituals.includes('velocidade-mortal')
+  const hasGolpePesado = character.selected_powers.includes('golpe-pesado')
+  const hasReflexosDefensivos = character.selected_powers.includes('reflexos-defensivos')
+  const hasTecnicaLetal = character.trail_id === 'guerreiro' && nexIdx >= 1
+  const isAniquilador = character.trail_id === 'aniquilador' && nexIdx >= 1
+  // Aniquilador – favorita category reduction scales with NEX tier
+  const favoritaCategoryReduction = isAniquilador
+    ? nexIdx >= 19 ? 3 : nexIdx >= 7 ? 2 : 1
+    : 0
+  // Máquina de Matar (99%) gives permanent +2 margem de ameaça and +1 dado to favorita weapon
+  const favoritaMargemBonus = isAniquilador && nexIdx >= 19 ? 2 : 0
+  const favoritaExtraDie = isAniquilador && nexIdx >= 19
   const MAX_SPACES = (character.attributes.forca + (hasInventarioOtimizado ? character.attributes.intelecto : 0)) * 5
   const armorBonus = inventory
     .filter(i => i.item_type === 'armor' || i.item_type === 'armorMod')
     .reduce((sum, i) => sum + (Number((i.item_data as Record<string, unknown>).defenseBonus) || 0), 0)
   const hasHeavyArmor = inventory.some(i => i.item_type === 'armor' && (i.item_data as Record<string, unknown>).id === 'protecao-pesada')
   const tanqueDeGuerraActive = hasTanqueDeGuerra && hasHeavyArmor
-  const inquebravelActive = hasInquebravel && currentHp > 0 && currentHp <= Math.floor(derived.hp / 2)
+  const inquebravelMachucadoActive = hasInquebravel && currentHp > 0 && currentHp <= Math.floor(derived.hp / 2)
+  const inquebravelMorrendoActive = hasInquebravel && currentHp === 0
+  // keep alias for all callers that reference inquebravelActive
+  const inquebravelActive = inquebravelMachucadoActive
   const armaduraDeSangueBonus = armaduraDeSangueLevel === 1 ? 5 : armaduraDeSangueLevel === 2 ? 10 : armaduraDeSangueLevel === 3 ? 15 : 0
   const condMods = getConditionModifiers(activeConditions)
+
+  // RD (Resistência a Dano): conditional on active states
+  const effectiveRd = (tanqueDeGuerraActive ? 2 : 0) + (inquebravelMachucadoActive ? 5 : 0)
+
+  // Resistance test bonus: passive and toggle-based
+  const resistanceBonus = (hasReflexosDefensivos ? 2 : 0)
+    + (tanqueDeGuerraActive ? 2 : 0)
+    + (sentidoTaticoActive ? character.attributes.intelecto : 0)
+
   const baseEffectiveDefense = derived.defense + armorBonus + condMods.defenseBonus
     + (sentidoTaticoActive ? character.attributes.intelecto : 0)
     + (tanqueDeGuerraActive ? 2 : 0)
@@ -314,7 +353,7 @@ export default function CharacterSheetPage() {
     + (velocidadeMortalActive ? 2 : 0)
   const isCaido = activeConditions.has('caido')
   const effectiveDefense = baseEffectiveDefense
-  const passiveSkillBonuses = getPassiveSkillBonuses(character.selected_powers, character.origin_id)
+  const passiveSkillBonuses = getPassiveSkillBonuses(character.selected_powers, character.origin_id, character.trail_id, nexIdx)
 
   const hpPct = Math.max(0, Math.min(100, (currentHp / derived.hp) * 100))
   const pePct = Math.max(0, Math.min(100, (currentPe / derived.pe) * 100))
@@ -646,6 +685,27 @@ export default function CharacterSheetPage() {
               </label>
               <span className="font-mono text-xl font-bold text-on-surface">{derived.nexPELimit}</span>
             </div>
+            <div>
+              <label className="block text-[9px] uppercase tracking-widest text-outline mb-1">
+                RD
+                {tanqueDeGuerraActive && <span className="text-secondary"> (+2)</span>}
+                {inquebravelMachucadoActive && <span className="text-secondary"> (+5)</span>}
+              </label>
+              <span className={cn('font-mono text-xl font-bold', effectiveRd > 0 ? 'text-secondary' : 'text-on-surface/30')}>
+                {effectiveRd > 0 ? effectiveRd : '—'}
+              </span>
+            </div>
+            <div>
+              <label className="block text-[9px] uppercase tracking-widest text-outline mb-1">
+                Bôn. Resist.
+                {hasReflexosDefensivos && <span className="text-secondary"> (+2)</span>}
+                {tanqueDeGuerraActive && <span className="text-secondary"> (+2)</span>}
+                {sentidoTaticoActive && <span className="text-tertiary"> (+{character.attributes.intelecto})</span>}
+              </label>
+              <span className={cn('font-mono text-xl font-bold', resistanceBonus > 0 ? 'text-secondary' : 'text-on-surface/30')}>
+                {resistanceBonus > 0 ? `+${resistanceBonus}` : '—'}
+              </span>
+            </div>
           </div>
 
           {/* Vitais */}
@@ -653,13 +713,25 @@ export default function CharacterSheetPage() {
             {/* PV */}
             <div className="space-y-2">
               <div className="flex justify-between items-center">
-                <span className="text-xs font-bold uppercase tracking-widest text-primary">Pontos de Vida</span>
+                <span className="text-xs font-bold uppercase tracking-widest text-primary">
+                  Pontos de Vida
+                  {currentHp === 0 && (
+                    <span className="ml-2 text-primary-container font-mono text-[9px] animate-pulse">
+                      MORRENDO
+                    </span>
+                  )}
+                </span>
                 <div className="flex items-center gap-2">
                   <button onClick={() => setCurrentHp(h => Math.max(0, h - 1))} className="w-6 h-6 bg-surface-container text-on-surface/60 hover:text-on-surface text-sm font-mono cursor-crosshair">−</button>
                   <span className="font-mono text-lg text-primary min-w-[64px] text-center">{currentHp}/{derived.hp}</span>
                   <button onClick={() => setCurrentHp(h => Math.min(derived.hp, h + 1))} className="w-6 h-6 bg-surface-container text-on-surface/60 hover:text-on-surface text-sm font-mono cursor-crosshair">+</button>
                 </div>
               </div>
+              {inquebravelMorrendoActive && (
+                <p className="text-[9px] font-mono text-secondary uppercase tracking-wider">
+                  Inquebrável: não fica indefeso — ainda pode agir
+                </p>
+              )}
               <div className="h-3 bg-surface-container-lowest overflow-hidden">
                 <div
                   className="h-full bg-primary-container transition-all duration-300 relative"
@@ -943,6 +1015,9 @@ export default function CharacterSheetPage() {
                                 <p className="text-xs font-bold text-on-surface uppercase tracking-wide truncate">
                                   {item.quantity > 1 && <span className="text-secondary mr-1">{item.quantity}×</span>}
                                   {item.name}
+                                  {!!(data as Record<string, unknown>).isFavorita && (
+                                    <span className="ml-1.5 text-[8px] font-mono text-tertiary border border-tertiary/50 px-1 py-0.5 not-italic normal-case tracking-widest">FAV</span>
+                                  )}
                                 </p>
                                 <div className="flex items-center gap-2 mt-1 flex-wrap">
                                   {isWeapon && data.damage != null && (
@@ -1170,6 +1245,14 @@ export default function CharacterSheetPage() {
           firearmDamageBonus={character.origin_id === 'militar' ? 2 : 0}
           hasTiroCerteiro={hasTiroCerteiro}
           hasMiraDeElite={hasMiraDeElite}
+          hasGolpePesado={hasGolpePesado}
+          hasTecnicaLetal={hasTecnicaLetal}
+          isFavorita={!!(selectedItem.item_data as Record<string, unknown>).isFavorita}
+          isAniquilador={isAniquilador && selectedItem.item_type === 'weapon'}
+          favoritaCategoryReduction={favoritaCategoryReduction}
+          favoritaMargemBonus={favoritaMargemBonus}
+          favoritaExtraDie={favoritaExtraDie}
+          onToggleFavorita={() => handleToggleFavorita(selectedItem)}
           onRoll={(label, notation, modifier, breakdown) => {
             setSelectedItem(null)
             roll({ label, notation, modifier, modifierBreakdown: breakdown })
