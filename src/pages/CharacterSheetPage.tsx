@@ -395,6 +395,13 @@ export default function CharacterSheetPage() {
   const hasInventarioOtimizado = character.trail_id === 'tecnico' && nexIdx >= 1
   const hasSentidoTatico = character.selected_powers.includes('sentido-tatico')
   const hasPresencaPoderosa = character.trail_id === 'intuitivo' && nexIdx >= 7
+  // Ocultista — Intuitivo trail
+  const hasMenteSa = character.trail_id === 'intuitivo' && nexIdx >= 1
+  const hasInabalavel = character.trail_id === 'intuitivo' && nexIdx >= 12
+  // Ocultista — Graduado trail
+  const hasRituaisEficientes = character.trail_id === 'graduado' && nexIdx >= 12
+  // Ocultista — Flagelador trail
+  const hasPoderDoFlagelo = character.trail_id === 'flagelador' && nexIdx >= 1
   const hasCombateDefensivo = character.selected_powers.includes('combate-defensivo')
   const hasCampoProtetor = character.selected_powers.includes('campo-protetor')
   const hasTanqueDeGuerra = character.selected_powers.includes('tanque-de-guerra')
@@ -469,10 +476,21 @@ export default function CharacterSheetPage() {
   // RD (Resistência a Dano): conditional on active states
   const effectiveRd = (tanqueDeGuerraActive ? 2 : 0) + (inquebravelMachucadoActive ? 5 : 0)
 
+  // Per-element RD from Resistir a <Elemento> powers
+  const elementRDs: { label: string; rd: number }[] = (
+    ['conhecimento', 'energia', 'morte', 'sangue'] as const
+  ).flatMap(el => {
+    if (!character.selected_powers.includes(`resistir-elemento-${el}`)) return []
+    const hasAfinidade = character.selected_powers.includes(`resistir-elemento-${el}-afinidade`)
+    const labels: Record<string, string> = { conhecimento: 'Conhecimento', energia: 'Energia', morte: 'Morte', sangue: 'Sangue' }
+    return [{ label: labels[el], rd: hasAfinidade ? 20 : 10 }]
+  })
+
   // Resistance test bonus: passive and toggle-based
   const resistanceBonus = (hasReflexosDefensivos ? 2 : 0)
     + (tanqueDeGuerraActive ? 2 : 0)
     + (sentidoTaticoActive ? character.attributes.intelecto : 0)
+    + (hasMenteSa ? 5 : 0)
 
   const baseEffectiveDefense = derived.defense + armorBonus + condMods.defenseBonus
     + (sentidoTaticoActive ? character.attributes.intelecto : 0)
@@ -510,11 +528,13 @@ export default function CharacterSheetPage() {
   for (const key of ['ocultistaPowers', 'general', 'conhecimento', 'energia', 'morte', 'sangue']) {
     for (const p of (pd[key] as (PowerInfo & { id: string })[] | undefined) ?? []) powerLookup.set(p.id, p)
   }
-  // Dynamic entries for resistir-elemento-{element}
+  // Dynamic entries for resistir-elemento-{element} and their afinidades
   const ELEMENT_LABELS_SHEET: Record<string, string> = { conhecimento: 'Conhecimento', energia: 'Energia', morte: 'Morte', sangue: 'Sangue' }
   for (const [el, label] of Object.entries(ELEMENT_LABELS_SHEET)) {
     const id = `resistir-elemento-${el}`
     powerLookup.set(id, { id, name: `Resistir a ${label}`, description: `Resistência 10 contra ${label}. Este poder conta como um poder de ${label}.` })
+    const afid = `resistir-elemento-${el}-afinidade`
+    powerLookup.set(afid, { id: afid, name: `Resistir a ${label} (Afinidade)`, description: `Resistência aumenta para 20 contra ${label}.` })
   }
 
   type RitualInfo = {
@@ -834,6 +854,12 @@ export default function CharacterSheetPage() {
               <span className={cn('font-mono text-xl font-bold', effectiveRd > 0 ? 'text-secondary' : 'text-on-surface/30')}>
                 {effectiveRd > 0 ? effectiveRd : '—'}
               </span>
+              {hasInabalavel && (
+                <p className="text-[9px] font-mono text-tertiary mt-0.5">10 mental/paranormal</p>
+              )}
+              {elementRDs.map(({ label, rd }) => (
+                <p key={label} className="text-[9px] font-mono text-tertiary mt-0.5">{rd} {label}</p>
+              ))}
             </div>
             <div>
               <label className="block text-[9px] uppercase tracking-widest text-outline mb-1">
@@ -841,6 +867,7 @@ export default function CharacterSheetPage() {
                 {hasReflexosDefensivos && <span className="text-secondary"> (+2)</span>}
                 {tanqueDeGuerraActive && <span className="text-secondary"> (+2)</span>}
                 {sentidoTaticoActive && <span className="text-tertiary"> (+{character.attributes.intelecto})</span>}
+                {hasMenteSa && <span className="text-tertiary"> (+5 paranormal)</span>}
               </label>
               <span className={cn('font-mono text-xl font-bold', resistanceBonus > 0 ? 'text-secondary' : 'text-on-surface/30')}>
                 {resistanceBonus > 0 ? `+${resistanceBonus}` : '—'}
@@ -1006,6 +1033,26 @@ export default function CharacterSheetPage() {
               <div className="flex justify-between items-center">
                 <span className="text-xs font-bold uppercase tracking-widest text-tertiary">Pontos de Esforço</span>
                 <div className="flex items-center gap-2">
+                  {hasPoderDoFlagelo && (
+                    <button
+                      onClick={() => {
+                        if (currentHp >= 2) {
+                          setCurrentHp(h => h - 2)
+                          setCurrentPe(p => Math.min(derived.pe, p + 1))
+                        }
+                      }}
+                      disabled={currentHp < 2}
+                      title="Poder do Flagelo: gasta 2 PV para ganhar 1 PE"
+                      className={cn(
+                        'text-[8px] font-mono px-1.5 py-0.5 uppercase tracking-widest transition-all cursor-crosshair border',
+                        currentHp >= 2
+                          ? 'text-tertiary border-tertiary/60 bg-tertiary/10 hover:bg-tertiary/20'
+                          : 'text-outline/30 border-outline-variant/20 cursor-not-allowed'
+                      )}
+                    >
+                      −2PV/+1PE
+                    </button>
+                  )}
                   <button onClick={() => setCurrentPe(p => Math.max(0, p - 1))} className="w-6 h-6 bg-surface-container text-on-surface/60 hover:text-on-surface text-sm font-mono cursor-crosshair">−</button>
                   <span className="font-mono text-lg text-tertiary min-w-[64px] text-center">{currentPe}/{derived.pe}</span>
                   <button onClick={() => setCurrentPe(p => Math.min(derived.pe, p + 1))} className="w-6 h-6 bg-surface-container text-on-surface/60 hover:text-on-surface text-sm font-mono cursor-crosshair">+</button>
@@ -1512,7 +1559,10 @@ export default function CharacterSheetPage() {
                   {character.known_rituals.length > 0 && (
                     <div>
                       <div className="flex items-center justify-between mb-2">
-                        <h4 className="text-[10px] uppercase tracking-widest text-tertiary">Rituais</h4>
+                        <h4 className="text-[10px] uppercase tracking-widest text-tertiary">
+                          Rituais
+                          {hasRituaisEficientes && <span className="text-[9px] font-mono text-tertiary/60 ml-2 normal-case tracking-normal">+5 DT</span>}
+                        </h4>
                         {character.attributes.intelecto > 0 && (
                           <span className={cn(
                             'text-[9px] font-mono uppercase tracking-widest',

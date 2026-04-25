@@ -99,7 +99,20 @@ function resolveAutoGrant(ability: string, cls: ClassData): { name: string; desc
   return null
 }
 
+// Element-count prerequisites (conhecimento_1, sangue_2, etc.) cannot be checked via ID — assume met
+function checkPowerPrereq(prereq: string, selectedPowers: string[]): boolean {
+  if (/^[a-z]+_\d+$/.test(prereq)) return true
+  return selectedPowers.includes(prereq)
+}
+
 function buildPowerPool(classId: string, selectedPowers: string[]): PowerEntry[] {
+  function passesPrereqs(p: PowerEntry): boolean {
+    if (!p.canChooseMultipleTimes && selectedPowers.includes(p.id)) return false
+    if (p.prerequisites && p.prerequisites.length > 0) {
+      return p.prerequisites.every(prereq => checkPowerPrereq(prereq, selectedPowers))
+    }
+    return true
+  }
   if (classId === 'ocultista') {
     const pd = powersData as Record<string, unknown>
     const all: PowerEntry[] = [
@@ -110,11 +123,28 @@ function buildPowerPool(classId: string, selectedPowers: string[]): PowerEntry[]
       ...((pd.morte as PowerEntry[]) ?? []),
       ...((pd.sangue as PowerEntry[]) ?? []),
     ]
-    return all.filter(p => p.canChooseMultipleTimes || !selectedPowers.includes(p.id))
+    return all.filter(passesPrereqs)
   }
   const cls = getClassData(classId)
   const pool = ((cls as unknown as Record<string, PowerEntry[]>)?.classPowers) ?? []
-  return pool.filter(p => p.canChooseMultipleTimes || !selectedPowers.includes(p.id))
+  return pool.filter(passesPrereqs)
+}
+
+function getAccessibleCircles(nex: string): number[] {
+  const n = parseInt(nex.replace('%', ''))
+  if (n >= 85) return [1, 2, 3, 4]
+  if (n >= 55) return [1, 2, 3]
+  if (n >= 25) return [1, 2]
+  return [1]
+}
+
+// Trail abilities that auto-grant rituals on level-up
+const TRAIL_RITUAL_GRANTS: Record<string, Record<string, string[]>> = {
+  'conduíte': { '99%': ['canalizar-o-medo'] },
+  'flagelador': { '99%': ['medo-tangivel'] },
+  'graduado': { '99%': ['conhecendo-o-medo'] },
+  'intuitivo': { '99%': ['presenca-do-medo'] },
+  'lamina-paranormal': { '10%': ['amaldicoar-arma-1-sang'], '99%': ['lamina-do-medo'] },
 }
 
 // Versatilidade pool: own class powers + first trail ability of other trails
@@ -180,6 +210,7 @@ export default function LevelUpModal({ character, newNex, onConfirm, onClose }: 
   const isTraining = (a: string) => a === 'grau-de-treinamento'
   const isPower = (a: string) => a.startsWith('poder-de-')
   const isRitual = (a: string) => a.startsWith('escolhido-pelo-outro-lado-')
+  const isRitualLivre = (a: string) => a === 'escolhido-pelo-outro-lado-livre'
   const isVersatilidade = (a: string) => a === 'versatilidade'
 
   const autoGrants = tierAbilities.filter(isAuto).map(a => resolveAutoGrant(a, cls)).filter(Boolean) as { name: string; description: string }[]
@@ -190,6 +221,15 @@ export default function LevelUpModal({ character, newNex, onConfirm, onClose }: 
   const ritualAbilities = tierAbilities.filter(isRitual)
   const needsVersatilidade = tierAbilities.some(isVersatilidade)
 
+  // Saber Ampliado (Graduado 10%): extra ritual pick at each circle-unlock tier
+  const hasSaberAmpliado = character.trail_id === 'graduado' && parseInt(character.nex.replace('%', '')) >= 10
+  const saberAmpliadoCircle = hasSaberAmpliado
+    ? ritualAbilities.reduce((acc: number, ra) => {
+        const m = ra.match(/(\d+)o-circulo/)
+        return m ? parseInt(m[1]) : acc
+      }, 0)
+    : 0
+
   // ── Local state ──────────────────────────────────────────────────────────────
 
   const [chosenAttr, setChosenAttr] = useState<keyof Attributes | null>(null)
@@ -197,6 +237,7 @@ export default function LevelUpModal({ character, newNex, onConfirm, onClose }: 
   const [trainingUpgrades, setTrainingUpgrades] = useState<Record<string, TrainingGrade>>({})
   const [chosenPowers, setChosenPowers] = useState<Record<string, string>>({})
   const [chosenRituals, setChosenRituals] = useState<Record<string, string>>({})
+  const [chosenSaberAmpliado, setChosenSaberAmpliado] = useState<string>('')
   const [aprenderRitualChoices, setAprenderRitualChoices] = useState<Record<string, string>>({})
   const [resistirElementoChoices, setResistirElementoChoices] = useState<Record<string, string>>({})
   const [expansaoChoices, setExpansaoChoices] = useState<Record<string, string>>({})
@@ -250,7 +291,16 @@ export default function LevelUpModal({ character, newNex, onConfirm, onClose }: 
     const classRituals = Object.values(chosenRituals).filter(Boolean)
     const powerRituals = Object.values(aprenderRitualChoices).filter(Boolean)
     if (powerRituals.length > 0) changes.addedRituals = powerRituals
-    if (classRituals.length > 0) changes.addedClassRituals = classRituals
+    // Saber Ampliado extra ritual (Graduado 10%+) — added as class ritual
+    if (saberAmpliadoCircle > 0 && chosenSaberAmpliado) {
+      classRituals.push(chosenSaberAmpliado)
+    }
+    // Auto-grant rituals from trail abilities (99% unlocks, Lâmina Maldita 10%)
+    const trailGrants = TRAIL_RITUAL_GRANTS[character.trail_id]?.[newNex] ?? []
+    const autoRituals = trailGrants.filter(r => !character.known_rituals.includes(r))
+    if (classRituals.length > 0 || autoRituals.length > 0) {
+      changes.addedClassRituals = [...classRituals, ...autoRituals]
+    }
     return changes
   }
 
@@ -267,8 +317,9 @@ export default function LevelUpModal({ character, newNex, onConfirm, onClose }: 
   const resistirReady = resistirSlots.every(pa => resistirElementoChoices[pa] !== undefined)
   const expansaoReady = expansaoSlots.every(pa => expansaoChoices[pa] !== undefined)
   const ritualReady = ritualAbilities.every(ra => chosenRituals[ra] !== undefined)
+  const saberAmpliadoReady = saberAmpliadoCircle === 0 || chosenSaberAmpliado !== ''
   const versatilReady = !needsVersatilidade || chosenPowers['versatilidade'] !== undefined
-  const canConfirm = attrReady && powerReady && aprenderReady && resistirReady && expansaoReady && ritualReady && versatilReady
+  const canConfirm = attrReady && powerReady && aprenderReady && resistirReady && expansaoReady && ritualReady && saberAmpliadoReady && versatilReady
 
   // ── Render ───────────────────────────────────────────────────────────────────
 
@@ -292,44 +343,76 @@ export default function LevelUpModal({ character, newNex, onConfirm, onClose }: 
         <div className="p-6 space-y-8">
 
           {/* Auto grants + trail */}
-          {(autoGrants.length > 0 || trailAbility) && (
-            <section>
-              <h3 className="text-[9px] font-mono uppercase tracking-[0.25em] text-outline mb-3">Ganhos Automáticos</h3>
-              <div className="space-y-2">
-                {autoGrants.map(g => (
-                  <div key={g.name} className="bg-surface-container-high p-4 border-l-2 border-secondary/30">
-                    <p className="text-xs font-bold text-secondary uppercase tracking-widest mb-1">{g.name}</p>
-                    <p className="text-xs text-on-surface-variant leading-relaxed">{g.description}</p>
-                  </div>
-                ))}
-                {trailAbility && (
-                  <div className="bg-surface-container-high p-4 border-l-2 border-tertiary/50">
-                    <p className="text-[9px] font-mono uppercase tracking-[0.2em] text-tertiary mb-1">Habilidade de Trilha</p>
-                    <p className="text-xs font-bold text-tertiary uppercase tracking-widest mb-1">{trailAbility.name}</p>
-                    <p className="text-xs text-on-surface-variant leading-relaxed">{trailAbility.description}</p>
-                  </div>
-                )}
-              </div>
-            </section>
-          )}
+          {(() => {
+            const trailAutoRituals = (TRAIL_RITUAL_GRANTS[character.trail_id]?.[newNex] ?? [])
+              .filter(r => !character.known_rituals.includes(r))
+            const catalog = (ritualsData as Record<string, unknown>).catalog as Record<string, Record<string, RitualEntry[]>>
+            const ritualName = (id: string) => {
+              for (const elements of Object.values(catalog)) {
+                for (const rituals of Object.values(elements)) {
+                  const r = rituals.find(r => r.id === id)
+                  if (r) return r.name
+                }
+              }
+              return id
+            }
+            const showSection = autoGrants.length > 0 || trailAbility || trailAutoRituals.length > 0
+            if (!showSection) return null
+            return (
+              <section>
+                <h3 className="text-[9px] font-mono uppercase tracking-[0.25em] text-outline mb-3">Ganhos Automáticos</h3>
+                <div className="space-y-2">
+                  {autoGrants.map(g => (
+                    <div key={g.name} className="bg-surface-container-high p-4 border-l-2 border-secondary/30">
+                      <p className="text-xs font-bold text-secondary uppercase tracking-widest mb-1">{g.name}</p>
+                      <p className="text-xs text-on-surface-variant leading-relaxed">{g.description}</p>
+                    </div>
+                  ))}
+                  {trailAbility && (
+                    <div className="bg-surface-container-high p-4 border-l-2 border-tertiary/50">
+                      <p className="text-[9px] font-mono uppercase tracking-[0.2em] text-tertiary mb-1">Habilidade de Trilha</p>
+                      <p className="text-xs font-bold text-tertiary uppercase tracking-widest mb-1">{trailAbility.name}</p>
+                      <p className="text-xs text-on-surface-variant leading-relaxed">{trailAbility.description}</p>
+                    </div>
+                  )}
+                  {trailAutoRituals.map(rid => (
+                    <div key={rid} className="bg-surface-container-high p-4 border-l-2 border-tertiary/30">
+                      <p className="text-[9px] font-mono uppercase tracking-[0.2em] text-tertiary mb-1">Ritual de Trilha Aprendido</p>
+                      <p className="text-xs font-bold text-tertiary uppercase tracking-widest">{ritualName(rid)}</p>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )
+          })()}
 
-          {/* Fix 2: Ritual picker */}
+          {/* Ritual picker — circle-unlock and livre */}
           {ritualAbilities.map(ra => {
+            const libre = isRitualLivre(ra)
             const circleMatch = ra.match(/(\d+)o-circulo/)
-            const circle = circleMatch ? parseInt(circleMatch[1]) : 1
-            const pool = getRitualsForCircle(circle, character.known_rituals)
+            const circle = circleMatch ? parseInt(circleMatch[1]) : 0
+            type RitualWithCircle = RitualEntry & { circle?: number }
+            const pool: RitualWithCircle[] = libre
+              ? getAccessibleCircles(newNex).flatMap(c =>
+                  getRitualsForCircle(c, character.known_rituals).map(r => ({ ...r, circle: c }))
+                )
+              : getRitualsForCircle(circle, character.known_rituals).map(r => ({ ...r, circle }))
             const chosen = chosenRituals[ra]
+            const label = libre
+              ? `Ritual Aprendido — Livre (círculos ${getAccessibleCircles(newNex).join(', ')})`
+              : `Ritual Aprendido — ${circle}º Círculo Desbloqueado`
+            const sublabel = libre
+              ? 'Escolha um ritual de qualquer círculo acessível'
+              : `Escolha um ritual do ${circle}º círculo para aprender`
             return (
               <section key={ra}>
                 <div className="flex items-center gap-3 mb-3">
                   <h3 className="text-[9px] font-mono uppercase tracking-[0.25em] text-outline">
-                    Ritual Aprendido — {circle}º Círculo Desbloqueado
+                    {label}
                   </h3>
                   <span className="text-[9px] font-mono text-primary-container">obrigatório</span>
                 </div>
-                <p className="text-[10px] text-on-surface/50 mb-3 uppercase tracking-wide">
-                  Escolha um ritual do {circle}º círculo para aprender
-                </p>
+                <p className="text-[10px] text-on-surface/50 mb-3 uppercase tracking-wide">{sublabel}</p>
                 <div className="space-y-1 max-h-56 overflow-y-auto">
                   {pool.map(ritual => {
                     const isChosen = chosen === ritual.id
@@ -337,6 +420,56 @@ export default function LevelUpModal({ character, newNex, onConfirm, onClose }: 
                       <button
                         key={ritual.id}
                         onClick={() => setChosenRituals(prev => ({ ...prev, [ra]: ritual.id }))}
+                        className={cn(
+                          'w-full text-left p-3 transition-all cursor-crosshair border-l-2',
+                          isChosen
+                            ? 'bg-surface-container-highest border-tertiary'
+                            : 'bg-surface-container-high border-transparent hover:border-outline-variant/40'
+                        )}
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <p className={cn('text-xs font-bold uppercase tracking-wide', isChosen ? 'text-tertiary' : 'text-on-surface')}>
+                            {ritual.name}
+                          </p>
+                          <div className="flex items-center gap-1 shrink-0">
+                            {libre && ritual.circle && (
+                              <span className="text-[9px] font-mono text-outline uppercase">{ritual.circle}º</span>
+                            )}
+                            <span className="text-[9px] font-mono text-outline uppercase">{ritual.element}</span>
+                          </div>
+                        </div>
+                        {isChosen && (
+                          <p className="text-[10px] text-on-surface-variant mt-1 leading-relaxed">{ritual.summary}</p>
+                        )}
+                      </button>
+                    )
+                  })}
+                </div>
+              </section>
+            )
+          })}
+
+          {/* Saber Ampliado (Graduado 10%+) — extra ritual at circle-unlock tiers */}
+          {saberAmpliadoCircle > 0 && (() => {
+            const pool = getRitualsForCircle(saberAmpliadoCircle, [...character.known_rituals, ...(chosenRituals[ritualAbilities.find(ra => ra.includes(`${saberAmpliadoCircle}o-circulo`)) ?? ''] ? [chosenRituals[ritualAbilities.find(ra => ra.includes(`${saberAmpliadoCircle}o-circulo`)) ?? '']] : [])])
+            return (
+              <section>
+                <div className="flex items-center gap-3 mb-3">
+                  <h3 className="text-[9px] font-mono uppercase tracking-[0.25em] text-outline">
+                    Saber Ampliado — Ritual Extra do {saberAmpliadoCircle}º Círculo
+                  </h3>
+                  <span className="text-[9px] font-mono text-primary-container">obrigatório</span>
+                </div>
+                <p className="text-[10px] text-on-surface/50 mb-3 uppercase tracking-wide">
+                  Trilha Graduado: aprende um ritual extra a cada novo círculo (não conta no limite)
+                </p>
+                <div className="space-y-1 max-h-56 overflow-y-auto">
+                  {pool.map(ritual => {
+                    const isChosen = chosenSaberAmpliado === ritual.id
+                    return (
+                      <button
+                        key={ritual.id}
+                        onClick={() => setChosenSaberAmpliado(ritual.id)}
                         className={cn(
                           'w-full text-left p-3 transition-all cursor-crosshair border-l-2',
                           isChosen
@@ -359,7 +492,7 @@ export default function LevelUpModal({ character, newNex, onConfirm, onClose }: 
                 </div>
               </section>
             )
-          })}
+          })()}
 
           {/* Aumento de Atributo */}
           {needsAttr && (

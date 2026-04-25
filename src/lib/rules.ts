@@ -160,6 +160,10 @@ export function getPassiveSkillBonuses(
   if (selectedPowers.includes('visao-do-oculto')) {
     add('percepcao', 5)
   }
+  // Envolto em Mistério: +5 Enganação/Intimidação (conditional: vs non-Ocultismo-trained)
+  if (selectedPowers.includes('envolto-em-misterio')) {
+    add('enganacao', 5); add('intimidacao', 5)
+  }
   // Operações Especiais – Iniciativa Aprimorada unlocks at NEX 10% (nexIndex >= 1)
   if (trailId === 'operacoes-especiais' && nexIndex >= 1) {
     add('iniciativa', 5)

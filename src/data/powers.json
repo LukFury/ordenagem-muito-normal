@@ -45,6 +45,34 @@
       "description": "Escolha entre Conhecimento, Energia, Morte ou Sangue. Você recebe resistência 10 contra esse elemento. Este poder conta como um poder do elemento escolhido.",
       "prerequisites": [],
       "afinidade": "Aumenta a resistência para 20."
+    },
+    {
+      "id": "resistir-elemento-conhecimento-afinidade",
+      "name": "Resistir a Conhecimento (Afinidade)",
+      "element": "conhecimento",
+      "description": "Sua resistência a Conhecimento aumenta para 20.",
+      "prerequisites": ["resistir-elemento-conhecimento"]
+    },
+    {
+      "id": "resistir-elemento-energia-afinidade",
+      "name": "Resistir a Energia (Afinidade)",
+      "element": "energia",
+      "description": "Sua resistência a Energia aumenta para 20.",
+      "prerequisites": ["resistir-elemento-energia"]
+    },
+    {
+      "id": "resistir-elemento-morte-afinidade",
+      "name": "Resistir a Morte (Afinidade)",
+      "element": "morte",
+      "description": "Sua resistência a Morte aumenta para 20.",
+      "prerequisites": ["resistir-elemento-morte"]
+    },
+    {
+      "id": "resistir-elemento-sangue-afinidade",
+      "name": "Resistir a Sangue (Afinidade)",
+      "element": "sangue",
+      "description": "Sua resistência a Sangue aumenta para 20.",
+      "prerequisites": ["resistir-elemento-sangue"]
     }
   ],
   "conhecimento": [
@@ -59,12 +87,26 @@
       "afinidade": "Você aprende um segundo poder de classe que não pertença à sua classe."
     },
     {
+      "id": "expansao-de-conhecimento-afinidade",
+      "name": "Expansão de Conhecimento (Afinidade)",
+      "element": "conhecimento",
+      "description": "Você aprende um segundo poder de classe que não pertença à sua classe.",
+      "prerequisites": ["expansao-de-conhecimento"]
+    },
+    {
       "id": "percepcao-paranormal",
       "name": "Percepção Paranormal",
       "element": "conhecimento",
       "description": "O Conhecimento sussurra em sua mente. Em cenas de investigação, sempre que fizer um teste para procurar pistas, você pode rolar novamente um dado com resultado menor que 10. Você deve aceitar a segunda rolagem, mesmo que seja menor.",
       "prerequisites": [],
       "afinidade": "Você pode rolar novamente até dois dados com resultado menor que 10."
+    },
+    {
+      "id": "percepcao-paranormal-afinidade",
+      "name": "Percepção Paranormal (Afinidade)",
+      "element": "conhecimento",
+      "description": "Você pode rolar novamente até dois dados com resultado menor que 10 em cenas de investigação.",
+      "prerequisites": ["percepcao-paranormal"]
     },
     {
       "id": "precognicao",
@@ -77,6 +119,13 @@
       "afinidade": "Você fica imune à condição desprevenido."
     },
     {
+      "id": "precognicao-afinidade",
+      "name": "Precognição (Afinidade)",
+      "element": "conhecimento",
+      "description": "Você se torna imune à condição desprevenido.",
+      "prerequisites": ["precognicao"]
+    },
+    {
       "id": "sensitivo",
       "name": "Sensitivo",
       "element": "conhecimento",
@@ -85,12 +134,26 @@
       "afinidade": "Quando você faz um teste oposto usando uma dessas perícias, o oponente sofre –5."
     },
     {
+      "id": "sensitivo-afinidade",
+      "name": "Sensitivo (Afinidade)",
+      "element": "conhecimento",
+      "description": "Quando você faz um teste oposto usando Diplomacia, Intimidação ou Intuição, o oponente sofre –5.",
+      "prerequisites": ["sensitivo"]
+    },
+    {
       "id": "visao-do-oculto",
       "name": "Visão do Oculto",
       "element": "conhecimento",
       "description": "Você não enxerga mais pelos olhos, mas sim pela percepção do Conhecimento em sua mente. Você recebe +5 em testes de Percepção e enxerga no escuro.",
       "prerequisites": [],
       "afinidade": "Você ignora camuflagem."
+    },
+    {
+      "id": "visao-do-oculto-afinidade",
+      "name": "Visão do Oculto (Afinidade)",
+      "element": "conhecimento",
+      "description": "Você ignora camuflagem.",
+      "prerequisites": ["visao-do-oculto"]
     }
   ],
   "energia": [
@@ -101,6 +164,13 @@
       "description": "A Energia considera resultados medíocres entediantes. Uma vez por rolagem, você pode rolar novamente um resultado 1 em qualquer dado que não seja d20.",
       "prerequisites": [],
       "afinidade": "Além disso, uma vez por teste, você pode rolar novamente um resultado 1 em d20."
+    },
+    {
+      "id": "afortunado-afinidade",
+      "name": "Afortunado (Afinidade)",
+      "element": "energia",
+      "description": "Além de rolar novamente resultados 1 em dados que não sejam d20, você pode rolar novamente uma vez por teste um resultado 1 no d20.",
+      "prerequisites": ["afortunado"]
     },
     {
       "id": "campo-protetor",
@@ -115,12 +185,28 @@
       "action": "reação"
     },
     {
+      "id": "campo-protetor-afinidade",
+      "name": "Campo Protetor (Afinidade)",
+      "element": "energia",
+      "description": "Ao ativar Campo Protetor, você também recebe +5 em Reflexos até o início do próximo turno. Se passar num teste de Reflexos que reduziria o dano à metade, em vez disso não sofre nenhum dano.",
+      "prerequisites": ["campo-protetor"],
+      "peCost": 1,
+      "action": "reação"
+    },
+    {
       "id": "causalidade-fortuita",
       "name": "Causalidade Fortuita",
       "element": "energia",
       "description": "A Energia o conduz rumo a descobertas. Em cenas de investigação, a DT para procurar pistas diminui em –5 para você até você encontrar uma pista.",
       "prerequisites": [],
       "afinidade": "A DT para procurar pistas sempre diminui em –5 para você."
+    },
+    {
+      "id": "causalidade-fortuita-afinidade",
+      "name": "Causalidade Fortuita (Afinidade)",
+      "element": "energia",
+      "description": "A DT para procurar pistas sempre diminui em –5 para você, não apenas até encontrar a primeira pista.",
+      "prerequisites": ["causalidade-fortuita"]
     },
     {
       "id": "golpe-de-sorte",
@@ -133,6 +219,13 @@
       "afinidade": "Seus ataques recebem +1 no multiplicador de crítico."
     },
     {
+      "id": "golpe-de-sorte-afinidade",
+      "name": "Golpe de Sorte (Afinidade)",
+      "element": "energia",
+      "description": "Seus ataques recebem +1 no multiplicador de crítico.",
+      "prerequisites": ["golpe-de-sorte"]
+    },
+    {
       "id": "manipular-entropia",
       "name": "Manipular Entropia",
       "element": "energia",
@@ -141,6 +234,15 @@
         "energia_1"
       ],
       "afinidade": "O alvo rola novamente todos os dados que você escolher.",
+      "peCost": 2,
+      "action": "reação"
+    },
+    {
+      "id": "manipular-entropia-afinidade",
+      "name": "Manipular Entropia (Afinidade)",
+      "element": "energia",
+      "description": "Ao usar Manipular Entropia, o alvo rola novamente todos os dados que você escolher, não apenas um.",
+      "prerequisites": ["manipular-entropia"],
       "peCost": 2,
       "action": "reação"
     }
@@ -172,6 +274,13 @@
       "afinidade": "Em vez do normal, você evita completamente o dano. Em caso de dano massivo, você fica com 1 PV."
     },
     {
+      "id": "escapar-da-morte-afinidade",
+      "name": "Escapar da Morte (Afinidade)",
+      "element": "morte",
+      "description": "Ao ativar Escapar da Morte, você evita completamente o dano. Em caso de dano massivo, você fica com 1 PV em vez de morrer.",
+      "prerequisites": ["escapar-da-morte"]
+    },
+    {
       "id": "potencial-aprimorado",
       "name": "Potencial Aprimorado",
       "element": "morte",
@@ -195,6 +304,13 @@
       "afinidade": "Você ganha 3 PE temporários, em vez de 2."
     },
     {
+      "id": "potencial-reaproveitado-afinidade",
+      "name": "Potencial Reaproveitado (Afinidade)",
+      "element": "morte",
+      "description": "Ao usar Potencial Reaproveitado, você ganha 3 PE temporários em vez de 2.",
+      "prerequisites": ["potencial-reaproveitado"]
+    },
+    {
       "id": "surto-temporal",
       "name": "Surto Temporal",
       "element": "morte",
@@ -203,6 +319,15 @@
         "morte_2"
       ],
       "afinidade": "Em vez de uma vez por cena, você pode usar este poder uma vez por turno.",
+      "peCost": 3,
+      "action": "livre"
+    },
+    {
+      "id": "surto-temporal-afinidade",
+      "name": "Surto Temporal (Afinidade)",
+      "element": "morte",
+      "description": "Você pode usar Surto Temporal uma vez por turno em vez de uma vez por cena.",
+      "prerequisites": ["surto-temporal"],
       "peCost": 3,
       "action": "livre"
     }
@@ -219,6 +344,13 @@
       "afinidade": "Você é imune aos efeitos de acertos críticos e ataques furtivos."
     },
     {
+      "id": "anatomia-insana-afinidade",
+      "name": "Anatomia Insana (Afinidade)",
+      "element": "sangue",
+      "description": "Você é imune ao dano adicional de acertos críticos e ataques furtivos.",
+      "prerequisites": ["anatomia-insana"]
+    },
+    {
       "id": "arma-de-sangue",
       "name": "Arma de Sangue",
       "element": "sangue",
@@ -231,12 +363,28 @@
       "damageType": "sangue"
     },
     {
+      "id": "arma-de-sangue-afinidade",
+      "name": "Arma de Sangue (Afinidade)",
+      "element": "sangue",
+      "description": "Sua arma de sangue torna-se permanente, não sendo mais necessário criá-la, e passa a causar 1d10 de dano de Sangue.",
+      "prerequisites": ["arma-de-sangue"],
+      "damage": "1d10",
+      "damageType": "sangue"
+    },
+    {
       "id": "sangue-de-ferro",
       "name": "Sangue de Ferro",
       "element": "sangue",
       "description": "O seu sangue flui de forma paranormal, concedendo vigor não natural. Você recebe +2 PV por NEX. Quando sobe de NEX, os PV que recebe por este poder aumentam de acordo.",
       "prerequisites": [],
       "afinidade": "Você recebe +5 em Fortitude e se torna imune a venenos e doenças."
+    },
+    {
+      "id": "sangue-de-ferro-afinidade",
+      "name": "Sangue de Ferro (Afinidade)",
+      "element": "sangue",
+      "description": "Você recebe +5 em Fortitude e se torna imune a venenos e doenças.",
+      "prerequisites": ["sangue-de-ferro"]
     },
     {
       "id": "sangue-fervente",
@@ -249,6 +397,13 @@
       "afinidade": "O bônus que você recebe em Agilidade ou Força aumenta para +2."
     },
     {
+      "id": "sangue-fervente-afinidade",
+      "name": "Sangue Fervente (Afinidade)",
+      "element": "sangue",
+      "description": "Seu bônus de Sangue Fervente em Agilidade ou Força aumenta para +2 enquanto machucado.",
+      "prerequisites": ["sangue-fervente"]
+    },
+    {
       "id": "sangue-vivo",
       "name": "Sangue Vivo",
       "element": "sangue",
@@ -257,6 +412,13 @@
         "sangue_1"
       ],
       "afinidade": "A cura acelerada aumenta para 5."
+    },
+    {
+      "id": "sangue-vivo-afinidade",
+      "name": "Sangue Vivo (Afinidade)",
+      "element": "sangue",
+      "description": "A cura acelerada de Sangue Vivo aumenta para 5.",
+      "prerequisites": ["sangue-vivo"]
     }
   ],
   "ocultistaPowers": [
