@@ -165,6 +165,15 @@ export function getPassiveSkillBonuses(
     add('iniciativa', 5)
   }
 
+  // Especialista powers
+  if (selectedPowers.includes('hacker')) {
+    add('tecnologia', 5)
+  }
+  // Infiltrador – Gatuno unlocks at NEX 40% (nexIndex >= 7)
+  if (trailId === 'infiltrador' && nexIndex >= 7) {
+    add('atletismo', 5); add('crime', 5)
+  }
+
   return bonuses
 }
 

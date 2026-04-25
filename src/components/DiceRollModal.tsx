@@ -184,8 +184,8 @@ export default function DiceRollModal({ isOpen, pending, result, onRollComplete,
               <div className="flex items-center gap-4 flex-wrap">
                 <div className="text-center">
                   <span className="text-[9px] font-mono text-on-surface/30 block uppercase mb-1">
-                    {result.mode === 'highest' ? `Melhor de ${result.rolls.length}` :
-                     result.mode === 'lowest'  ? `Pior de ${result.rolls.length}` :
+                    {result.mode === 'highest' ? `Melhor de ${result.mainRolls.length}` :
+                     result.mode === 'lowest'  ? `Pior de ${result.mainRolls.length}` :
                      'Dado'}
                   </span>
                   <span className={cn(
@@ -196,9 +196,9 @@ export default function DiceRollModal({ isOpen, pending, result, onRollComplete,
                   )}>
                     {(() => {
                       const mode = result.mode ?? 'sum'
-                      if (mode === 'sum') return `[${result.rolls.join('+')}]`
+                      if (mode === 'sum') return `[${result.mainRolls.join('+')}]`
                       let marked = false
-                      const parts = result.rolls.map(r => {
+                      const parts = result.mainRolls.map(r => {
                         if (!marked && r === result.selectedRoll) { marked = true; return `<${r}>` }
                         return String(r)
                       })
@@ -206,6 +206,21 @@ export default function DiceRollModal({ isOpen, pending, result, onRollComplete,
                     })()}
                   </span>
                 </div>
+
+                {result.bonusRolls.length > 0 && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-on-surface/30 font-mono text-xl">+</span>
+                    <div className="text-center">
+                      <span className="text-[9px] font-mono text-tertiary/70 block uppercase mb-1">
+                        {result.bonusDiceLabel ?? 'Dado Bônus'}
+                      </span>
+                      <span className="font-mono text-2xl font-bold text-tertiary">
+                        {result.bonusTotal}
+                        <span className="text-[10px] text-outline ml-1">[{result.bonusRolls.join('+')}]</span>
+                      </span>
+                    </div>
+                  </div>
+                )}
 
                 {result.modifierBreakdown.map(m => (
                   <div key={m.label} className="flex items-center gap-2">

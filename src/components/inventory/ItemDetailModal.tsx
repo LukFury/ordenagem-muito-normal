@@ -11,6 +11,7 @@ interface Props {
   hasMiraDeElite?: boolean
   hasGolpePesado?: boolean
   hasTecnicaLetal?: boolean
+  hasNinjaUrbano?: boolean
   isFavorita?: boolean
   isAniquilador?: boolean
   favoritaCategoryReduction?: number
@@ -60,7 +61,7 @@ function parseDamageOptions(damage: string): { label: string; notation: string }
   return [{ label: clean, notation: clean }]
 }
 
-export default function ItemDetailModal({ item, attributes, meleeDamageBonus = 0, firearmDamageBonus = 0, hasTiroCerteiro = false, hasMiraDeElite = false, hasGolpePesado = false, hasTecnicaLetal = false, isFavorita = false, isAniquilador = false, favoritaCategoryReduction = 0, favoritaMargemBonus = 0, favoritaExtraDie = false, onToggleFavorita, onRoll, onClose }: Props) {
+export default function ItemDetailModal({ item, attributes, meleeDamageBonus = 0, firearmDamageBonus = 0, hasTiroCerteiro = false, hasMiraDeElite = false, hasGolpePesado = false, hasTecnicaLetal = false, hasNinjaUrbano = false, isFavorita = false, isAniquilador = false, favoritaCategoryReduction = 0, favoritaMargemBonus = 0, favoritaExtraDie = false, onToggleFavorita, onRoll, onClose }: Props) {
   const d = item.item_data as Record<string, unknown>
   const isWeapon = item.item_type === 'weapon'
   const isArmor = item.item_type === 'armor'
@@ -123,7 +124,11 @@ export default function ItemDetailModal({ item, attributes, meleeDamageBonus = 0
   function handleDamage(notation: string, label: string) {
     const isArremessavel = special.includes('arremessavel')
     const isFirearm = hasAmmo && item.item_id !== 'arco-composto'
-    const originBonus = isRanged ? firearmDamageBonus : meleeDamageBonus
+    const category = d.category != null ? String(d.category) : '0'
+    const isTacNonFire = category === 'I' && !isFirearm
+
+    const baseBonus = isRanged ? firearmDamageBonus : meleeDamageBonus
+    const ninjaBonus = hasNinjaUrbano && isTacNonFire ? 2 : 0
 
     let effectiveNotation = notation
     for (let i = 0; i < diceToAdd; i++) effectiveNotation = addDie(effectiveNotation)
@@ -149,10 +154,11 @@ export default function ItemDetailModal({ item, attributes, meleeDamageBonus = 0
       statEntries.push({ label: 'Intelecto (Mira de Elite)', value: attributes.intelecto })
     }
 
-    const mod = statVal + originBonus
+    const mod = statVal + baseBonus + ninjaBonus
     const breakdown = [
       ...statEntries,
-      ...(originBonus > 0 ? [{ label: 'Bónus de Origem', value: originBonus }] : []),
+      ...(baseBonus > 0 ? [{ label: 'Bónus', value: baseBonus }] : []),
+      ...(ninjaBonus > 0 ? [{ label: 'Ninja Urbano', value: ninjaBonus }] : []),
       ...(diceToAdd > 0 ? [{ label: diceToAdd === 1 ? '+1 dado extra' : `+${diceToAdd} dados extra`, value: 0 }] : []),
     ]
     onRoll(`Dano — ${item.name} (${label})`, effectiveNotation, mod, breakdown)

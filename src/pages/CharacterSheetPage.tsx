@@ -101,6 +101,8 @@ export default function CharacterSheetPage() {
   const [armaduraDeSangueLevel, setArmaduraDeSangueLevel] = useState(0)
   const [velocidadeMortalActive, setVelocidadeMortalActive] = useState(false)
   const [inventoryTab, setInventoryTab] = useState<'pessoal' | 'partido'>('pessoal')
+  const [peritoPickerOpen, setPeritoPickerOpen] = useState(false)
+  const [peritoPickerSelected, setPeritoPickerSelected] = useState<string[]>([])
   const [inventory, setInventory] = useState<InventoryItem[]>([])
   const [showAddItem, setShowAddItem] = useState(false)
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null)
@@ -161,6 +163,52 @@ export default function CharacterSheetPage() {
         ...(extraBonus !== 0 ? [{ label: 'Bónus/Penalidade', value: extraBonus }] : []),
       ],
     })
+  }
+
+  function rollWithEcletico(skillName: string, attrValue: number, extraBonus: number, targetGrade: TrainingGrade, peCost: number) {
+    if (currentPe < peCost) return
+    setCurrentPe(p => Math.max(0, p - peCost))
+    const bonus = getSkillBonus(targetGrade)
+    const numDice = attrValue >= 1 ? attrValue : 2
+    const mode = attrValue === 0 ? 'lowest' : 'highest'
+    const GRADE_LABELS: Record<TrainingGrade, string> = { destreinado: 'Destr.', treinado: 'Treinado', veterano: 'Veterano', expert: 'Expert' }
+    roll({
+      label: `${skillName} (Eclético — ${GRADE_LABELS[targetGrade]})`,
+      notation: `${numDice}d20`,
+      mode,
+      modifier: bonus + extraBonus,
+      modifierBreakdown: [
+        { label: `Treino EC (${targetGrade})`, value: bonus },
+        ...(extraBonus !== 0 ? [{ label: 'Bónus/Penalidade', value: extraBonus }] : []),
+      ],
+    })
+  }
+
+  function rollWithPerito(skillName: string, attrValue: number, grade: TrainingGrade, extraBonus: number, tier: { cost: number; die: string }) {
+    if (currentPe < tier.cost) return
+    setCurrentPe(p => Math.max(0, p - tier.cost))
+    const bonus = getSkillBonus(grade)
+    const numDice = attrValue >= 1 ? attrValue : 2
+    const mode = attrValue === 0 ? 'lowest' : 'highest'
+    roll({
+      label: `${skillName} (Perito)`,
+      notation: `${numDice}d20+${tier.die}`,
+      mode,
+      modifier: bonus + extraBonus,
+      bonusDiceCount: 1,
+      bonusDiceLabel: `Perito (${tier.die})`,
+      modifierBreakdown: [
+        ...(bonus > 0 ? [{ label: 'Treino', value: bonus }] : []),
+        ...(extraBonus !== 0 ? [{ label: 'Bónus/Penalidade', value: extraBonus }] : []),
+      ],
+    })
+  }
+
+  async function savePeritoSkills(skillIds: string[]) {
+    const filtered = character.selected_powers.filter(p => !p.startsWith('perito-skill-'))
+    const newPowers = [...filtered, ...skillIds.map(s => `perito-skill-${s}`)]
+    await supabase.from('characters').update({ selected_powers: newPowers }).eq('id', id)
+    setCharacter(prev => prev ? { ...prev, selected_powers: newPowers } : prev)
   }
 
   async function handleAddItem(item: FlatItem, quantity: number) {
@@ -314,6 +362,30 @@ export default function CharacterSheetPage() {
   const hasReflexosDefensivos = character.selected_powers.includes('reflexos-defensivos')
   const hasTecnicaLetal = character.trail_id === 'guerreiro' && nexIdx >= 1
   const isAniquilador = character.trail_id === 'aniquilador' && nexIdx >= 1
+  // Especialista powers
+  const hasBalísticaAvancada = character.selected_powers.includes('balistica-avancada')
+  const hasNinjaUrbano = character.selected_powers.includes('ninja-urbano')
+  const hasArtistaMarcialEsp = character.selected_powers.includes('artista-marcial-esp')
+  const artistaMarcialDamage = hasArtistaMarcialEsp
+    ? (nexIdx >= 13 ? '1d10' : nexIdx >= 6 ? '1d8' : '1d6')
+    : null
+  // Eclético
+  const hasEcletico = character.selected_powers.includes('ecletico')
+  const ecleticoCanVet = character.selected_powers.includes('engenhosidade-veterano')
+  const ecleticoCanExp = character.selected_powers.includes('engenhosidade-expert')
+  // Perito
+  const peritoTier = character.selected_powers.includes('perito-5pe-1d12')
+    ? { cost: 5, die: '1d12' }
+    : character.selected_powers.includes('perito-4pe-1d10')
+    ? { cost: 4, die: '1d10' }
+    : character.selected_powers.includes('perito-3pe-1d8')
+    ? { cost: 3, die: '1d8' }
+    : character.selected_powers.includes('perito-2pe-1d6')
+    ? { cost: 2, die: '1d6' }
+    : null
+  const peritoSkillIds = character.selected_powers
+    .filter(p => p.startsWith('perito-skill-'))
+    .map(p => p.slice('perito-skill-'.length))
   // Aniquilador – favorita category reduction scales with NEX tier
   const favoritaCategoryReduction = isAniquilador
     ? nexIdx >= 19 ? 3 : nexIdx >= 7 ? 2 : 1
@@ -409,7 +481,15 @@ export default function CharacterSheetPage() {
   const unlockedTrailAbilities: TrailAbility[] = trailDataForChar
     ? Object.entries(trailDataForChar.abilities)
         .filter(([nex]) => parseInt(nex.replace('%', '')) <= nexNumeric)
-        .map(([nex, ab]) => ({ ...ab, nex, trailName: trailDataForChar.name }))
+        .map(([nex, ab]) => {
+          const entry = { ...ab, nex, trailName: trailDataForChar.name }
+          // Ataque Furtivo damage scales with NEX: +1d6 per bracket
+          if (ab.name === 'Ataque Furtivo') {
+            entry.damage = nexIdx >= 19 ? '4d6' : nexIdx >= 12 ? '3d6' : nexIdx >= 7 ? '2d6' : '1d6'
+          }
+          // Paramédico base heal stays 2d10; extra dice via PE are described in text
+          return entry
+        })
     : []
 
   // Conditions list
@@ -708,6 +788,41 @@ export default function CharacterSheetPage() {
             </div>
           </div>
 
+          {/* Artista Marcial — unarmed attack stats */}
+          {hasArtistaMarcialEsp && (
+            <div className="bg-surface-container-low p-4 border-t border-outline-variant/10">
+              <span className="text-[9px] uppercase tracking-widest text-outline mb-2 block">Desarmado (Artista Marcial)</span>
+              <div className="flex items-center gap-4">
+                <div>
+                  <span className="text-[8px] font-mono text-outline uppercase">Ataque</span>
+                  <p className="font-mono text-sm font-bold text-on-surface">Agi ({character.attributes.agilidade})</p>
+                </div>
+                <div>
+                  <span className="text-[8px] font-mono text-outline uppercase">Dano</span>
+                  <p className="font-mono text-sm font-bold text-on-surface">
+                    {artistaMarcialDamage}
+                    {character.origin_id === 'lutador' ? ' +2' : ''}
+                    <span className="text-[9px] text-outline ml-1">letal, ágil</span>
+                  </p>
+                </div>
+                <button
+                  className="ml-auto text-[8px] font-mono uppercase tracking-widest text-outline/50 border border-outline-variant/20 hover:border-outline/40 hover:text-outline/80 px-2 py-1 cursor-crosshair transition-colors"
+                  onClick={() => roll({
+                    label: 'Dano — Desarmado',
+                    notation: artistaMarcialDamage!,
+                    modifier: (character.attributes.agilidade) + (character.origin_id === 'lutador' ? 2 : 0),
+                    modifierBreakdown: [
+                      { label: 'Agilidade', value: character.attributes.agilidade },
+                      ...(character.origin_id === 'lutador' ? [{ label: 'Bónus', value: 2 }] : []),
+                    ],
+                  })}
+                >
+                  Rolar dano
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Vitais */}
           <div className="bg-surface-container-high p-4 space-y-5">
             {/* PV */}
@@ -840,6 +955,78 @@ export default function CharacterSheetPage() {
               </div>
             </div>
 
+            {/* Perito skill picker */}
+            {peritoTier && (
+              <div className="mb-6 bg-surface-container-highest border-l-2 border-tertiary/40 p-3">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[9px] font-mono uppercase tracking-widest text-tertiary">
+                    Perito · {peritoTier.die} · {peritoTier.cost} PE
+                    {peritoSkillIds.length > 0 && (
+                      <span className="ml-2 text-on-surface/40">
+                        ({peritoSkillIds.join(', ')})
+                      </span>
+                    )}
+                  </span>
+                  <button
+                    className="text-[8px] font-mono uppercase tracking-widest text-outline/50 border border-outline-variant/20 hover:border-outline/40 hover:text-outline px-2 py-0.5 cursor-crosshair transition-colors"
+                    onClick={() => {
+                      setPeritoPickerSelected(peritoSkillIds)
+                      setPeritoPickerOpen(v => !v)
+                    }}
+                  >
+                    {peritoPickerOpen ? 'Fechar' : 'Configurar'}
+                  </button>
+                </div>
+                {peritoPickerOpen && (
+                  <div className="space-y-2">
+                    <p className="text-[9px] text-on-surface/40">Escolhe 2 perícias (exceto Luta e Pontaria)</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {(skillsData as { id: string; name: string }[])
+                        .filter(s => s.id !== 'luta' && s.id !== 'pontaria')
+                        .map(s => {
+                          const isSelected = peritoPickerSelected.includes(s.id)
+                          return (
+                            <button
+                              key={s.id}
+                              onClick={() => {
+                                setPeritoPickerSelected(prev =>
+                                  isSelected
+                                    ? prev.filter(x => x !== s.id)
+                                    : prev.length < 2 ? [...prev, s.id] : prev
+                                )
+                              }}
+                              className={cn(
+                                'text-[8px] font-mono uppercase tracking-wide px-2 py-0.5 border transition-colors cursor-crosshair',
+                                isSelected
+                                  ? 'border-tertiary text-tertiary bg-tertiary/10'
+                                  : 'border-outline-variant/30 text-outline/60 hover:border-outline/50 hover:text-outline'
+                              )}
+                            >
+                              {s.name}
+                            </button>
+                          )
+                        })}
+                    </div>
+                    <button
+                      disabled={peritoPickerSelected.length !== 2}
+                      onClick={async () => {
+                        await savePeritoSkills(peritoPickerSelected)
+                        setPeritoPickerOpen(false)
+                      }}
+                      className={cn(
+                        'text-[8px] font-mono uppercase tracking-widest px-3 py-1 border transition-colors',
+                        peritoPickerSelected.length === 2
+                          ? 'border-tertiary/60 text-tertiary hover:bg-tertiary/10 cursor-crosshair'
+                          : 'border-outline-variant/20 text-outline/30 cursor-not-allowed'
+                      )}
+                    >
+                      Guardar ({peritoPickerSelected.length}/2)
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
             <div className="space-y-8">
               {skillsByAttr.map(({ attr, label, attrValue, skills: attrSkills }) => {
                 const attrCondPenalty = condMods.attrPenalty[attr] ?? 0
@@ -864,6 +1051,17 @@ export default function CharacterSheetPage() {
                       const color = gradeColor(grade)
                       const isTrained = grade !== 'destreinado'
                       const hasExtra = extraBonus !== 0
+                      const isPerito = !!peritoTier && peritoSkillIds.includes(skill.id)
+                      const GRADE_ORDER: TrainingGrade[] = ['destreinado', 'treinado', 'veterano', 'expert']
+                      const gradeIdx = GRADE_ORDER.indexOf(grade)
+                      const ecOptions: { grade: TrainingGrade; cost: number; label: string }[] = hasEcletico
+                        ? [
+                            ...(gradeIdx < 1 ? [{ grade: 'treinado' as TrainingGrade, cost: 2, label: 'T' }] : []),
+                            ...(ecleticoCanVet && gradeIdx < 2 ? [{ grade: 'veterano' as TrainingGrade, cost: 4, label: 'V' }] : []),
+                            ...(ecleticoCanExp && gradeIdx < 3 ? [{ grade: 'expert' as TrainingGrade, cost: 6, label: 'E' }] : []),
+                          ]
+                        : []
+                      const showButtons = isPerito || ecOptions.length > 0
 
                       return (
                         <div
@@ -884,6 +1082,9 @@ export default function CharacterSheetPage() {
                               {skill.trainedOnly && !isTrained && (
                                 <span className="ml-1 text-primary-container opacity-60">*</span>
                               )}
+                              {isPerito && (
+                                <span className="ml-1 text-tertiary opacity-70 text-[7px] font-bold tracking-widest">P</span>
+                              )}
                             </span>
                             <span className={cn(
                               'font-mono text-base font-bold',
@@ -903,6 +1104,44 @@ export default function CharacterSheetPage() {
                               />
                             ))}
                           </div>
+                          {showButtons && (
+                            <div
+                              className="flex gap-1 mt-1.5 flex-wrap"
+                              onClick={e => e.stopPropagation()}
+                            >
+                              {ecOptions.map(opt => (
+                                <button
+                                  key={opt.grade}
+                                  title={`Eclético: conta como ${opt.grade} (${opt.cost} PE)`}
+                                  disabled={currentPe < opt.cost}
+                                  onClick={() => rollWithEcletico(skill.name, attrValue, extraBonus, opt.grade, opt.cost)}
+                                  className={cn(
+                                    'text-[7px] font-mono uppercase px-1.5 py-0.5 border transition-colors cursor-crosshair',
+                                    currentPe >= opt.cost
+                                      ? 'border-secondary/40 text-secondary/70 hover:border-secondary hover:text-secondary'
+                                      : 'border-outline-variant/15 text-outline/25 cursor-not-allowed'
+                                  )}
+                                >
+                                  EC·{opt.label}·{opt.cost}
+                                </button>
+                              ))}
+                              {isPerito && peritoTier && (
+                                <button
+                                  title={`Perito: adiciona ${peritoTier.die} ao resultado (${peritoTier.cost} PE)`}
+                                  disabled={currentPe < peritoTier.cost}
+                                  onClick={() => rollWithPerito(skill.name, attrValue, grade, extraBonus, peritoTier)}
+                                  className={cn(
+                                    'text-[7px] font-mono uppercase px-1.5 py-0.5 border transition-colors cursor-crosshair',
+                                    currentPe >= peritoTier.cost
+                                      ? 'border-tertiary/40 text-tertiary/70 hover:border-tertiary hover:text-tertiary'
+                                      : 'border-outline-variant/15 text-outline/25 cursor-not-allowed'
+                                  )}
+                                >
+                                  P·{peritoTier.die}·{peritoTier.cost}
+                                </button>
+                              )}
+                            </div>
+                          )}
                         </div>
                       )
                     })}
@@ -1241,12 +1480,13 @@ export default function CharacterSheetPage() {
         <ItemDetailModal
           item={selectedItem}
           attributes={character.attributes}
-          meleeDamageBonus={character.origin_id === 'lutador' ? 2 : 0}
-          firearmDamageBonus={character.origin_id === 'militar' ? 2 : 0}
+          meleeDamageBonus={(character.origin_id === 'lutador' ? 2 : 0)}
+          firearmDamageBonus={(character.origin_id === 'militar' ? 2 : 0) + (hasBalísticaAvancada ? 2 : 0)}
           hasTiroCerteiro={hasTiroCerteiro}
           hasMiraDeElite={hasMiraDeElite}
           hasGolpePesado={hasGolpePesado}
           hasTecnicaLetal={hasTecnicaLetal}
+          hasNinjaUrbano={hasNinjaUrbano}
           isFavorita={!!(selectedItem.item_data as Record<string, unknown>).isFavorita}
           isAniquilador={isAniquilador && selectedItem.item_type === 'weapon'}
           favoritaCategoryReduction={favoritaCategoryReduction}
