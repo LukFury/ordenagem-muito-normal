@@ -205,6 +205,7 @@ export default function CharacterSheetPage() {
   }
 
   async function savePeritoSkills(skillIds: string[]) {
+    if (!character) return
     const filtered = character.selected_powers.filter(p => !p.startsWith('perito-skill-'))
     const newPowers = [...filtered, ...skillIds.map(s => `perito-skill-${s}`)]
     await supabase.from('characters').update({ selected_powers: newPowers }).eq('id', id)
