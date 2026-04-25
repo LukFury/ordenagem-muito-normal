@@ -76,6 +76,7 @@ export function calculateDerivedStats(
     peBonus += selectedPowers.includes('potencial-aprimorado-afinidade') ? nexTier * 2 : nexTier
   }
   if (selectedPowers.includes('precognicao')) defenseBonus += 2
+  if (selectedPowers.includes('reflexos-defensivos')) defenseBonus += 2
   if (selectedPowers.includes('encarar-a-morte')) {
     nexPELimitBonus += selectedPowers.includes('encarar-a-morte-afinidade') ? 2 : 1
   }
@@ -179,6 +180,8 @@ function resolveConditions(active: Set<string>): Set<string> {
 
 export interface ConditionModifiers {
   defenseBonus: number
+  meleDefenseBonus: number
+  rangedDefenseBonus: number
   globalSkillPenalty: number
   attrPenalty: Record<string, number>
   skillPenalty: Record<string, number>
@@ -189,6 +192,8 @@ export function getConditionModifiers(activeConditions: Set<string>): ConditionM
   const has = (id: string) => r.has(id)
 
   let defenseBonus = 0
+  let meleDefenseBonus = 0
+  let rangedDefenseBonus = 0
   let globalSkillPenalty = 0
   const attrPenalty: Record<string, number> = {}
   const skillPenalty: Record<string, number> = {}
@@ -204,6 +209,7 @@ export function getConditionModifiers(activeConditions: Set<string>): ConditionM
   if (has('vulneravel')) defenseBonus -= 2
   if (has('indefeso')) defenseBonus -= 10
   else if (has('desprevenido')) defenseBonus -= 5
+  if (has('caido')) { meleDefenseBonus -= 5; rangedDefenseBonus += 5 }
 
   // Agi / Força / Vigor (worst of fraco/debilitado applies, they don't stack)
   if (has('debilitado')) { addAttr('agilidade', -10); addAttr('forca', -10); addAttr('vigor', -10) }
@@ -220,5 +226,5 @@ export function getConditionModifiers(activeConditions: Set<string>): ConditionM
   else if (has('ofuscado')) addSkill('percepcao', -5)
   if (has('surdo')) addSkill('iniciativa', -10)
 
-  return { defenseBonus, globalSkillPenalty, attrPenalty, skillPenalty }
+  return { defenseBonus, meleDefenseBonus, rangedDefenseBonus, globalSkillPenalty, attrPenalty, skillPenalty }
 }

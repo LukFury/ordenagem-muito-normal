@@ -94,6 +94,11 @@ export default function CharacterSheetPage() {
   const [activeConditions, setActiveConditions] = useState<Set<string>>(new Set())
 
   const [sentidoTaticoActive, setSentidoTaticoActive] = useState(false)
+  const [combateDefensivoActive, setCombateDefensivoActive] = useState(false)
+  const [campoProtetorActive, setCampoProtetorActive] = useState(false)
+  const [embaralharCopias, setEmbaralharCopias] = useState(0)
+  const [armaduraDeSangueLevel, setArmaduraDeSangueLevel] = useState(0)
+  const [velocidadeMortalActive, setVelocidadeMortalActive] = useState(false)
   const [inventoryTab, setInventoryTab] = useState<'pessoal' | 'partido'>('pessoal')
   const [inventory, setInventory] = useState<InventoryItem[]>([])
   const [showAddItem, setShowAddItem] = useState(false)
@@ -275,12 +280,33 @@ export default function CharacterSheetPage() {
   const hasInventarioOtimizado = character.trail_id === 'tecnico' && nexIdx >= 1
   const hasSentidoTatico = character.selected_powers.includes('sentido-tatico')
   const hasPresencaPoderosa = character.trail_id === 'intuitivo' && nexIdx >= 7
+  const hasCombateDefensivo = character.selected_powers.includes('combate-defensivo')
+  const hasCampoProtetor = character.selected_powers.includes('campo-protetor')
+  const hasTanqueDeGuerra = character.selected_powers.includes('tanque-de-guerra')
+  const hasInquebravel = character.trail_id === 'tropa-de-choque' && nexIdx >= 19
+  const hasEmbaralhar = character.known_rituals.includes('embaralhar')
+  const hasArmaduraDeSangue = character.known_rituals.includes('armadura-de-sangue')
+  const hasVelocidadeMortal = character.known_rituals.includes('velocidade-mortal')
   const MAX_SPACES = (character.attributes.forca + (hasInventarioOtimizado ? character.attributes.intelecto : 0)) * 5
   const armorBonus = inventory
-    .filter(i => i.item_type === 'armor')
+    .filter(i => i.item_type === 'armor' || i.item_type === 'armorMod')
     .reduce((sum, i) => sum + (Number((i.item_data as Record<string, unknown>).defenseBonus) || 0), 0)
+  const hasHeavyArmor = inventory.some(i => i.item_type === 'armor' && (i.item_data as Record<string, unknown>).id === 'protecao-pesada')
+  const tanqueDeGuerraActive = hasTanqueDeGuerra && hasHeavyArmor
+  const inquebravelActive = hasInquebravel && currentHp > 0 && currentHp <= Math.floor(derived.hp / 2)
+  const armaduraDeSangueBonus = armaduraDeSangueLevel === 1 ? 5 : armaduraDeSangueLevel === 2 ? 10 : armaduraDeSangueLevel === 3 ? 15 : 0
   const condMods = getConditionModifiers(activeConditions)
-  const effectiveDefense = derived.defense + armorBonus + condMods.defenseBonus + (sentidoTaticoActive ? character.attributes.intelecto : 0)
+  const baseEffectiveDefense = derived.defense + armorBonus + condMods.defenseBonus
+    + (sentidoTaticoActive ? character.attributes.intelecto : 0)
+    + (tanqueDeGuerraActive ? 2 : 0)
+    + (combateDefensivoActive ? 5 : 0)
+    + (inquebravelActive ? 5 : 0)
+    + (campoProtetorActive ? 5 : 0)
+    + embaralharCopias * 2
+    + armaduraDeSangueBonus
+    + (velocidadeMortalActive ? 2 : 0)
+  const isCaido = activeConditions.has('caido')
+  const effectiveDefense = baseEffectiveDefense
   const passiveSkillBonuses = getPassiveSkillBonuses(character.selected_powers, character.origin_id)
 
   const hpPct = Math.max(0, Math.min(100, (currentHp / derived.hp) * 100))
@@ -501,12 +527,24 @@ export default function CharacterSheetPage() {
               <label className="block text-[9px] uppercase tracking-widest text-outline mb-1">
                 {armorBonus > 0 ? `Defesa (+${armorBonus})` : 'Defesa'}
                 {condMods.defenseBonus < 0 && <span className="text-primary-container"> ({condMods.defenseBonus})</span>}
+                {tanqueDeGuerraActive && <span className="text-secondary"> (+2)</span>}
                 {sentidoTaticoActive && <span className="text-tertiary"> (+{character.attributes.intelecto})</span>}
+                {combateDefensivoActive && <span className="text-tertiary"> (+5)</span>}
+                {inquebravelActive && <span className="text-secondary"> (+5)</span>}
+                {campoProtetorActive && <span className="text-tertiary"> (+5)</span>}
+                {embaralharCopias > 0 && <span className="text-tertiary"> (+{embaralharCopias * 2})</span>}
+                {armaduraDeSangueLevel > 0 && <span className="text-tertiary"> (+{armaduraDeSangueBonus})</span>}
+                {velocidadeMortalActive && <span className="text-tertiary"> (+2)</span>}
               </label>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 flex-wrap">
                 <span className={cn('font-mono text-xl font-bold', condMods.defenseBonus < 0 ? 'text-primary-container' : 'text-on-surface')}>
                   {effectiveDefense}
                 </span>
+                {isCaido && (
+                  <span className="text-[9px] font-mono text-outline/60">
+                    ({effectiveDefense - 5} melee / {effectiveDefense + 5} dist.)
+                  </span>
+                )}
                 {hasSentidoTatico && (
                   <button
                     onClick={() => setSentidoTaticoActive(v => !v)}
@@ -519,6 +557,77 @@ export default function CharacterSheetPage() {
                     )}
                   >
                     ST
+                  </button>
+                )}
+                {hasCombateDefensivo && (
+                  <button
+                    onClick={() => setCombateDefensivoActive(v => !v)}
+                    title={combateDefensivoActive ? 'Desativar Combate Defensivo' : 'Ativar Combate Defensivo (−5 ataque, +5 Defesa)'}
+                    className={cn(
+                      'text-[8px] font-mono px-1.5 py-0.5 uppercase tracking-widest transition-all cursor-crosshair border',
+                      combateDefensivoActive
+                        ? 'text-tertiary border-tertiary/60 bg-tertiary/10'
+                        : 'text-outline/40 border-outline-variant/20 hover:border-outline/40 hover:text-outline/70'
+                    )}
+                  >
+                    CD
+                  </button>
+                )}
+                {hasCampoProtetor && (
+                  <button
+                    onClick={() => setCampoProtetorActive(v => !v)}
+                    title={campoProtetorActive ? 'Desativar Campo Protetor' : 'Ativar Campo Protetor (1 PE, reação)'}
+                    className={cn(
+                      'text-[8px] font-mono px-1.5 py-0.5 uppercase tracking-widest transition-all cursor-crosshair border',
+                      campoProtetorActive
+                        ? 'text-tertiary border-tertiary/60 bg-tertiary/10'
+                        : 'text-outline/40 border-outline-variant/20 hover:border-outline/40 hover:text-outline/70'
+                    )}
+                  >
+                    CP
+                  </button>
+                )}
+                {hasEmbaralhar && (
+                  <button
+                    onClick={() => setEmbaralharCopias(v => v >= 3 ? 0 : v + 1)}
+                    onContextMenu={e => { e.preventDefault(); setEmbaralharCopias(v => Math.max(0, v - 1)) }}
+                    title={embaralharCopias > 0 ? `Embaralhar: ${embaralharCopias} cópia(s) — clique dir. para reduzir` : 'Ativar Embaralhar (3 cópias, +6 Defesa)'}
+                    className={cn(
+                      'text-[8px] font-mono px-1.5 py-0.5 uppercase tracking-widest transition-all cursor-crosshair border',
+                      embaralharCopias > 0
+                        ? 'text-tertiary border-tertiary/60 bg-tertiary/10'
+                        : 'text-outline/40 border-outline-variant/20 hover:border-outline/40 hover:text-outline/70'
+                    )}
+                  >
+                    EMB{embaralharCopias > 0 ? ` ${embaralharCopias}` : ''}
+                  </button>
+                )}
+                {hasArmaduraDeSangue && (
+                  <button
+                    onClick={() => setArmaduraDeSangueLevel(v => (v + 1) % 4)}
+                    title={['Ativar Armadura de Sangue (+5)', 'Discente (+10)', 'Verdadeiro (+15)', 'Desativar'][armaduraDeSangueLevel]}
+                    className={cn(
+                      'text-[8px] font-mono px-1.5 py-0.5 uppercase tracking-widest transition-all cursor-crosshair border',
+                      armaduraDeSangueLevel > 0
+                        ? 'text-tertiary border-tertiary/60 bg-tertiary/10'
+                        : 'text-outline/40 border-outline-variant/20 hover:border-outline/40 hover:text-outline/70'
+                    )}
+                  >
+                    AdS{armaduraDeSangueLevel > 0 ? ` +${armaduraDeSangueBonus}` : ''}
+                  </button>
+                )}
+                {hasVelocidadeMortal && (
+                  <button
+                    onClick={() => setVelocidadeMortalActive(v => !v)}
+                    title={velocidadeMortalActive ? 'Desativar Velocidade Mortal' : 'Ativar Velocidade Mortal (+2 Defesa)'}
+                    className={cn(
+                      'text-[8px] font-mono px-1.5 py-0.5 uppercase tracking-widest transition-all cursor-crosshair border',
+                      velocidadeMortalActive
+                        ? 'text-tertiary border-tertiary/60 bg-tertiary/10'
+                        : 'text-outline/40 border-outline-variant/20 hover:border-outline/40 hover:text-outline/70'
+                    )}
+                  >
+                    VM
                   </button>
                 )}
               </div>

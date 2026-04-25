@@ -100,7 +100,7 @@
     { "id": "antibombas", "name": "Antibombas", "effect": "+5 em testes de resistência contra efeitos de área." },
     { "id": "blindada", "name": "Blindada", "effect": "Aumenta RD para 5 e o espaço em +1." },
     { "id": "discreta", "name": "Discreta", "effect": "+5 em testes de ocultar e reduz o espaço em –1." },
-    { "id": "reforcada", "name": "Reforçada", "effect": "Aumenta a Defesa em +2 e o espaço em +1." }
+    { "id": "reforcada", "name": "Reforçada", "effect": "Aumenta a Defesa em +2 e o espaço em +1.", "defenseBonus": 2 }
   ],
   "generalItems": {
     "accessories": [
