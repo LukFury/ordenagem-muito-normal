@@ -50,8 +50,12 @@ export function calculateDerivedStats(
     attrVal(initialStats.pe.attribute) +
     nexIndex * (perNEXGains.pe.base + attrVal(perNEXGains.pe.attribute))
 
+  const effectiveBaseSan = originId === 'cultista-arrependido'
+    ? Math.floor(initialStats.san.base / 2)
+    : initialStats.san.base
+
   const san =
-    initialStats.san.base +
+    effectiveBaseSan +
     nexIndex * perNEXGains.san.base
 
   const defense = 10 + attrVal('agilidade')
@@ -89,6 +93,7 @@ export function calculateDerivedStats(
     nexPELimitBonus += 1
   }
   if (originId === 'vitima') sanBonus += nexTier
+  if (selectedPowers.some(p => p.startsWith('transcender-'))) sanBonus -= perNEXGains.san.base
 
   return {
     hp: hp + hpBonus,
